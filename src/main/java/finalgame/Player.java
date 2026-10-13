@@ -61,4 +61,10 @@ public class Player {
     public int getMaxHp() {
         return maxHp;
     }
+    public void reset(double startX, double startY) {
+        x = startX;
+        y = startY;
+        hp = maxHp;
+        invincibleTime = 0.0;
+    }
 }

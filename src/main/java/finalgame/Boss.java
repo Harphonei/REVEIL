@@ -56,4 +56,7 @@ public class Boss {
             y + height
         );
     }  
+    public void reset() {
+        hp = maxHp;
+    }
 }

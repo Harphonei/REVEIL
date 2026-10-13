@@ -44,6 +44,15 @@ public class GamePanel extends JPanel {
         bindKey("A", 1);
         bindKey("S", 2);
         bindKey("D", 3);
+        getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("released R"),"restart-battle");
+        getActionMap().put("restart-battle", new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent event) {
+            if (!player.isAlive() || !boss.isAlive()) {
+                restartBattle();
+            }
+        }
+    });
         timer = new Timer(16, event -> updateGame());
         
         addMouseListener(new MouseAdapter() {
@@ -204,5 +213,23 @@ public class GamePanel extends JPanel {
             g.setColor(Color.GREEN);
             g.drawString("VICTORY", battleArea.x + 120, battleArea.y + 130);
         }
+        if (!player.isAlive() || !boss.isAlive()) {
+            g.setColor(Color.WHITE);
+            g.drawString(
+                "Press R to retry",
+                battleArea.x + 95,
+                battleArea.y + 165
+            );
+        }
+    }
+    private void restartBattle() {
+        clearInput();
+        projectiles.clear();
+        enemyProjectiles.clear();
+        player.reset(468, 500);
+        boss.reset();
+        shotCooldown = 0.0;
+        bossShotCooldown = BOSS_SHOT_INTERVAL;
+        repaint();
     }
 }
