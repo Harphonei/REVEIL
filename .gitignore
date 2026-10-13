@@ -1,0 +1,10 @@
+/target/
+/build/
+/dist/
+/saves/
+/nbproject/private/
+/nbactions-private.xml
+*.class
+*.log
+.DS_Store
+Thumbs.db
