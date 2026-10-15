@@ -24,7 +24,7 @@ public class GamePanel extends JPanel {
     private final Rectangle battleArea = new Rectangle(300, 300, 360, 260);
     private final Player player;
     private Boss boss;
-    private int selectedBoss = 3;
+    private int selectedBoss = 4;
     private final LaserBeam laser = new LaserBeam();
     private final boolean[] pressed = new boolean[4];
     private final Timer timer;
@@ -42,7 +42,7 @@ public class GamePanel extends JPanel {
         setPreferredSize(new Dimension(VIEW_WIDTH, VIEW_HEIGHT));
         setBackground(Color.BLACK);
         player = new Player(468, 500);
-        boss = new MothBoss(430, 210);
+        boss = new KnightBoss(430, 210);
 
         bindKey("W", 0);
         bindKey("A", 1);
@@ -51,6 +51,7 @@ public class GamePanel extends JPanel {
         bindBossSelection("1", 1);
         bindBossSelection("2", 2);
         bindBossSelection("3", 3);
+        bindBossSelection("4", 4);
 
         getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
                 KeyStroke.getKeyStroke("released R"), "restart-battle");
@@ -156,7 +157,8 @@ public class GamePanel extends JPanel {
                 switch (number) {
                     case 1: boss = new ForestBoss(430, 210); break;
                     case 2: boss = new ScientistBoss(430, 210); break;
-                    default: boss = new MothBoss(430, 210); break;
+                    case 3: boss = new MothBoss(430, 210); break;
+                    default: boss = new KnightBoss(430, 210); break;
                 }
                 restartBattle();
             }
@@ -302,7 +304,7 @@ public class GamePanel extends JPanel {
         g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 18));
         g.drawString("WASD: Move | Right mouse: Fire", 60, 130);
         g.setColor(Color.LIGHT_GRAY);
-        g.drawString("TEST: 1 Forest / 2 Scientist / 3 Moth", 60, 625);
+        g.drawString("TEST: 1 Forest / 2 Scientist / 3 Moth / 4 Knight", 60, 625);
         g.setColor(Color.WHITE);
 
         Graphics2D border = (Graphics2D) g.create();
@@ -359,7 +361,7 @@ public class GamePanel extends JPanel {
         g.drawString("BOSS: " + boss.getAttackName(), 700, 405);
         g.setColor(Color.LIGHT_GRAY);
         g.drawString("Target: " + boss.getDifficultyLabel(), 700, 435);
-        g.drawString("Boss " + selectedBoss + " / 3", 700, 465);
+        g.drawString("Boss " + selectedBoss + " / 4", 700, 465);
 
         if (!player.isAlive()) {
             g.setColor(Color.RED);
