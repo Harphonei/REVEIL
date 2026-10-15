@@ -7,7 +7,9 @@ import java.awt.Rectangle;
 public class EnemyProjectile {
     private double x;
     private double y;
-    private final int diameter = 10;
+    public static final int NORMAL_DIAMETER = 12;
+    private final int diameter;
+    private final Color color;
     private final double velocityX;
     private final double velocityY;
 
@@ -17,10 +19,17 @@ public class EnemyProjectile {
 
     public EnemyProjectile(double startX, double startY,
             double velocityX, double velocityY) {
+        this(startX, startY, velocityX, velocityY, NORMAL_DIAMETER, Color.ORANGE);
+    }
+
+    protected EnemyProjectile(double startX, double startY,
+            double velocityX, double velocityY, int diameter, Color color) {
         x = startX;
         y = startY;
         this.velocityX = velocityX;
         this.velocityY = velocityY;
+        this.diameter = diameter;
+        this.color = color;
     }
 
     public void update(double seconds) {
@@ -38,7 +47,15 @@ public class EnemyProjectile {
     }
 
     public void draw(Graphics g) {
-        g.setColor(Color.ORANGE);
+        g.setColor(color);
         g.fillOval((int) x, (int) y, diameter, diameter);
+    }
+
+    public boolean shouldSplit() {
+        return false;
+    }
+
+    public java.util.ArrayList<EnemyProjectile> split() {
+        return new java.util.ArrayList<>();
     }
 }

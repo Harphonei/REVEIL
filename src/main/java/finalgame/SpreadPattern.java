@@ -12,7 +12,8 @@ public class SpreadPattern implements AttackPattern {
             ArrayList<EnemyProjectile> projectiles) {
         int[] sweepAngles = {-12, 0, 12, 0};
         int centreAngle = sweepAngles[wave % sweepAngles.length];
-        double x = bossBounds.x + bossBounds.width / 2.0 - 5;
+        double x = bossBounds.x + bossBounds.width / 2.0
+                - EnemyProjectile.NORMAL_DIAMETER / 2.0;
         double y = bossBounds.y + bossBounds.height;
 
         for (int i = -2; i <= 2; i++) {

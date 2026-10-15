@@ -23,7 +23,8 @@ public class GamePanel extends JPanel {
     private static final int VIEW_HEIGHT = 640;
     private final Rectangle battleArea = new Rectangle(300, 300, 360, 260);
     private final Player player;
-    private final Boss boss;
+    private Boss boss;
+    private int selectedBoss = 2;
     private final LaserBeam laser = new LaserBeam();
     private final boolean[] pressed = new boolean[4];
     private final Timer timer;
@@ -41,12 +42,14 @@ public class GamePanel extends JPanel {
         setPreferredSize(new Dimension(VIEW_WIDTH, VIEW_HEIGHT));
         setBackground(Color.BLACK);
         player = new Player(468, 500);
-        boss = new ForestBoss(430, 210);
+        boss = new ScientistBoss(430, 210);
 
         bindKey("W", 0);
         bindKey("A", 1);
         bindKey("S", 2);
         bindKey("D", 3);
+        bindBossSelection("1", 1);
+        bindBossSelection("2", 2);
 
         getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
                 KeyStroke.getKeyStroke("released R"), "restart-battle");
@@ -141,6 +144,21 @@ public class GamePanel extends JPanel {
         });
     }
 
+    private void bindBossSelection(String key, int number) {
+        String action = "select-boss-" + number;
+        getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+                KeyStroke.getKeyStroke("released " + key), action);
+        getActionMap().put(action, new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent event) {
+                selectedBoss = number;
+                boss = number == 1
+                        ? new ForestBoss(430, 210) : new ScientistBoss(430, 210);
+                restartBattle();
+            }
+        });
+    }
+
     private void useSkillE() {
         if (!player.isAlive() || !boss.isAlive()) {
             return;
@@ -210,6 +228,11 @@ public class GamePanel extends JPanel {
         for (int i = enemyProjectiles.size() - 1; i >= 0; i--) {
             EnemyProjectile projectile = enemyProjectiles.get(i);
             projectile.update(seconds);
+            if (projectile.shouldSplit()) {
+                enemyProjectiles.addAll(projectile.split());
+                enemyProjectiles.remove(i);
+                continue;
+            }
             if (projectile.getBounds().intersects(player.getBounds())) {
                 player.takeDamage(10);
                 enemyProjectiles.remove(i);
@@ -274,6 +297,9 @@ public class GamePanel extends JPanel {
         g.drawString("FINAL", 60, 100);
         g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 18));
         g.drawString("WASD: Move | Right mouse: Fire", 60, 130);
+        g.setColor(Color.LIGHT_GRAY);
+        g.drawString("TEST: 1 Forest / 2 Scientist", 60, 625);
+        g.setColor(Color.WHITE);
 
         Graphics2D border = (Graphics2D) g.create();
         border.setColor(Color.WHITE);
@@ -328,7 +354,8 @@ public class GamePanel extends JPanel {
         g.setColor(Color.ORANGE);
         g.drawString("BOSS: " + boss.getAttackName(), 700, 405);
         g.setColor(Color.LIGHT_GRAY);
-        g.drawString("Target: 1/5", 700, 435);
+        g.drawString("Target: " + boss.getDifficultyLabel(), 700, 435);
+        g.drawString("Boss " + selectedBoss + " / 2", 700, 465);
 
         if (!player.isAlive()) {
             g.setColor(Color.RED);

@@ -30,7 +30,8 @@ public class RainPattern implements AttackPattern {
         int[] selected = {first, second};
         for (int column : selected) {
             double jitter = (random.nextDouble() - 0.5) * 16.0;
-            double x = battleArea.x + (column + 0.5) * columnWidth + jitter - 5;
+            double x = battleArea.x + (column + 0.5) * columnWidth + jitter
+                    - EnemyProjectile.NORMAL_DIAMETER / 2.0;
             double y = battleArea.y - 40;
             projectiles.add(new EnemyProjectile(x, y, 0.0, 125.0));
         }

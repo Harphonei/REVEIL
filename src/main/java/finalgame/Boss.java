@@ -46,7 +46,8 @@ public abstract class Boss {
     }
 
     public EnemyProjectile shoot() {
-        return new EnemyProjectile(x + width / 2.0 - 5, y + height);
+        return new EnemyProjectile(x + width / 2.0
+                - EnemyProjectile.NORMAL_DIAMETER / 2.0, y + height);
     }
 
     public abstract void attack(ArrayList<EnemyProjectile> projectiles);
@@ -75,6 +76,14 @@ public abstract class Boss {
         return "STRAIGHT / SPREAD";
     }
 
+    public String getDifficultyLabel() {
+        return "1/5";
+    }
+
+    protected Color getBodyColor() {
+        return Color.RED;
+    }
+
     public void reset() {
         hp = maxHp;
         shotCooldown = 1.0;
@@ -86,7 +95,7 @@ public abstract class Boss {
         }
         g.setColor(Color.WHITE);
         g.drawString(name, x - 45, y - 60);
-        g.setColor(Color.RED);
+        g.setColor(getBodyColor());
         g.fillRect(x, y, width, height);
         g.setColor(Color.DARK_GRAY);
         g.fillRect(x, y - 20, width, 8);
