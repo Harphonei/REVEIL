@@ -25,15 +25,19 @@ public class GamePanel extends JPanel {
     private final boolean[] pressed = new boolean[4];
     private final Timer timer;
     private long previousTime;
+    
     private final ArrayList<Projectile> projectiles = new ArrayList<>();
     private boolean shooting = false;
     private double shotCooldown = 0.0;
     private static final double SHOT_INTERVAL = 0.3;
+    
     private final Boss boss;
     private final Rectangle battleArea = new Rectangle(300, 300, 360, 260);
     private final ArrayList<EnemyProjectile> enemyProjectiles = new ArrayList<>();
     private double bossShotCooldown = 1.0;
     private static final double BOSS_SHOT_INTERVAL = 1.0;
+    
+    private boolean eHeld = false;
 
     public GamePanel() {
         setPreferredSize(new Dimension(VIEW_WIDTH, VIEW_HEIGHT));
@@ -44,6 +48,27 @@ public class GamePanel extends JPanel {
         bindKey("A", 1);
         bindKey("S", 2);
         bindKey("D", 3);
+        getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+            KeyStroke.getKeyStroke("pressed E"),"skill-e-press"
+        );
+        getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+            KeyStroke.getKeyStroke("released E"),"skill-e-release"
+         );
+        getActionMap().put("skill-e-press", new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent event) {
+            if (!eHeld) {
+                eHeld = true;
+                useSkillE();
+            }
+        }
+    });
+        getActionMap().put("skill-e-release", new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent event) {
+            eHeld = false;
+        }
+    });
         getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("released R"),"restart-battle");
         getActionMap().put("restart-battle", new AbstractAction() {
         @Override
@@ -63,13 +88,13 @@ public class GamePanel extends JPanel {
                 }
             }
 
-    @Override
-    public void mouseReleased(MouseEvent event) {
-        if (SwingUtilities.isRightMouseButton(event)) {
-            shooting = false;
-        }
-    }
-});
+            @Override
+            public void mouseReleased(MouseEvent event) {
+                if (SwingUtilities.isRightMouseButton(event)) {
+                    shooting = false;
+                }
+            }
+        });
     }
 
     private void bindKey(String key, int index) {
@@ -120,7 +145,7 @@ public class GamePanel extends JPanel {
             Projectile projectile = projectiles.get(i);
             projectile.update(seconds);
             if (boss.isAlive()&& projectile.getBounds().intersects(boss.getBounds())) {
-                boss.takeDamage(10);
+                boss.takeDamage(projectile.getDamage());
                 projectiles.remove(i);
             } else if (projectile.isOutsideScreen()) {
                 projectiles.remove(i);
@@ -206,6 +231,15 @@ public class GamePanel extends JPanel {
             battleArea.x,
             battleArea.y + battleArea.height + 35
         );
+        String skillEText;
+        if (player.getSkillECooldown() <= 0.0) {
+            skillEText = "E: READY";
+        } else {
+            int remaining = (int) Math.ceil(player.getSkillECooldown());
+            skillEText = "E: " + remaining + "s";
+        }
+        g.setColor(Color.MAGENTA);
+        g.drawString(skillEText, 700, 335);
         if (!player.isAlive()) {
             g.setColor(Color.RED);
             g.drawString("YOU DIED", battleArea.x + 120, battleArea.y + 130);
@@ -231,5 +265,14 @@ public class GamePanel extends JPanel {
         shotCooldown = 0.0;
         bossShotCooldown = BOSS_SHOT_INTERVAL;
         repaint();
+    }
+    private void useSkillE() {
+        if (!player.isAlive() || !boss.isAlive()) {
+            return;
+        }
+        Projectile skill = player.useSkillE();
+        if (skill != null) {
+            projectiles.add(skill);
+        }
     }
 }

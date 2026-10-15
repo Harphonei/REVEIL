@@ -12,6 +12,9 @@ public class Player {
     private final int maxHp = 100;
     private int hp = maxHp;
     private double invincibleTime = 0.0;
+    
+    private static final double SKILL_E_COOLDOWN = 5.0;
+    private double skillECooldown = 0.0;
 
     public Player(double startX, double startY) {
         x = startX;
@@ -42,6 +45,7 @@ public class Player {
     }
     public void update(double seconds) {
         invincibleTime = Math.max(0.0, invincibleTime - seconds);
+        skillECooldown = Math.max(0.0, skillECooldown - seconds);
     }
     public Rectangle getBounds() {
         return new Rectangle((int) x, (int) y, size, size);
@@ -66,5 +70,15 @@ public class Player {
         y = startY;
         hp = maxHp;
         invincibleTime = 0.0;
+    }
+    public Projectile useSkillE() {
+        if (!isAlive() || skillECooldown > 0.0) {
+            return null;
+        }
+        skillECooldown = SKILL_E_COOLDOWN;
+        return new SkillProjectile(x + size / 2.0, y);
+    }
+    public double getSkillECooldown() {
+        return skillECooldown;
     }
 }
