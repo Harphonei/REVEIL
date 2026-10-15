@@ -3,8 +3,9 @@ package finalgame;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Rectangle;
+import java.util.ArrayList;
 
-public class Boss {
+public abstract class Boss {
     private final int x;
     private final int y;
     private final int width = 100;
@@ -54,4 +55,6 @@ public class Boss {
         g.setColor(Color.WHITE);
         g.drawString("HP: " + hp + "/" + maxHp, x, y - 30);
     }
+    
+    public abstract void attack(ArrayList<EnemyProjectile> projectiles);
 }

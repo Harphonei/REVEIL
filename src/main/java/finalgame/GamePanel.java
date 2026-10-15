@@ -43,7 +43,7 @@ public class GamePanel extends JPanel {
         setPreferredSize(new Dimension(VIEW_WIDTH, VIEW_HEIGHT));
         setBackground(Color.BLACK);
         player = new Player(468, 500);
-        boss = new Boss(430, 190);
+        boss = new TrainingBoss(430, 190);
 
         bindKey("W", 0);
         bindKey("A", 1);
@@ -209,7 +209,7 @@ public class GamePanel extends JPanel {
 
         bossShotCooldown = Math.max(0.0, bossShotCooldown - seconds);
         if (bossShotCooldown <= 0.0) {
-            enemyProjectiles.add(boss.shoot());
+            boss.attack(enemyProjectiles);
             bossShotCooldown = BOSS_SHOT_INTERVAL;
         }
 
