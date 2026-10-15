@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Random;
 
 public class ScientistBoss extends Boss {
+    private final RandomAttackOrder order = new RandomAttackOrder(3);
     private enum Phase {
         RAIN, REST_AFTER_RAIN, REACTION, REST_AFTER_REACTION,
         GRID, REST_AFTER_GRID
@@ -23,6 +24,7 @@ public class ScientistBoss extends Boss {
 
     public ScientistBoss(int startX, int startY) {
         super(startX, startY, 1400, "THE SCIENTIST");
+        selectAttack();
     }
 
     @Override
@@ -94,15 +96,33 @@ public class ScientistBoss extends Boss {
         experimentWave++;
     }
 
+    private void selectAttack() {
+        Phase[] attacks = {Phase.RAIN, Phase.REACTION, Phase.GRID};
+        int selected = order.next();
+        phase = attacks[selected];
+        double[] durations = {5.2, 6.2, 6.8};
+        phaseTime = durations[selected];
+        attackCooldown = 0.7;
+        experimentWave = 0;
+    }
+
     private void nextPhase() {
         switch (phase) {
-            case RAIN: phase = Phase.REST_AFTER_RAIN; phaseTime = 1.5; break;
-            case REST_AFTER_RAIN: phase = Phase.REACTION; phaseTime = 6.2; break;
-            case REACTION: phase = Phase.REST_AFTER_REACTION; phaseTime = 2.0; break;
-            case REST_AFTER_REACTION:
-                phase = Phase.GRID; phaseTime = 6.8; experimentWave = 0; break;
-            case GRID: phase = Phase.REST_AFTER_GRID; phaseTime = 1.5; break;
-            default: phase = Phase.RAIN; phaseTime = 5.2; break;
+            case RAIN:
+                phase = Phase.REST_AFTER_RAIN;
+                phaseTime = 1.5;
+                break;
+            case REACTION:
+                phase = Phase.REST_AFTER_REACTION;
+                phaseTime = 2.0;
+                break;
+            case GRID:
+                phase = Phase.REST_AFTER_GRID;
+                phaseTime = 1.5;
+                break;
+            default:
+                selectAttack();
+                return;
         }
         attackCooldown = 0.45;
     }
@@ -151,9 +171,7 @@ public class ScientistBoss extends Boss {
     public void reset() {
         super.reset();
         zones.clear();
-        phase = Phase.RAIN;
-        phaseTime = 5.2;
-        attackCooldown = 0.7;
-        experimentWave = 0;
+        order.reset();
+        selectAttack();
     }
 }

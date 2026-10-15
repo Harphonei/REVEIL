@@ -7,13 +7,19 @@ import java.util.Random;
 // Shared basic attack: two falling circles per wave, never a full-width wall.
 public class RainPattern implements AttackPattern {
     private final Random random;
+    private final double speed;
 
     public RainPattern() {
         this(new Random());
     }
 
     public RainPattern(Random random) {
+        this(random, 125.0);
+    }
+
+    public RainPattern(Random random, double speed) {
         this.random = random;
+        this.speed = speed;
     }
 
     @Override
@@ -33,7 +39,7 @@ public class RainPattern implements AttackPattern {
             double x = battleArea.x + (column + 0.5) * columnWidth + jitter
                     - EnemyProjectile.NORMAL_DIAMETER / 2.0;
             double y = battleArea.y - 40;
-            projectiles.add(new EnemyProjectile(x, y, 0.0, 125.0));
+            projectiles.add(new EnemyProjectile(x, y, 0.0, speed));
         }
     }
 }

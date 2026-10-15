@@ -5,8 +5,8 @@ import java.awt.Graphics;
 import java.awt.Rectangle;
 
 public class EnemyProjectile {
-    private double x;
-    private double y;
+    protected double x;
+    protected double y;
     public static final int NORMAL_DIAMETER = 12;
     private final int diameter;
     private final Color color;

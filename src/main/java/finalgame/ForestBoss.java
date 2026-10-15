@@ -6,6 +6,7 @@ import java.util.ArrayList;
 
 // A frenzied monster: the bodies in the forest are its victims.
 public class ForestBoss extends Boss {
+    private final RandomAttackOrder order = new RandomAttackOrder(3);
     private enum Phase {
         RAIN, REST_AFTER_RAIN, CLAWS, REST_AFTER_CLAWS, ROOTS, REST_AFTER_ROOTS
     }
@@ -21,6 +22,7 @@ public class ForestBoss extends Boss {
 
     public ForestBoss(int startX, int startY) {
         super(startX, startY, 1200, "FRENZIED FOREST BEAST");
+        selectAttack();
     }
 
     @Override
@@ -77,35 +79,26 @@ public class ForestBoss extends Boss {
         }
     }
 
+    private void selectAttack() {
+        Phase[] attacks = {Phase.RAIN, Phase.CLAWS, Phase.ROOTS};
+        int selected = order.next();
+        phase = attacks[selected];
+        phaseTime = selected == 2 ? 4.6 : 5.2;
+        attackCooldown = 0.7;
+        rootsCreated = 0;
+        claws.reset();
+    }
+
     private void nextPhase() {
         switch (phase) {
-            case RAIN:
-                phase = Phase.REST_AFTER_RAIN;
-                phaseTime = 1.4;
-                break;
-            case REST_AFTER_RAIN:
-                phase = Phase.CLAWS;
-                phaseTime = 5.2;
-                claws.reset();
-                break;
-            case CLAWS:
-                phase = Phase.REST_AFTER_CLAWS;
-                phaseTime = 1.4;
-                break;
-            case REST_AFTER_CLAWS:
-                phase = Phase.ROOTS;
-                phaseTime = 4.6;
-                rootsCreated = 0;
-                break;
-            case ROOTS:
-                phase = Phase.REST_AFTER_ROOTS;
-                phaseTime = 1.4;
-                break;
+            case RAIN: phase = Phase.REST_AFTER_RAIN; break;
+            case CLAWS: phase = Phase.REST_AFTER_CLAWS; break;
+            case ROOTS: phase = Phase.REST_AFTER_ROOTS; break;
             default:
-                phase = Phase.RAIN;
-                phaseTime = 5.2;
-                break;
+                selectAttack();
+                return;
         }
+        phaseTime = 1.4;
         attackCooldown = 0.45;
     }
 
@@ -144,9 +137,7 @@ public class ForestBoss extends Boss {
         super.reset();
         roots.clear();
         claws.reset();
-        phase = Phase.RAIN;
-        phaseTime = 5.2;
-        attackCooldown = 0.7;
-        rootsCreated = 0;
+        order.reset();
+        selectAttack();
     }
 }
