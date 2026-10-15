@@ -14,13 +14,20 @@ public class Player {
     private double invincibleTime = 0.0;
 
     private static final double SKILL_E_COOLDOWN = 5.0;
+    private static final double SKILL_E_CHARGE = 0.55;
+    private static final double SKILL_E_RECOVERY = 0.20;
     private double skillECooldown = 0.0;
+    private double skillEChargeTime = 0.0;
+    private double skillRecoveryTime = 0.0;
+    private boolean skillEReadyToFire = false;
 
     private static final double SKILL_Q_DURATION = 4.0;
     private static final double SKILL_Q_COOLDOWN = 15.0;
+    private static final double SKILL_Q_CHARGE = 0.65;
     private static final double ULTIMATE_SPEED_MULTIPLIER = 1.2;
     private double ultimateTime = 0.0;
     private double skillQCooldown = 0.0;
+    private double skillQChargeTime = 0.0;
 
     public Player(double startX, double startY) {
         x = startX;
@@ -49,33 +56,79 @@ public class Player {
     public void update(double seconds) {
         invincibleTime = Math.max(0.0, invincibleTime - seconds);
         skillECooldown = Math.max(0.0, skillECooldown - seconds);
-        ultimateTime = Math.max(0.0, ultimateTime - seconds);
         skillQCooldown = Math.max(0.0, skillQCooldown - seconds);
+        skillRecoveryTime = Math.max(0.0, skillRecoveryTime - seconds);
+        ultimateTime = Math.max(0.0, ultimateTime - seconds);
+
+        if (skillEChargeTime > 0.0) {
+            double before = skillEChargeTime;
+            skillEChargeTime = Math.max(0.0, skillEChargeTime - seconds);
+            if (skillEChargeTime <= 0.0 && isAlive()) {
+                skillEReadyToFire = true;
+                double overshoot = Math.max(0.0, seconds - before);
+                skillRecoveryTime = Math.max(0.0, SKILL_E_RECOVERY - overshoot);
+            }
+        }
+        if (skillQChargeTime > 0.0) {
+            double before = skillQChargeTime;
+            skillQChargeTime = Math.max(0.0, skillQChargeTime - seconds);
+            if (skillQChargeTime <= 0.0 && isAlive()) {
+                double overshoot = Math.max(0.0, seconds - before);
+                ultimateTime = Math.max(0.0, SKILL_Q_DURATION - overshoot);
+            }
+        }
+    }
+
+    public boolean isUsingSkill() {
+        return skillEChargeTime > 0.0 || skillEReadyToFire
+                || skillRecoveryTime > 0.0 || skillQChargeTime > 0.0
+                || isUltimateActive();
     }
 
     public Projectile shoot() {
+        if (!isAlive() || isUsingSkill()) {
+            return null;
+        }
         return new Projectile(x + size / 2.0 - 3, y - 12);
     }
 
-    public Projectile useSkillE() {
-        if (!isAlive() || skillECooldown > 0.0) {
-            return null;
+    public boolean useSkillE() {
+        if (!isAlive() || isUsingSkill() || skillECooldown > 0.0) {
+            return false;
         }
         skillECooldown = SKILL_E_COOLDOWN;
-        return new SkillProjectile(x + size / 2.0, y);
+        skillEChargeTime = SKILL_E_CHARGE;
+        return true;
+    }
+
+    // Consume the completed cast once, after movement, using the current position.
+    public Projectile pollSkillProjectile() {
+        if (!skillEReadyToFire) {
+            return null;
+        }
+        skillEReadyToFire = false;
+        return isAlive() ? new SkillProjectile(x + size / 2.0, y) : null;
     }
 
     public double getSkillECooldown() {
         return skillECooldown;
     }
 
+    public double getSkillEChargeTime() {
+        return skillEChargeTime;
+    }
+
     public boolean useSkillQ() {
-        if (!isAlive() || skillQCooldown > 0.0) {
+        if (!isAlive() || isUsingSkill() || skillQCooldown > 0.0) {
             return false;
         }
-        ultimateTime = SKILL_Q_DURATION;
+        skillQChargeTime = SKILL_Q_CHARGE;
         skillQCooldown = SKILL_Q_COOLDOWN;
         return true;
+    }
+
+    public double getSkillQChargeTime() {
+        return skillQChargeTime;
     }
 
     public boolean isUltimateActive() {
@@ -105,6 +158,13 @@ public class Player {
         if (damage > 0 && isAlive() && invincibleTime <= 0.0) {
             hp = Math.max(0, hp - damage);
             invincibleTime = 0.75;
+            if (!isAlive()) {
+                skillEChargeTime = 0.0;
+                skillEReadyToFire = false;
+                skillRecoveryTime = 0.0;
+                skillQChargeTime = 0.0;
+                ultimateTime = 0.0;
+            }
         }
     }
 
@@ -126,11 +186,37 @@ public class Player {
         hp = maxHp;
         invincibleTime = 0.0;
         skillECooldown = 0.0;
+        skillEChargeTime = 0.0;
+        skillRecoveryTime = 0.0;
+        skillEReadyToFire = false;
         ultimateTime = 0.0;
         skillQCooldown = 0.0;
+        skillQChargeTime = 0.0;
     }
 
     public void draw(Graphics g) {
+        if (isAlive() && skillQChargeTime > 0.0) {
+            // Placeholder activation aura; replace with sprite animation later.
+            double progress = 1.0 - skillQChargeTime / SKILL_Q_CHARGE;
+            int padding = 7 + (int) (progress * 12);
+            g.setColor(new Color(255, 190, 30));
+            g.drawOval((int) x - padding, (int) y - padding,
+                    size + padding * 2, size + padding * 2);
+            g.setColor(Color.YELLOW);
+            g.drawOval((int) x - padding - 4, (int) y - padding - 4,
+                    size + padding * 2 + 8, size + padding * 2 + 8);
+        }
+        if (isAlive() && skillEChargeTime > 0.0) {
+            double progress = 1.0 - skillEChargeTime / SKILL_E_CHARGE;
+            int diameter = 6 + (int) (progress * 16);
+            g.setColor(Color.MAGENTA);
+            g.fillOval((int) (x + size / 2.0 - diameter / 2.0),
+                    (int) y - diameter - 5, diameter, diameter);
+        }
+        if (isAlive() && isUltimateActive()) {
+            g.setColor(Color.YELLOW);
+            g.drawRect((int) x - 3, (int) y - 3, size + 6, size + 6);
+        }
         g.setColor(invincibleTime > 0.0 ? Color.YELLOW : Color.WHITE);
         g.fillRect((int) x, (int) y, size, size);
     }

@@ -36,7 +36,7 @@ public class GamePanel extends JPanel {
     private boolean eHeld = false;
     private boolean qHeld = false;
     private double shotCooldown = 0.0;
-    private static final double SHOT_INTERVAL = 0.3;
+    private static final double SHOT_INTERVAL = 0.5;
 
     public GamePanel() {
         setPreferredSize(new Dimension(VIEW_WIDTH, VIEW_HEIGHT));
@@ -171,10 +171,7 @@ public class GamePanel extends JPanel {
         if (!player.isAlive() || !boss.isAlive()) {
             return;
         }
-        Projectile skill = player.useSkillE();
-        if (skill != null) {
-            projectiles.add(skill);
-        }
+        player.useSkillE();
     }
 
     private void updateGame() {
@@ -199,10 +196,18 @@ public class GamePanel extends JPanel {
         if (pressed[3]) directionX++;
         player.move(directionX, directionY, seconds, battleArea);
 
+        Projectile chargedSkill = player.pollSkillProjectile();
+        if (chargedSkill != null) {
+            projectiles.add(chargedSkill);
+        }
+
         shotCooldown = Math.max(0.0, shotCooldown - seconds);
-        if (shooting && !player.isUltimateActive() && shotCooldown <= 0.0) {
-            projectiles.add(player.shoot());
-            shotCooldown = SHOT_INTERVAL;
+        if (shooting && !player.isUsingSkill() && shotCooldown <= 0.0) {
+            Projectile normalShot = player.shoot();
+            if (normalShot != null) {
+                projectiles.add(normalShot);
+                shotCooldown = SHOT_INTERVAL;
+            }
         }
 
         for (int i = projectiles.size() - 1; i >= 0; i--) {
@@ -339,7 +344,9 @@ public class GamePanel extends JPanel {
                 battleArea.x, battleArea.y + battleArea.height + 35);
 
         String skillEText;
-        if (player.getSkillECooldown() <= 0.0) {
+        if (player.getSkillEChargeTime() > 0.0) {
+            skillEText = "E: CHARGING";
+        } else if (player.getSkillECooldown() <= 0.0) {
             skillEText = "E: READY";
         } else {
             int remaining = (int) Math.ceil(player.getSkillECooldown());
@@ -349,7 +356,9 @@ public class GamePanel extends JPanel {
         g.drawString(skillEText, 700, 335);
 
         String skillQText;
-        if (player.isUltimateActive()) {
+        if (player.getSkillQChargeTime() > 0.0) {
+            skillQText = "Q: POWER UP";
+        } else if (player.isUltimateActive()) {
             int remaining = (int) Math.ceil(player.getUltimateTime());
             skillQText = "Q ACTIVE: " + remaining + "s";
         } else if (player.getSkillQCooldown() > 0.0) {

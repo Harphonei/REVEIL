@@ -14,7 +14,7 @@ public class Projectile {
     private final Color color;
 
     public Projectile(double startX, double startY) {
-        this(startX, startY, 6, 12, 230.0, 10, Color.CYAN);
+        this(startX, startY, 6, 12, 190.0, 10, Color.CYAN);
     }
 
     protected Projectile(double startX, double startY,
