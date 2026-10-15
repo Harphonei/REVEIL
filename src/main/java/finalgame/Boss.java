@@ -80,6 +80,10 @@ public abstract class Boss {
         return "1/5";
     }
 
+    public String getPhaseLabel() {
+        return "";
+    }
+
     protected Color getBodyColor() {
         return Color.RED;
     }

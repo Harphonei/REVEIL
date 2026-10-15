@@ -55,6 +55,10 @@ public class EnemyProjectile {
         return false;
     }
 
+    public boolean isDangerous() {
+        return true;
+    }
+
     public java.util.ArrayList<EnemyProjectile> split() {
         return new java.util.ArrayList<>();
     }

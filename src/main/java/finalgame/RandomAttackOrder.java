@@ -48,4 +48,9 @@ public class RandomAttackOrder {
         last = -1;
         index = order.length;
     }
+
+    public void reset(int previousAttack) {
+        last = previousAttack;
+        index = order.length;
+    }
 }
