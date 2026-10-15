@@ -219,7 +219,7 @@ public class GamePanel extends JPanel {
             if (projectile.getBounds().intersects(player.getBounds())) {
                 player.takeDamage(10);
                 enemyProjectiles.remove(i);
-            } else if (projectile.isOutsideScreen(getHeight())) {
+            } else if (projectile.isOutsideScreen(getWidth(), getHeight())) {
                 enemyProjectiles.remove(i);
             }
         }
