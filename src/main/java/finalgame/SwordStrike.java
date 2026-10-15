@@ -24,7 +24,7 @@ public class SwordStrike {
             float width, double warningTime, double activeTime, Rectangle arena) {
         line = new Line2D.Double(x1, y1, x2, y2);
         this.width = width;
-        this.warningTime = warningTime;
+        this.warningTime = warningTime * CombatTuning.WARNING_TIME_MULTIPLIER;
         this.activeTime = activeTime;
         this.arena = new Rectangle(arena);
         Area area = new Area(new BasicStroke(width, BasicStroke.CAP_BUTT,

@@ -101,7 +101,7 @@ public class MaskedBoss extends Boss {
             updateFinalSequence(seconds, projectiles);
             return;
         }
-        attackCooldown = Math.max(0.0, attackCooldown - seconds);
+        attackCooldown = Math.max(0.0, attackCooldown - seconds / CombatTuning.ATTACK_INTERVAL_MULTIPLIER);
         if (attackCooldown <= 0.0) {
             attack(projectiles);
             double[] intervals = {phaseTwo ? 0.32 : 0.40,
@@ -170,7 +170,7 @@ public class MaskedBoss extends Boss {
             finalStep = 4;
         }
         if (elapsed >= 2.6 && elapsed < 4.2) {
-            attackCooldown -= seconds;
+            attackCooldown -= seconds / CombatTuning.ATTACK_INTERVAL_MULTIPLIER;
             if (attackCooldown <= 0.0) {
                 rain.emit(arena, getBounds(), projectiles);
                 attackCooldown = 0.65;

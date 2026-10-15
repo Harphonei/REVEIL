@@ -367,6 +367,8 @@ public class GamePanel extends JPanel {
         g.drawString("Boss " + selectedBoss + " / 5", 700, 465);
         g.setColor(Color.PINK);
         g.drawString(boss.getPhaseLabel(), 700, 495);
+        g.setColor(Color.ORANGE);
+        g.drawString("Tuning: +1 STEP", 700, 525);
 
         if (!player.isAlive()) {
             g.setColor(Color.RED);

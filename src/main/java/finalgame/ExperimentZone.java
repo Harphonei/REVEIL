@@ -6,7 +6,7 @@ import java.awt.Rectangle;
 
 public class ExperimentZone {
     private final Rectangle bounds;
-    private static final double WARNING_TIME = 0.9;
+    private static final double WARNING_TIME = 0.9 * CombatTuning.WARNING_TIME_MULTIPLIER;
     private static final double ACTIVE_TIME = 0.38;
     private double age = 0.0;
     private boolean hitConsumed = false;

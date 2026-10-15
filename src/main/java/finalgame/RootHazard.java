@@ -6,7 +6,7 @@ import java.awt.Rectangle;
 
 // Position is locked when the warning appears; it never follows the player.
 public class RootHazard {
-    private static final double WARNING_TIME = 0.85;
+    private static final double WARNING_TIME = 0.85 * CombatTuning.WARNING_TIME_MULTIPLIER;
     private static final double ACTIVE_TIME = 0.32;
     private final Rectangle bounds;
     private double age = 0.0;

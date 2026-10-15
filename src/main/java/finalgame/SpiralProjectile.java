@@ -20,7 +20,7 @@ public class SpiralProjectile extends EnemyProjectile {
 
     @Override
     public void update(double seconds) {
-        age += seconds;
+        age += seconds * CombatTuning.ENEMY_SPEED_MULTIPLIER;
         double radius = 18 + Math.min(age * 22, 90);
         double angle = startAngle + age * 2.8;
         x = centreX + Math.cos(angle) * radius - NORMAL_DIAMETER / 2.0;

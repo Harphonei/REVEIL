@@ -26,8 +26,8 @@ public class EnemyProjectile {
             double velocityX, double velocityY, int diameter, Color color) {
         x = startX;
         y = startY;
-        this.velocityX = velocityX;
-        this.velocityY = velocityY;
+        this.velocityX = velocityX * CombatTuning.ENEMY_SPEED_MULTIPLIER;
+        this.velocityY = velocityY * CombatTuning.ENEMY_SPEED_MULTIPLIER;
         this.diameter = diameter;
         this.color = color;
     }

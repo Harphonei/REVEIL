@@ -44,7 +44,7 @@ public class ForestBoss extends Boss {
             nextPhase();
             return;
         }
-        attackCooldown = Math.max(0.0, attackCooldown - seconds);
+        attackCooldown = Math.max(0.0, attackCooldown - seconds / CombatTuning.ATTACK_INTERVAL_MULTIPLIER);
         if (attackCooldown > 0.0) {
             return;
         }

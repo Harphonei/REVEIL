@@ -24,7 +24,7 @@ public class MemoryEcho {
     }
 
     public boolean isReady() {
-        return age >= 1.05 && !released;
+        return age >= 1.05 * CombatTuning.WARNING_TIME_MULTIPLIER && !released;
     }
 
     public void release(ArrayList<EnemyProjectile> projectiles) {
