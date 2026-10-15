@@ -36,14 +36,12 @@ public class GamePanel extends JPanel {
     private boolean qHeld = false;
     private double shotCooldown = 0.0;
     private static final double SHOT_INTERVAL = 0.3;
-    private double bossShotCooldown = 1.0;
-    private static final double BOSS_SHOT_INTERVAL = 1.0;
 
     public GamePanel() {
         setPreferredSize(new Dimension(VIEW_WIDTH, VIEW_HEIGHT));
         setBackground(Color.BLACK);
         player = new Player(468, 500);
-        boss = new TrainingBoss(430, 190);
+        boss = new ForestBoss(430, 210);
 
         bindKey("W", 0);
         bindKey("A", 1);
@@ -207,11 +205,7 @@ public class GamePanel extends JPanel {
             return;
         }
 
-        bossShotCooldown = Math.max(0.0, bossShotCooldown - seconds);
-        if (bossShotCooldown <= 0.0) {
-            boss.attack(enemyProjectiles);
-            bossShotCooldown = BOSS_SHOT_INTERVAL;
-        }
+        boss.update(seconds, battleArea, player.getBounds(), enemyProjectiles);
 
         for (int i = enemyProjectiles.size() - 1; i >= 0; i--) {
             EnemyProjectile projectile = enemyProjectiles.get(i);
@@ -222,6 +216,10 @@ public class GamePanel extends JPanel {
             } else if (projectile.isOutsideScreen(getWidth(), getHeight())) {
                 enemyProjectiles.remove(i);
             }
+        }
+
+        if (boss.checkHazards(player.getBounds())) {
+            player.takeDamage(10);
         }
 
         if (!player.isAlive()) {
@@ -240,7 +238,6 @@ public class GamePanel extends JPanel {
         player.reset(468, 500);
         boss.reset();
         shotCooldown = 0.0;
-        bossShotCooldown = BOSS_SHOT_INTERVAL;
         repaint();
     }
 
@@ -276,7 +273,7 @@ public class GamePanel extends JPanel {
         g.setFont(new Font(Font.MONOSPACED, Font.BOLD, 48));
         g.drawString("FINAL", 60, 100);
         g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 18));
-        g.drawString("WASD: Move | Right mouse: Fire", 60, 145);
+        g.drawString("WASD: Move | Right mouse: Fire", 60, 130);
 
         Graphics2D border = (Graphics2D) g.create();
         border.setColor(Color.WHITE);
@@ -286,6 +283,7 @@ public class GamePanel extends JPanel {
         border.dispose();
 
         if (player.isAlive() && boss.isAlive()) {
+            boss.drawHazards(g);
             laser.draw(g);
         }
         boss.draw(g);
@@ -293,9 +291,13 @@ public class GamePanel extends JPanel {
         for (Projectile projectile : projectiles) {
             projectile.draw(g);
         }
+        Graphics2D enemyGraphics = (Graphics2D) g.create();
+        enemyGraphics.clipRect(battleArea.x, battleArea.y,
+                battleArea.width, battleArea.height);
         for (EnemyProjectile projectile : enemyProjectiles) {
-            projectile.draw(g);
+            projectile.draw(enemyGraphics);
         }
+        enemyGraphics.dispose();
 
         g.setColor(Color.WHITE);
         g.drawString("Player HP: " + player.getHp() + "/" + player.getMaxHp(),
@@ -323,6 +325,10 @@ public class GamePanel extends JPanel {
         }
         g.setColor(Color.YELLOW);
         g.drawString(skillQText, 700, 365);
+        g.setColor(Color.ORANGE);
+        g.drawString("BOSS: " + boss.getAttackName(), 700, 405);
+        g.setColor(Color.LIGHT_GRAY);
+        g.drawString("Target: 1/5", 700, 435);
 
         if (!player.isAlive()) {
             g.setColor(Color.RED);

@@ -7,8 +7,7 @@ import java.awt.Rectangle;
 public class EnemyProjectile {
     private double x;
     private double y;
-    private final int width = 10;
-    private final int height = 14;
+    private final int diameter = 10;
     private final double velocityX;
     private final double velocityY;
 
@@ -30,18 +29,16 @@ public class EnemyProjectile {
     }
 
     public Rectangle getBounds() {
-        return new Rectangle((int) x, (int) y, width, height);
+        return new Rectangle((int) x, (int) y, diameter, diameter);
     }
 
     public boolean isOutsideScreen(int screenWidth, int screenHeight) {
-        return x + width < 0
-                || x > screenWidth
-                || y + height < 0
-                || y > screenHeight;
+        return x + diameter < 0 || x > screenWidth
+                || y + diameter < 0 || y > screenHeight;
     }
 
     public void draw(Graphics g) {
         g.setColor(Color.ORANGE);
-        g.fillRect((int) x, (int) y, width, height);
+        g.fillOval((int) x, (int) y, diameter, diameter);
     }
 }
