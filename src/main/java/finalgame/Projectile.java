@@ -18,8 +18,7 @@ public class Projectile {
     }
 
     protected Projectile(double startX, double startY,
-            int width, int height, double speed,
-            int damage, Color color) {
+            int width, int height, double speed, int damage, Color color) {
         x = startX;
         y = startY;
         this.width = width;

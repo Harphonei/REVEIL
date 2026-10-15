@@ -9,7 +9,7 @@ public class Boss {
     private final int y;
     private final int width = 100;
     private final int height = 60;
-    private final int maxHp = 1000;
+    private final int maxHp = 100;
     private int hp;
 
     public Boss(int startX, int startY) {
@@ -32,31 +32,26 @@ public class Boss {
         return hp > 0;
     }
 
+    public EnemyProjectile shoot() {
+        return new EnemyProjectile(x + width / 2.0 - 5, y + height);
+    }
+
+    public void reset() {
+        hp = maxHp;
+    }
+
     public void draw(Graphics g) {
         if (!isAlive()) {
             return;
         }
-
         g.setColor(Color.RED);
         g.fillRect(x, y, width, height);
-
         g.setColor(Color.DARK_GRAY);
         g.fillRect(x, y - 20, width, 8);
-
         int hpBarWidth = width * hp / maxHp;
         g.setColor(Color.GREEN);
         g.fillRect(x, y - 20, hpBarWidth, 8);
-
         g.setColor(Color.WHITE);
         g.drawString("HP: " + hp + "/" + maxHp, x, y - 30);
-    }
-    public EnemyProjectile shoot() {
-        return new EnemyProjectile(
-            x + width / 2.0 - 5,
-            y + height
-        );
-    }  
-    public void reset() {
-        hp = maxHp;
     }
 }
