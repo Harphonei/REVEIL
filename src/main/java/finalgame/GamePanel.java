@@ -59,6 +59,9 @@ public class GamePanel extends JPanel {
         bindBossSelection("3", 3);
         bindBossSelection("4", 4);
         bindBossSelection("5", 5);
+        bindScreenAction("released F3", "collision-view", () -> {
+            if (state == GameState.EXPLORATION) { exploration.toggleCollisionView(); repaint(); }
+        });
         bindScreenAction("released ESCAPE", "pause", () -> togglePause());
         bindScreenAction("released ENTER", "confirm", () -> confirmScreen());
         bindScreenAction("released M", "menu", () -> {

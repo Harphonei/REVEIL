@@ -8,14 +8,16 @@ import javax.imageio.ImageIO;
 
 /** Forest coordinates use a 2048 x 683 design grid, independent of image pixels. */
 public class ExplorationRoom {
-    private static final double SCALE = 1.5;
+    private final double scaleX, scaleY;
     private static final int VIEW_W = 960, VIEW_H = 520, TOP = 60;
     private static final double SPEED = 90, SIZE = 16;
     private final BufferedImage background;
     private final Area floor = createFloor();
     private final Rectangle2D bossZone = new Rectangle2D.Double(1430, 335, 130, 105);
     private final Rectangle2D mineZone = new Rectangle2D.Double(1920, 322, 88, 90);
-    private final Rectangle2D[] obstacles = {
+    private final Shape[] obstacles = {
+        polygon(new double[][]{{1240,335},{1249,322},{1272,321},{1287,340},{1282,359},{1260,365},{1241,355}}),
+        polygon(new double[][]{{74,198},{87,192},{144,213},{146,229},{135,238},{77,218}}),
         new Rectangle2D.Double(357, 335, 117, 48),
         new Rectangle2D.Double(492, 294, 98, 62),
         new Rectangle2D.Double(589, 334, 43, 29),
@@ -32,6 +34,7 @@ public class ExplorationRoom {
     private double x, y, cameraX, cameraY;
     private boolean cleared, battleRequested, mineReached;
     private String message;
+    private boolean showCollision;
 
     public ExplorationRoom() {
         try {
@@ -42,32 +45,44 @@ public class ExplorationRoom {
         } catch (IOException ex) {
             throw new IllegalStateException("Cannot load forest map. Copy all of src including main/resources.", ex);
         }
+        scaleX=background.getWidth()/2048.0;
+        scaleY=background.getHeight()/683.0;
         reset();
     }
 
     private static Area createFloor() {
         Path2D path = new Path2D.Double();
-        double[][] points = {{70,365},{180,365},{265,377},{360,378},{450,375},
-            {580,375},{620,370},{690,370},{720,380},{870,380},{924,386},
-            {1048,386},{1130,382},{1205,368},{1290,343},{1410,320},
-            {1570,325},{1660,355},{1795,354},{1870,336},{1935,326},
-            {1995,326},{1995,391},{1870,405},{1795,410},{1660,419},
-            {1585,443},{1420,460},{1290,435},{1205,431},{1130,438},
-            {1048,438},{924,438},{870,438},{720,438},{690,435},
-            {620,434},{580,438},{450,446},{360,449},{265,446},{180,442},{70,425}};
+        double[][] points = {{60,345},{185,340},{265,350},{340,345},{450,355},
+            {585,350},{620,348},{705,348},{750,365},{875,365},{924,383},
+            {1048,383},{1125,362},{1205,340},{1280,320},{1410,300},
+            {1570,310},{1660,340},{1795,340},{1870,326},{1940,315},
+            {2008,315},{2008,399},{1870,415},{1795,427},{1660,439},
+            {1585,470},{1420,483},{1290,453},{1205,447},{1130,447},
+            {1048,439},{924,439},{875,448},{720,449},{690,450},
+            {620,445},{580,450},{450,462},{360,462},{265,458},{180,444},{60,430}};
         path.moveTo(points[0][0], points[0][1]);
         for (int i=1;i<points.length;i++) path.lineTo(points[i][0],points[i][1]);
         path.closePath();
         Area area = new Area(path);
-        area.add(new Area(new Rectangle2D.Double(65,248,165,177)));
-        area.add(new Area(new Rectangle2D.Double(105,226,91,70)));
-        area.add(new Area(new Rectangle2D.Double(621,254,77,160)));
-        area.add(new Area(new Rectangle2D.Double(609,207,140,72)));
-        area.add(new Area(new Rectangle2D.Double(1320,288,265,183)));
-        area.add(new Area(new Rectangle2D.Double(1390,265,103,210)));
-        area.add(new Area(new Rectangle2D.Double(1535,336,100,141)));
+        area.add(polygon(new double[][]{{55,260},{65,230},{80,212},{150,224},{180,220},{230,260},
+            {255,310},{300,342},{310,405},{190,430},{60,423}}));
+        area.add(new Area(new Rectangle2D.Double(613,252,91,165)));
+        area.add(polygon(new double[][]{{601,230},{620,188},{700,185},
+            {754,218},{759,268},{710,287},{608,283}}));
+        area.add(polygon(new double[][]{{1230,348},{1267,294},{1320,278},
+            {1360,220},{1450,212},{1490,240},{1585,265},{1620,320},
+            {1655,378},{1640,475},{1580,510},{1420,510},{1300,461}}));
+        area.add(new Area(new Rectangle2D.Double(1940,284,62,91)));
         return area;
     }
+
+    private static Area polygon(double[][] points) {
+        Path2D p=new Path2D.Double(); p.moveTo(points[0][0],points[0][1]);
+        for(int i=1;i<points.length;i++) p.lineTo(points[i][0],points[i][1]);
+        p.closePath(); return new Area(p);
+    }
+
+    public void toggleCollisionView() { showCollision=!showCollision; }
 
     public void reset() {
         x=135; y=312; cleared=false; battleRequested=false; mineReached=false;
@@ -100,16 +115,16 @@ public class ExplorationRoom {
     }
 
     private boolean canStand(double px,double py) {
-        Rectangle2D body=new Rectangle2D.Double(px,py,SIZE,SIZE);
+        Rectangle2D body=new Rectangle2D.Double(px+4,py+10,8,6);
         if(!floor.contains(body)) return false;
-        if(!cleared && px+SIZE>1660) return false;
-        for(Rectangle2D obstacle:obstacles) if(obstacle.intersects(body)) return false;
+        if(!cleared && body.getMaxX()>1660) return false;
+        for(Shape obstacle:obstacles) if(obstacle.intersects(body)) return false;
         return true;
     }
 
     private void updateCamera() {
-        cameraX=Math.max(0,Math.min(x*SCALE+SIZE*SCALE/2-VIEW_W/2.0,2048*SCALE-VIEW_W));
-        cameraY=Math.max(0,Math.min(y*SCALE+SIZE*SCALE/2-VIEW_H/2.0,683*SCALE-VIEW_H));
+        cameraX=Math.max(0,Math.min(x*scaleX+SIZE*scaleX/2-VIEW_W/2.0,background.getWidth()-VIEW_W));
+        cameraY=Math.max(0,Math.min(y*scaleY+SIZE*scaleY/2-VIEW_H/2.0,background.getHeight()-VIEW_H));
     }
 
     public boolean consumeBattleRequest() {
@@ -119,8 +134,8 @@ public class ExplorationRoom {
     }
 
     public boolean interact(int mouseX,int mouseY) {
-        double wx=(mouseX+cameraX)/SCALE;
-        double wy=(mouseY-TOP+cameraY)/SCALE;
+        double wx=(mouseX+Math.round(cameraX))/scaleX;
+        double wy=(mouseY-TOP+Math.round(cameraY))/scaleY;
         if(mouseY<TOP || mouseY>TOP+VIEW_H) return false;
         if(!cleared && bossZone.contains(wx,wy) && Point2D.distance(x,y,wx,wy)<110) return true;
         if(mineZone.contains(wx,wy))
@@ -139,28 +154,40 @@ public class ExplorationRoom {
         g.setClip(0,TOP,VIEW_W,VIEW_H);
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
         g.translate(-Math.round(cameraX),TOP-Math.round(cameraY));
-        g.drawImage(background,0,0,(int)(2048*SCALE),(int)(683*SCALE),null);
+        // Draw source pixels 1:1: no resize filter or palette adjustment.
+        g.drawImage(background,0,0,null);
+        if(showCollision) {
+            Graphics2D debug=(Graphics2D)g.create();
+            debug.scale(scaleX,scaleY);
+            debug.setColor(new Color(30,240,80,65)); debug.fill(floor);
+            debug.setColor(new Color(250,50,40,120));
+            for(Shape o:obstacles) debug.fill(o);
+            debug.setColor(Color.CYAN);
+            debug.draw(new Rectangle2D.Double(x+4,y+10,8,6));
+            debug.dispose();
+        }
         if(!cleared) {
             g.setColor(new Color(115,54,45));
-            int bx=(int)(1660*SCALE);
-            g.fillRect(bx,(int)(353*SCALE),8,(int)(67*SCALE));
+            int bx=(int)(1660*scaleX);
+            g.fillRect(bx,(int)(340*scaleY),8,(int)(100*scaleY));
         }
         // Temporary actor is separate from the approved environment PNG.
+        int actorW=(int)Math.round(SIZE*scaleX), actorH=(int)Math.round(SIZE*scaleY);
         g.setColor(new Color(0,0,0,100));
-        g.fillOval((int)(x*SCALE)-2,(int)((y+SIZE-3)*SCALE),28,10);
+        g.fillOval((int)(x*scaleX)-2,(int)((y+SIZE-3)*scaleY),actorW+4,7);
         g.setColor(new Color(30,30,35));
-        g.fillRect((int)(x*SCALE)-2,(int)(y*SCALE)-2,28,28);
+        g.fillRect((int)(x*scaleX)-1,(int)(y*scaleY)-1,actorW+2,actorH+2);
         g.setColor(new Color(225,225,212));
-        g.fillRect((int)(x*SCALE),(int)(y*SCALE),24,24);
+        g.fillRect((int)(x*scaleX),(int)(y*scaleY),actorW,actorH);
         g.dispose();
         graphics.setColor(new Color(15,20,19));
         graphics.fillRect(0,0,VIEW_W,TOP);
         graphics.fillRect(0,TOP+VIEW_H,VIEW_W,60);
         graphics.setFont(new Font(Font.MONOSPACED,Font.BOLD,18));
         graphics.setColor(Color.WHITE);
-        graphics.drawString("FOREST  |  "+(cleared?"Route to mine: OPEN":"Follow the trail"),20,25);
+        graphics.drawString("FOREST v2.2  |  "+(cleared?"Route to mine: OPEN":"Follow the trail"),20,25);
         graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
-        graphics.drawString(cleared ? "WASD: Move   |   Esc: Pause   |   Follow the trail into the mine entrance" : "WASD: Move   |   Esc: Pause   |   Walk into the clearing to face the guardian",20,47);
+        graphics.drawString(cleared ? "WASD: Move | Esc: Pause | F3: Collision view | Head to the mine" : "WASD: Move | Esc: Pause | F3: Collision view | Follow the trail",20,47);
         graphics.setColor(mineReached?new Color(175,210,175):Color.LIGHT_GRAY);
         graphics.drawString(message,20,612);
     }
