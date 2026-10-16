@@ -22,10 +22,12 @@ public abstract class Boss {
     protected Boss(int startX, int startY, int maxHp, String name) {
         x = startX;
         y = startY;
-        this.maxHp = maxHp;
+        this.maxHp = CombatTuning.TEST_BOSS_HP > 0 ? CombatTuning.TEST_BOSS_HP : maxHp;
         this.name = name;
-        hp = maxHp;
+        hp = this.maxHp;
     }
+
+    public int getMaxHp() { return maxHp; }
 
     public Rectangle getBounds() {
         return new Rectangle(x, y, width, height);

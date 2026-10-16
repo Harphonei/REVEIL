@@ -14,22 +14,27 @@ public class ExplorationRoom {
     private final BufferedImage background;
     private final Area floor = createFloor();
     private final Rectangle2D bossZone = new Rectangle2D.Double(1430, 335, 130, 105);
-    private final Rectangle2D mineZone = new Rectangle2D.Double(1920, 322, 88, 90);
+    private final Rectangle2D mineZone = new Rectangle2D.Double(1940, 312, 70, 90);
     private final Shape[] obstacles = {
-        polygon(new double[][]{{1240,335},{1249,322},{1272,321},{1287,340},{1282,359},{1260,365},{1241,355}}),
-        polygon(new double[][]{{74,198},{87,192},{144,213},{146,229},{135,238},{77,218}}),
-        new Rectangle2D.Double(357, 335, 117, 48),
-        new Rectangle2D.Double(492, 294, 98, 62),
-        new Rectangle2D.Double(589, 334, 43, 29),
-        new Rectangle2D.Double(637, 212, 118, 61),
-        new Rectangle2D.Double(645, 162, 38, 49),
-        new Rectangle2D.Double(741, 421, 64, 32),
-        new Rectangle2D.Double(1294, 219, 126, 63),
-        new Rectangle2D.Double(1513, 460, 127, 62),
-        new Rectangle2D.Double(1544, 270, 65, 35),
-        new Rectangle2D.Double(1293, 428, 65, 39),
-        new Rectangle2D.Double(1470, 193, 116, 82),
-        new Rectangle2D.Double(1897, 300, 41, 45)
+        polygon(new double[][]{{73,208},{90,202},{147,220},{145,240},{128,246},{76,225}}),
+        polygon(new double[][]{{339,358},{359,341},{399,338},{432,351},{454,377},{439,389},{349,386}}),
+        polygon(new double[][]{{482,310},{536,295},{552,312},{549,348},{517,363},{480,348}}),
+        new Rectangle2D.Double(445,302,36,37),
+        polygon(new double[][]{{553,351},{582,339},{596,350},{587,362},{553,369}}),
+        polygon(new double[][]{{603,247},{623,227},{661,216},{690,224},{711,247},{726,264},{697,277},{612,270}}),
+        new Rectangle2D.Double(608,168,40,53),
+        new Rectangle2D.Double(711,425,57,27),
+        polygon(new double[][]{{1221,346},{1230,331},{1252,329},{1267,346},{1266,365},{1244,373},{1222,366}}),
+        polygon(new double[][]{{1290,243},{1321,222},{1365,225},{1395,245},{1416,273},{1371,286},{1290,276}}),
+        new Rectangle2D.Double(1544,283,74,26),
+        polygon(new double[][]{{1523,479},{1545,463},{1588,467},{1614,487},{1640,500},{1630,515},{1530,513}}),
+        new Rectangle2D.Double(1291,439,59,27),
+        polygon(new double[][]{{1481,249},{1512,232},{1518,187},{1533,185},{1550,228},{1593,266},{1545,272}}),
+        new Rectangle2D.Double(1227,299,55,23),
+        new Rectangle2D.Double(1240,435,59,17),
+        new Rectangle2D.Double(1364,472,36,56),
+        new Rectangle2D.Double(1389,521,43,30),
+        new Rectangle2D.Double(1910,305,38,47)
     };
     private double x, y, cameraX, cameraY;
     private boolean cleared, battleRequested, mineReached;
@@ -52,29 +57,25 @@ public class ExplorationRoom {
     }
 
     private static Area createFloor() {
-        Path2D path = new Path2D.Double();
-        double[][] points = {{60,345},{185,340},{265,350},{340,345},{450,355},
-            {585,350},{620,348},{705,348},{750,365},{875,365},{924,383},
-            {1048,383},{1125,362},{1205,340},{1280,320},{1410,300},
-            {1570,310},{1660,340},{1795,340},{1870,326},{1940,315},
-            {2008,315},{2008,399},{1870,415},{1795,427},{1660,439},
-            {1585,470},{1420,483},{1290,453},{1205,447},{1130,447},
-            {1048,439},{924,439},{875,448},{720,449},{690,450},
-            {620,445},{580,450},{450,462},{360,462},{265,458},{180,444},{60,430}};
-        path.moveTo(points[0][0], points[0][1]);
-        for (int i=1;i<points.length;i++) path.lineTo(points[i][0],points[i][1]);
-        path.closePath();
-        Area area = new Area(path);
-        area.add(polygon(new double[][]{{55,260},{65,230},{80,212},{150,224},{180,220},{230,260},
-            {255,310},{300,342},{310,405},{190,430},{60,423}}));
-        area.add(new Area(new Rectangle2D.Double(613,252,91,165)));
-        area.add(polygon(new double[][]{{601,230},{620,188},{700,185},
-            {754,218},{759,268},{710,287},{608,283}}));
-        area.add(polygon(new double[][]{{1230,348},{1267,294},{1320,278},
-            {1360,220},{1450,212},{1490,240},{1585,265},{1620,320},
-            {1655,378},{1640,475},{1580,510},{1420,510},{1300,461}}));
-        area.add(new Area(new Rectangle2D.Double(1940,284,62,91)));
-        return area;
+        try {
+            java.net.URL url=ExplorationRoom.class.getResource("/finalgame/forest-floor.png");
+            if(url==null) throw new IOException("Missing forest-floor.png");
+            BufferedImage mask=ImageIO.read(url);
+            if(mask==null || mask.getWidth()!=2048 || mask.getHeight()!=683)
+                throw new IOException("Invalid forest-floor.png");
+            // Horizontal runs retain every bend in the checked-in walkability mask.
+            Path2D path=new Path2D.Double(Path2D.WIND_NON_ZERO);
+            for(int row=0;row<mask.getHeight();row++) {
+                int col=0;
+                while(col<mask.getWidth()) {
+                    while(col<mask.getWidth() && (mask.getRGB(col,row)&255)<128) col++;
+                    int first=col;
+                    while(col<mask.getWidth() && (mask.getRGB(col,row)&255)>=128) col++;
+                    if(col>first) path.append(new Rectangle2D.Double(first,row,col-first,1),false);
+                }
+            }
+            return new Area(path);
+        } catch(IOException ex) { throw new IllegalStateException("Cannot load forest walkability mask",ex); }
     }
 
     private static Area polygon(double[][] points) {
@@ -127,7 +128,7 @@ public class ExplorationRoom {
     private boolean canStand(double px,double py) {
         Rectangle2D body=new Rectangle2D.Double(px+4,py+10,8,6);
         if(!floor.contains(body)) return false;
-        if(!cleared && body.getMaxX()>1660) return false;
+        if(!cleared && body.getMaxX()>1658) return false;
         for(Shape obstacle:obstacles) if(obstacle.intersects(body)) return false;
         return true;
     }
@@ -179,8 +180,8 @@ public class ExplorationRoom {
         }
         if(!cleared) {
             g.setColor(new Color(115,54,45));
-            int bx=(int)(1660*scaleX);
-            g.fillRect(bx,(int)(340*scaleY),8,(int)(100*scaleY));
+            int bx=(int)(1658*scaleX);
+            g.fillRect(bx,(int)(345*scaleY),8,(int)(85*scaleY));
         }
         int feetX=(int)Math.round((x+SIZE/2)*scaleX);
         int feetY=(int)Math.round((y+SIZE)*scaleY);
@@ -191,7 +192,7 @@ public class ExplorationRoom {
         graphics.fillRect(0,TOP+VIEW_H,VIEW_W,60);
         graphics.setFont(new Font(Font.MONOSPACED,Font.BOLD,18));
         graphics.setColor(Color.WHITE);
-        graphics.drawString("FOREST v3.3  |  "+(cleared?"Route to mine: OPEN":"Follow the trail"),20,25);
+        graphics.drawString("FOREST v3.8  |  "+(cleared?"Route to mine: OPEN":"Follow the trail"),20,25);
         graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
         graphics.drawString(cleared ? "WASD: Walk | Shift: Run | Esc: Pause | F3: Collision view" : "WASD: Walk | Shift: Run | Esc: Pause | F3: Collision view",20,47);
         graphics.setColor(mineReached?new Color(175,210,175):Color.LIGHT_GRAY);

@@ -37,7 +37,7 @@ public class MaskedBoss extends Boss {
         }
         // Stop at half HP so a strong hit cannot skip the phase-two opening.
         if (!phaseTwo) {
-            damage = Math.min(damage, Math.max(0, getHp() - MAX_HP / 2));
+            damage = Math.min(damage, Math.max(0, getHp() - getMaxHp() / 2));
         }
         super.takeDamage(damage);
     }
@@ -61,7 +61,7 @@ public class MaskedBoss extends Boss {
             return;
         }
         arena = new Rectangle(battleArea);
-        if (!phaseTwo && getHp() <= MAX_HP / 2) {
+        if (!phaseTwo && getHp() <= getMaxHp() / 2) {
             phaseTwo = true;
             transitionTime = 1.1;
             beams.clear();
