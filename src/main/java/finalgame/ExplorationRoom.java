@@ -13,7 +13,7 @@ public class ExplorationRoom {
     private static final double SPEED = 90, SIZE = 16;
     private final BufferedImage background;
     private final Area floor = createFloor();
-    private final Rectangle2D bossZone = new Rectangle2D.Double(1430, 335, 130, 105);
+    private final Rectangle2D bossZone = new Rectangle2D.Double(1435, 390, 60, 45);
     private final Rectangle2D mineZone = new Rectangle2D.Double(1940, 312, 70, 90);
     private final Shape[] obstacles = {
         polygon(new double[][]{{73,208},{90,202},{147,220},{145,240},{128,246},{76,225}}),
@@ -183,17 +183,24 @@ public class ExplorationRoom {
             int bx=(int)(1658*scaleX);
             g.fillRect(bx,(int)(345*scaleY),8,(int)(85*scaleY));
         }
-        if(!cleared) BossArtwork.drawMap(g,(int)Math.round(1485*scaleX),(int)Math.round(350*scaleY));
         int feetX=(int)Math.round((x+SIZE/2)*scaleX);
         int feetY=(int)Math.round((y+SIZE)*scaleY);
-        animation.draw(g,feetX,feetY,36,54);
+        int bossFeetX=(int)Math.round(1465*scaleX);
+        int bossFeetY=(int)Math.round(425*scaleY);
+        if(!cleared && feetY<bossFeetY) {
+            animation.draw(g,feetX,feetY,36,54);
+            BossArtwork.drawMap(g,bossFeetX,bossFeetY);
+        } else {
+            if(!cleared) BossArtwork.drawMap(g,bossFeetX,bossFeetY);
+            animation.draw(g,feetX,feetY,36,54);
+        }
         g.dispose();
         graphics.setColor(new Color(15,20,19));
         graphics.fillRect(0,0,VIEW_W,TOP);
         graphics.fillRect(0,TOP+VIEW_H,VIEW_W,60);
         graphics.setFont(new Font(Font.MONOSPACED,Font.BOLD,18));
         graphics.setColor(Color.WHITE);
-        graphics.drawString("FOREST v3.9  |  "+(cleared?"Route to mine: OPEN":"Follow the trail"),20,25);
+        graphics.drawString("FOREST v3.11  |  "+(cleared?"Route to mine: OPEN":"Follow the trail"),20,25);
         graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
         graphics.drawString(cleared ? "WASD: Walk | Shift: Run | Esc: Pause | F3: Collision view" : "WASD: Walk | Shift: Run | Esc: Pause | F3: Collision view",20,47);
         graphics.setColor(mineReached?new Color(175,210,175):Color.LIGHT_GRAY);

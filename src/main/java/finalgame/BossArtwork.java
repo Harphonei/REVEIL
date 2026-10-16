@@ -20,7 +20,14 @@ public final class BossArtwork {
         } catch(IOException e) { throw new IllegalStateException("Cannot load boss artwork",e); }
     }
     public static void drawMap(Graphics g,int footX,int footY) {
-        draw(g,MAP,footX-30,footY-100,60,100);
+        g.setColor(new Color(0,0,0,65));
+        // Anchor visible soles, not transparent canvas padding.
+        int height=90;
+        int width=(int)Math.round(MAP.getWidth()*height/(double)MAP.getHeight());
+        int left=footX-width/2;
+        g.fillOval(left+width/5-5,footY-4,16,5);
+        g.fillOval(left+width*4/5-5,footY-3,17,5);
+        draw(g,MAP,left,footY-height+1,width,height);
     }
     public static void drawBattle(Graphics g,Rectangle bounds) {
         draw(g,BATTLE,bounds.x,bounds.y,bounds.width,bounds.height);
