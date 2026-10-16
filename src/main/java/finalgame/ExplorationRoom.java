@@ -35,6 +35,7 @@ public class ExplorationRoom {
     private boolean cleared, battleRequested, mineReached;
     private String message;
     private boolean showCollision;
+    private final SpriteAnimator animation = new SpriteAnimator();
 
     public ExplorationRoom() {
         try {
@@ -84,17 +85,25 @@ public class ExplorationRoom {
 
     public void toggleCollisionView() { showCollision=!showCollision; }
 
+    public void stopMovement() { animation.stop(); }
+
     public void reset() {
+        animation.reset(SpriteAnimator.DOWN);
         x=135; y=312; cleared=false; battleRequested=false; mineReached=false;
         message="You wake in the forest. Follow the trail to the right.";
         updateCamera();
     }
 
     public void update(int dx, int dy, double seconds) {
+        update(dx,dy,seconds,false);
+    }
+
+    public void update(int dx, int dy, double seconds, boolean running) {
+        double oldX=x,oldY=y;
         // Small axis-separated steps prevent tunnelling and allow sliding along walls.
         double length=Math.hypot(dx,dy);
         if (length>0) {
-            double distance=SPEED*Math.max(0,Math.min(seconds,0.1));
+            double distance=SPEED*(running?1.65:1.0)*Math.max(0,Math.min(seconds,0.1));
             int steps=Math.max(1,(int)Math.ceil(distance/2));
             for(int i=0;i<steps;i++) {
                 double nx=x+dx/length*distance/steps;
@@ -103,6 +112,7 @@ public class ExplorationRoom {
                 if(canStand(x,ny)) y=ny;
             }
         }
+        animation.update(x-oldX,y-oldY,seconds,running);
         if(!cleared && !battleRequested && bossZone.intersects(x,y,SIZE,SIZE))
             battleRequested=true;
         if(mineZone.intersects(x,y,SIZE,SIZE)) {
@@ -144,6 +154,7 @@ public class ExplorationRoom {
     }
 
     public void returnFromBattle() {
+        animation.reset(SpriteAnimator.RIGHT);
         cleared=true; battleRequested=false; x=1510; y=390;
         message="Forest cleared! The mine entrance on the right is now open.";
         updateCamera();
@@ -171,23 +182,20 @@ public class ExplorationRoom {
             int bx=(int)(1660*scaleX);
             g.fillRect(bx,(int)(340*scaleY),8,(int)(100*scaleY));
         }
-        // Temporary actor is separate from the approved environment PNG.
-        int actorW=(int)Math.round(SIZE*scaleX), actorH=(int)Math.round(SIZE*scaleY);
-        g.setColor(new Color(0,0,0,100));
-        g.fillOval((int)(x*scaleX)-2,(int)((y+SIZE-3)*scaleY),actorW+4,7);
-        g.setColor(new Color(30,30,35));
-        g.fillRect((int)(x*scaleX)-1,(int)(y*scaleY)-1,actorW+2,actorH+2);
-        g.setColor(new Color(225,225,212));
-        g.fillRect((int)(x*scaleX),(int)(y*scaleY),actorW,actorH);
+        int feetX=(int)Math.round((x+SIZE/2)*scaleX);
+        int feetY=(int)Math.round((y+SIZE)*scaleY);
+        g.setColor(new Color(0,0,0,85));
+        g.fillOval(feetX-8,feetY-4,16,6);
+        animation.draw(g,feetX,feetY,24,36);
         g.dispose();
         graphics.setColor(new Color(15,20,19));
         graphics.fillRect(0,0,VIEW_W,TOP);
         graphics.fillRect(0,TOP+VIEW_H,VIEW_W,60);
         graphics.setFont(new Font(Font.MONOSPACED,Font.BOLD,18));
         graphics.setColor(Color.WHITE);
-        graphics.drawString("FOREST v2.2  |  "+(cleared?"Route to mine: OPEN":"Follow the trail"),20,25);
+        graphics.drawString("FOREST v3  |  "+(cleared?"Route to mine: OPEN":"Follow the trail"),20,25);
         graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
-        graphics.drawString(cleared ? "WASD: Move | Esc: Pause | F3: Collision view | Head to the mine" : "WASD: Move | Esc: Pause | F3: Collision view | Follow the trail",20,47);
+        graphics.drawString(cleared ? "WASD: Walk | Shift: Run | Esc: Pause | F3: Collision view" : "WASD: Walk | Shift: Run | Esc: Pause | F3: Collision view",20,47);
         graphics.setColor(mineReached?new Color(175,210,175):Color.LIGHT_GRAY);
         graphics.drawString(message,20,612);
     }

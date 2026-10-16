@@ -38,6 +38,7 @@ public class GamePanel extends JPanel {
 
     private final ArrayList<Projectile> projectiles = new ArrayList<>();
     private final ArrayList<EnemyProjectile> enemyProjectiles = new ArrayList<>();
+    private boolean running = false;
     private boolean shooting = false;
     private boolean eHeld = false;
     private boolean qHeld = false;
@@ -50,6 +51,10 @@ public class GamePanel extends JPanel {
         player = new Player(468, 500);
         boss = new MaskedBoss(430, 210);
 
+        bindScreenAction("pressed SHIFT", "run-press", () -> {
+            if (state == GameState.EXPLORATION) running = true;
+        });
+        bindScreenAction("released SHIFT", "run-release", () -> running = false);
         bindKey("W", 0);
         bindKey("A", 1);
         bindKey("S", 2);
@@ -277,7 +282,7 @@ public class GamePanel extends JPanel {
         if (state == GameState.EXPLORATION) {
             int dx = (pressed[3] ? 1 : 0) - (pressed[1] ? 1 : 0);
             int dy = (pressed[2] ? 1 : 0) - (pressed[0] ? 1 : 0);
-            exploration.update(dx, dy, seconds);
+            exploration.update(dx, dy, seconds, running);
             if (exploration.consumeBattleRequest()) startForestBattle();
             repaint();
             return;
@@ -396,6 +401,8 @@ public class GamePanel extends JPanel {
     }
 
     public void clearInput() {
+        running = false;
+        exploration.stopMovement();
         for (int i = 0; i < pressed.length; i++) {
             pressed[i] = false;
         }

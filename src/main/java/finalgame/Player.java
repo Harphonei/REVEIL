@@ -5,6 +5,7 @@ import java.awt.Graphics;
 import java.awt.Rectangle;
 
 public class Player {
+    private final SpriteAnimator animation = new SpriteAnimator();
     private double x;
     private double y;
     private final int size = 24;
@@ -30,12 +31,14 @@ public class Player {
     private double skillQChargeTime = 0.0;
 
     public Player(double startX, double startY) {
+        animation.reset(SpriteAnimator.UP);
         x = startX;
         y = startY;
     }
 
     public void move(int directionX, int directionY, double seconds,
             Rectangle movementArea) {
+        double beforeX=x,beforeY=y;
         double distance = Math.hypot(directionX, directionY);
         double currentSpeed = speed;
         if (isUltimateActive()) {
@@ -51,6 +54,7 @@ public class Player {
         double maxY = movementArea.y + movementArea.height - size;
         x = Math.max(minX, Math.min(x, maxX));
         y = Math.max(minY, Math.min(y, maxY));
+        animation.update(x-beforeX,y-beforeY,seconds,false);
     }
 
     public void update(double seconds) {
@@ -181,6 +185,7 @@ public class Player {
     }
 
     public void reset(double startX, double startY) {
+        animation.reset(SpriteAnimator.UP);
         x = startX;
         y = startY;
         hp = maxHp;
@@ -217,7 +222,10 @@ public class Player {
             g.setColor(Color.YELLOW);
             g.drawRect((int) x - 3, (int) y - 3, size + 6, size + 6);
         }
-        g.setColor(invincibleTime > 0.0 ? Color.YELLOW : Color.WHITE);
-        g.fillRect((int) x, (int) y, size, size);
+        animation.draw(g,(int)(x+size/2.0),(int)(y+size),24,36);
+        if(invincibleTime>0.0) {
+            g.setColor(Color.YELLOW);
+            g.drawRect((int)x,(int)y,size,size);
+        }
     }
 }
