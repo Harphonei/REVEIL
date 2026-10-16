@@ -185,15 +185,15 @@ public class ExplorationRoom {
         int feetX=(int)Math.round((x+SIZE/2)*scaleX);
         int feetY=(int)Math.round((y+SIZE)*scaleY);
         g.setColor(new Color(0,0,0,85));
-        g.fillOval(feetX-8,feetY-4,16,6);
-        animation.draw(g,feetX,feetY,24,36);
+        g.fillOval(feetX-11,feetY-4,22,7);
+        animation.draw(g,feetX,feetY,48,72);
         g.dispose();
         graphics.setColor(new Color(15,20,19));
         graphics.fillRect(0,0,VIEW_W,TOP);
         graphics.fillRect(0,TOP+VIEW_H,VIEW_W,60);
         graphics.setFont(new Font(Font.MONOSPACED,Font.BOLD,18));
         graphics.setColor(Color.WHITE);
-        graphics.drawString("FOREST v3  |  "+(cleared?"Route to mine: OPEN":"Follow the trail"),20,25);
+        graphics.drawString("FOREST v3.1  |  "+(cleared?"Route to mine: OPEN":"Follow the trail"),20,25);
         graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
         graphics.drawString(cleared ? "WASD: Walk | Shift: Run | Esc: Pause | F3: Collision view" : "WASD: Walk | Shift: Run | Esc: Pause | F3: Collision view",20,47);
         graphics.setColor(mineReached?new Color(175,210,175):Color.LIGHT_GRAY);

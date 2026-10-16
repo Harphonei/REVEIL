@@ -153,6 +153,8 @@ public class GamePanel extends JPanel {
     private void bindScreenAction(String key, String name, Runnable command) {
         getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
                 KeyStroke.getKeyStroke(key), name);
+        getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+                KeyStroke.getKeyStroke("shift " + key), name);
         getActionMap().put(name, new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent event) {
@@ -229,6 +231,10 @@ public class GamePanel extends JPanel {
                 KeyStroke.getKeyStroke("pressed " + key), pressAction);
         getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
                 KeyStroke.getKeyStroke("released " + key), releaseAction);
+        getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+                KeyStroke.getKeyStroke("shift pressed " + key), pressAction);
+        getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+                KeyStroke.getKeyStroke("shift released " + key), releaseAction);
         getActionMap().put(pressAction, new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent event) {

@@ -222,7 +222,7 @@ public class Player {
             g.setColor(Color.YELLOW);
             g.drawRect((int) x - 3, (int) y - 3, size + 6, size + 6);
         }
-        animation.draw(g,(int)(x+size/2.0),(int)(y+size),24,36);
+        animation.draw(g,(int)(x+size/2.0),(int)(y+size),32,48);
         if(invincibleTime>0.0) {
             g.setColor(Color.YELLOW);
             g.drawRect((int)x,(int)y,size,size);
