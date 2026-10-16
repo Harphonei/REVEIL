@@ -180,7 +180,7 @@ public class GamePanel extends JPanel {
         if (state == GameState.MENU) startNewGame();
         else if (state == GameState.PAUSED) togglePause();
         else if (state == GameState.BATTLE && !boss.isAlive() && player.isAlive()) {
-            exploration.returnFromBattle();
+            if (selectedBoss == 1) exploration.returnFromBattle();
             projectiles.clear();
             enemyProjectiles.clear();
             laser.reset();
@@ -195,10 +195,16 @@ public class GamePanel extends JPanel {
             if (resumeButton.contains(x, y)) togglePause();
             else if (menuButton.contains(x, y)) changeState(GameState.MENU);
         } else if (state == GameState.EXPLORATION && exploration.interact(x, y)) {
-            restartBattle();
-            changeState(GameState.BATTLE);
+            startForestBattle();
         }
         repaint();
+    }
+
+    private void startForestBattle() {
+        selectedBoss = 1;
+        boss = new ForestBoss(430, 210);
+        restartBattle();
+        changeState(GameState.BATTLE);
     }
 
     public void onFocusLost() {
@@ -269,6 +275,7 @@ public class GamePanel extends JPanel {
             int dx = (pressed[3] ? 1 : 0) - (pressed[1] ? 1 : 0);
             int dy = (pressed[2] ? 1 : 0) - (pressed[0] ? 1 : 0);
             exploration.update(dx, dy, seconds);
+            if (exploration.consumeBattleRequest()) startForestBattle();
             repaint();
             return;
         }
@@ -429,7 +436,7 @@ public class GamePanel extends JPanel {
         g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 18));
         g.setColor(Color.LIGHT_GRAY);
         g.drawString("Click NEW GAME or press Enter", 320, 395);
-        g.drawString("Prototype: exploration + battle + pause", 265, 500);
+        g.drawString("Forest map + guardian encounter", 265, 500);
         g.drawString("No saved progress yet", 365, 535);
     }
 
@@ -533,7 +540,7 @@ public class GamePanel extends JPanel {
             g.drawString("Press R to retry",
                     battleArea.x + 95, battleArea.y + 165);
             if (player.isAlive()) {
-                g.drawString("Enter: Return to room", 365, 495);
+                g.drawString("Enter: Return to forest", 365, 495);
             }
         }
     }
