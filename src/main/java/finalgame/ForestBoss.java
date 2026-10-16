@@ -1,6 +1,8 @@
 package finalgame;
 
 import java.awt.Graphics;
+import java.awt.Color;
+import java.awt.Font;
 import java.awt.Rectangle;
 import java.util.ArrayList;
 
@@ -23,6 +25,29 @@ public class ForestBoss extends Boss {
     public ForestBoss(int startX, int startY) {
         super(startX, startY, 1200, "FRENZIED FOREST BEAST");
         selectAttack();
+    }
+
+    @Override
+    public Rectangle getBounds() {
+        Rectangle base=super.getBounds();
+        return new Rectangle(base.x+base.width/2-56,base.y+base.height-162,112,168);
+    }
+
+    @Override
+    public void draw(Graphics graphics) {
+        if(!isAlive()) return;
+        Graphics g=graphics.create();
+        Rectangle art=getBounds();
+        g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,16));
+        g.setColor(Color.WHITE);
+        String title="FRENZIED FOREST BEAST";
+        g.drawString(title,art.x+art.width/2-g.getFontMetrics().stringWidth(title)/2,50);
+        String hp="HP: "+getHp()+"/"+getMaxHp();
+        g.drawString(hp,art.x+art.width/2-g.getFontMetrics().stringWidth(hp)/2,75);
+        g.setColor(Color.DARK_GRAY);g.fillRect(art.x,85,art.width,7);
+        g.setColor(Color.GREEN);g.fillRect(art.x,85,art.width*getHp()/getMaxHp(),7);
+        BossArtwork.drawBattle(g,art);
+        g.dispose();
     }
 
     @Override

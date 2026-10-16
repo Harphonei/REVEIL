@@ -475,7 +475,8 @@ public class GamePanel extends JPanel {
         g.setFont(new Font(Font.MONOSPACED, Font.BOLD, 48));
         g.drawString("FINAL", 60, 100);
         g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 18));
-        g.drawString("WASD: Move | Right mouse: Fire | Esc: Pause", 60, 130);
+        g.drawString("WASD: Move | Esc: Pause", 60, 130);
+        g.drawString("Right mouse: Fire", 60, 155);
         g.setColor(Color.LIGHT_GRAY);
         g.drawString("TEST: 1 Forest / 2 Scientist / 3 Moth / 4 Knight / 5 Final", 60, 625);
         g.setColor(Color.WHITE);

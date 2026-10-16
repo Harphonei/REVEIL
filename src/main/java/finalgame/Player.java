@@ -199,6 +199,13 @@ public class Player {
         skillQChargeTime = 0.0;
     }
 
+    private static final String[] HEART = {
+        "001110011100", "011111111110", "111111111111",
+        "111111111111", "111111111111", "011111111110",
+        "001111111100", "000111111000", "000011110000",
+        "000001100000", "000001100000", "000000000000"
+    };
+
     public void draw(Graphics g) {
         if (isAlive() && skillQChargeTime > 0.0) {
             // Placeholder activation aura; replace with sprite animation later.
@@ -222,10 +229,9 @@ public class Player {
             g.setColor(Color.YELLOW);
             g.drawRect((int) x - 3, (int) y - 3, size + 6, size + 6);
         }
-        animation.draw(g,(int)(x+size/2.0),(int)(y+size),32,48);
-        if(invincibleTime>0.0) {
-            g.setColor(Color.YELLOW);
-            g.drawRect((int)x,(int)y,size,size);
-        }
+        g.setColor(invincibleTime>0.0 ? new Color(255,120,120) : new Color(235,35,50));
+        for(int row=0;row<HEART.length;row++)
+            for(int col=0;col<HEART[row].length();col++)
+                if(HEART[row].charAt(col)=='1') g.fillRect((int)x+col*2,(int)y+row*2,2,2);
     }
 }

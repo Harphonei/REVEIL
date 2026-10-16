@@ -183,6 +183,7 @@ public class ExplorationRoom {
             int bx=(int)(1658*scaleX);
             g.fillRect(bx,(int)(345*scaleY),8,(int)(85*scaleY));
         }
+        if(!cleared) BossArtwork.drawMap(g,(int)Math.round(1485*scaleX),(int)Math.round(350*scaleY));
         int feetX=(int)Math.round((x+SIZE/2)*scaleX);
         int feetY=(int)Math.round((y+SIZE)*scaleY);
         animation.draw(g,feetX,feetY,36,54);
@@ -192,7 +193,7 @@ public class ExplorationRoom {
         graphics.fillRect(0,TOP+VIEW_H,VIEW_W,60);
         graphics.setFont(new Font(Font.MONOSPACED,Font.BOLD,18));
         graphics.setColor(Color.WHITE);
-        graphics.drawString("FOREST v3.8  |  "+(cleared?"Route to mine: OPEN":"Follow the trail"),20,25);
+        graphics.drawString("FOREST v3.9  |  "+(cleared?"Route to mine: OPEN":"Follow the trail"),20,25);
         graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
         graphics.drawString(cleared ? "WASD: Walk | Shift: Run | Esc: Pause | F3: Collision view" : "WASD: Walk | Shift: Run | Esc: Pause | F3: Collision view",20,47);
         graphics.setColor(mineReached?new Color(175,210,175):Color.LIGHT_GRAY);
