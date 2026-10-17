@@ -11,19 +11,20 @@ public class KnightBoss extends Boss {
     @Override
     public Rectangle getBounds() {
         Rectangle base=super.getBounds();
-        return new Rectangle(base.x+base.width/2-61,base.y+base.height-162,122,168);
+        // The sword extends left: centre the stance (68% across the art), not the canvas.
+        return new Rectangle(base.x+base.width/2-91,100,134,184);
     }
     @Override
     public void draw(Graphics graphics) {
         if(!isAlive())return;
-        Graphics g=graphics.create();Rectangle art=getBounds();
+        Graphics g=graphics.create();Rectangle art=getBounds();int centre=art.x+91;
         g.setFont(new java.awt.Font(java.awt.Font.MONOSPACED,java.awt.Font.PLAIN,16));g.setColor(Color.WHITE);
         String title="THE LAST GUARDIAN";
-        g.drawString(title,art.x+art.width/2-g.getFontMetrics().stringWidth(title)/2,50);
+        g.drawString(title,centre-g.getFontMetrics().stringWidth(title)/2,50);
         String hp="HP: "+getHp()+"/"+getMaxHp();
-        g.drawString(hp,art.x+art.width/2-g.getFontMetrics().stringWidth(hp)/2,75);
-        g.setColor(Color.DARK_GRAY);g.fillRect(art.x,85,art.width,7);
-        g.setColor(Color.GREEN);g.fillRect(art.x,85,art.width*getHp()/getMaxHp(),7);
+        g.drawString(hp,centre-g.getFontMetrics().stringWidth(hp)/2,75);
+        g.setColor(Color.DARK_GRAY);g.fillRect(centre-art.width/2,85,art.width,7);
+        g.setColor(Color.GREEN);g.fillRect(centre-art.width/2,85,art.width*getHp()/getMaxHp(),7);
         BossArtwork.drawKnightBattle(g,art);g.dispose();
     }
 

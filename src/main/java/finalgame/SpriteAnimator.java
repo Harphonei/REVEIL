@@ -14,7 +14,7 @@ public final class SpriteAnimator {
     public enum Lighting {
         NEUTRAL(1,1,1,0), FOREST(.82,.85,.80,.12),
         MINE(.63,.69,.76,.20), BUTTERFLY(.57,.63,.70,.24),
-        TEMPLE(.56,.62,.72,.25);
+        TEMPLE(.56,.62,.72,.25), TEMPLE_STONE(.76,.80,.86,.65);
         private final BufferedImage sheet;
         private final double red,green,blue,desaturation;
         Lighting(double red,double green,double blue,double desaturation) {
