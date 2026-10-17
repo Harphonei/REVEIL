@@ -108,13 +108,15 @@ public final class ButterflyRoom {
         animation.update(x-ox,y-oy,seconds,running);
         if(!cleared && bossZone.intersects(x,y,16,16))battleRequested=true;
         if(x<12)backRequested=true;
-        if(cleared && x>1480 && y<330)exitReached=true;
+        if(cleared && x>1508 && y<330)exitReached=true;
         updateCamera();
     }
     private void updateCamera() {
         cameraX=Math.max(0,Math.min(x+8-960/(2*ZOOM),background.getWidth()-960/ZOOM));
         cameraY=Math.max(0,Math.min(y+8-520/(2*ZOOM),background.getHeight()-520/ZOOM));
     }
+    public boolean consumeExitRequest(){boolean b=exitReached;exitReached=false;return b;}
+    public void returnFromTemple(){x=1450;y=261;exitReached=false;battleRequested=false;animation.reset(SpriteAnimator.LEFT);updateCamera();}
     public boolean consumeBattleRequest(){boolean b=battleRequested;battleRequested=false;return b;}
     public boolean consumeBackRequest(){boolean b=backRequested;backRequested=false;return b;}
     public boolean interact(int mx,int my) {
@@ -151,11 +153,11 @@ public final class ButterflyRoom {
         g.dispose();
         graphics.setColor(new Color(15,20,19));graphics.fillRect(0,0,960,60);graphics.fillRect(0,580,960,60);
         graphics.setColor(Color.WHITE);graphics.setFont(new Font(Font.MONOSPACED,Font.BOLD,18));
-        graphics.drawString("BUTTERFLY FOREST v3.25  |  "+(cleared?"Roots released":"Follow the lower trail"),20,25);
+        graphics.drawString("BUTTERFLY FOREST v3.26  |  "+(cleared?"Roots released":"Follow the lower trail"),20,25);
         graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
         graphics.drawString("WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip map",20,47);
         graphics.setColor(Color.LIGHT_GRAY);
-        graphics.drawString(exitReached?"Temple entrance reached. Map 4 is coming soon.":
+        graphics.drawString(exitReached?"Entering the ruined temple...":
             cleared?"The roots have withdrawn. Return to the upper path and head east.":
             "The upper path is sealed by roots. Follow the cocoons below.",20,612);
     }
