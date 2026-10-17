@@ -11,6 +11,8 @@ public final class BossArtwork {
     private static final BufferedImage BATTLE=load("forest-boss-battle.png");
     private static final BufferedImage SCIENTIST_MAP=load("scientist-map.png");
     private static final BufferedImage SCIENTIST_BATTLE=load("scientist-battle.png");
+    private static final BufferedImage MOTH_MAP=load("moth-map.png");
+    private static final BufferedImage MOTH_BATTLE=load("moth-battle.png");
     private BossArtwork() {}
     private static BufferedImage load(String name) {
         try {
@@ -41,6 +43,14 @@ public final class BossArtwork {
     }
     public static void drawScientistBattle(Graphics g,Rectangle bounds) {
         draw(g,SCIENTIST_BATTLE,bounds.x,bounds.y,bounds.width,bounds.height);
+    }
+    public static void drawMothMap(Graphics g,int anchorX,int anchorY) {
+        int height=100;
+        int width=(int)Math.round(MOTH_MAP.getWidth()*height/(double)MOTH_MAP.getHeight());
+        draw(g,MOTH_MAP,anchorX-width/2,anchorY-height,width,height);
+    }
+    public static void drawMothBattle(Graphics g,Rectangle bounds) {
+        draw(g,MOTH_BATTLE,bounds.x,bounds.y,bounds.width,bounds.height);
     }
     private static void draw(Graphics graphics,BufferedImage image,int x,int y,int w,int h) {
         Graphics2D g=(Graphics2D)graphics.create();

@@ -15,7 +15,7 @@ public class ExplorationRoom {
     private final BufferedImage background;
     private final Area floor = createFloor();
     private final Rectangle2D bossZone = new Rectangle2D.Double(1435, 390, 60, 45);
-    private final Rectangle2D mineZone = new Rectangle2D.Double(1960, 328, 38, 12);
+    private final Rectangle2D mineZone = new Rectangle2D.Double(1960, 310, 38, 12);
     private final Shape[] obstacles = {
         polygon(new double[][]{{73,208},{90,202},{147,220},{145,240},{128,246},{76,225}}),
         polygon(new double[][]{{339,358},{359,341},{399,338},{432,351},{454,377},{439,389},{349,386}}),
@@ -170,6 +170,14 @@ public class ExplorationRoom {
         updateCamera();
     }
 
+    private void drawPlayer(Graphics2D graphics,int feetX,int feetY) {
+        Graphics2D actor=(Graphics2D)graphics.create();
+        if(x+SIZE/2>=1960 && x+SIZE/2<1998 && y+SIZE<350) {
+            actor.clip(new Rectangle2D.Double(1955*scaleX,290*scaleY,45*scaleX,90*scaleY));
+        }
+        animation.draw(actor,feetX,feetY,36,54);actor.dispose();
+    }
+
     public void draw(Graphics graphics) {
         Graphics2D g=(Graphics2D)graphics.create();
         g.setClip(0,TOP,VIEW_W,VIEW_H);
@@ -199,11 +207,11 @@ public class ExplorationRoom {
         int bossFeetX=(int)Math.round(1465*scaleX);
         int bossFeetY=(int)Math.round(425*scaleY);
         if(!cleared && feetY<bossFeetY) {
-            animation.draw(g,feetX,feetY,36,54);
+            drawPlayer(g,feetX,feetY);
             BossArtwork.drawMap(g,bossFeetX,bossFeetY);
         } else {
             if(!cleared) BossArtwork.drawMap(g,bossFeetX,bossFeetY);
-            animation.draw(g,feetX,feetY,36,54);
+            drawPlayer(g,feetX,feetY);
         }
         g.dispose();
         graphics.setColor(new Color(15,20,19));
@@ -211,7 +219,7 @@ public class ExplorationRoom {
         graphics.fillRect(0,TOP+VIEW_H,VIEW_W,60);
         graphics.setFont(new Font(Font.MONOSPACED,Font.BOLD,18));
         graphics.setColor(Color.WHITE);
-        graphics.drawString("FOREST v3.20  |  "+(cleared?"Route to mine: OPEN":"Follow the trail"),20,25);
+        graphics.drawString("FOREST v3.23  |  "+(cleared?"Route to mine: OPEN":"Follow the trail"),20,25);
         graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
         graphics.drawString(cleared ? "WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip map" : "WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip map",20,47);
         graphics.setColor(mineReached?new Color(175,210,175):Color.LIGHT_GRAY);

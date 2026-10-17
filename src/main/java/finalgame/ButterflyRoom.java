@@ -140,11 +140,18 @@ public final class ButterflyRoom {
             g.setColor(Color.CYAN);g.draw(new Rectangle2D.Double(x+4,y+10,8,6));
             g.setColor(Color.ORANGE);if(!cleared)g.draw(bossZone);
         }
-        animation.draw(g,(int)Math.round(x+8),(int)Math.round(y+16),36,54);
+        int feetX=(int)Math.round(x+8),feetY=(int)Math.round(y+16);
+        if(!cleared && feetY<800) {
+            animation.draw(g,feetX,feetY,36,54);
+            BossArtwork.drawMothMap(g,1200,800);
+        } else {
+            if(!cleared)BossArtwork.drawMothMap(g,1200,800);
+            animation.draw(g,feetX,feetY,36,54);
+        }
         g.dispose();
         graphics.setColor(new Color(15,20,19));graphics.fillRect(0,0,960,60);graphics.fillRect(0,580,960,60);
         graphics.setColor(Color.WHITE);graphics.setFont(new Font(Font.MONOSPACED,Font.BOLD,18));
-        graphics.drawString("BUTTERFLY FOREST v3.20  |  "+(cleared?"Roots released":"Follow the lower trail"),20,25);
+        graphics.drawString("BUTTERFLY FOREST v3.23  |  "+(cleared?"Roots released":"Follow the lower trail"),20,25);
         graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
         graphics.drawString("WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip map",20,47);
         graphics.setColor(Color.LIGHT_GRAY);
