@@ -15,7 +15,7 @@ public final class MineRoom {
     private final Rectangle bossZone=new Rectangle(850,205,120,90);
     private final Rectangle exitDoor=new Rectangle(1494,478,32,16);
     private final Rectangle gate=new Rectangle(1005,357,119,22);
-    private final SpriteAnimator animation=new SpriteAnimator();
+    private final SpriteAnimator animation=new SpriteAnimator(SpriteAnimator.Lighting.MINE);
     private double x,y,cameraX,cameraY;
     private boolean cleared,battleRequested,backRequested,exitReached,showCollision;
 
@@ -149,7 +149,7 @@ public final class MineRoom {
         g.dispose();
         graphics.setColor(new Color(15,20,19));graphics.fillRect(0,0,960,60);graphics.fillRect(0,580,960,60);
         graphics.setColor(Color.WHITE);graphics.setFont(new Font(Font.MONOSPACED,Font.BOLD,18));
-        graphics.drawString("MINE v3.28  |  "+(cleared?"Laboratory cleared":"Follow the rails"),20,25);
+        graphics.drawString("MINE v3.29  |  "+(cleared?"Laboratory cleared":"Follow the rails"),20,25);
         graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
         graphics.drawString("WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip map",20,47);
         graphics.setColor(Color.LIGHT_GRAY);

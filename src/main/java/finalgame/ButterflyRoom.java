@@ -15,7 +15,7 @@ public final class ButterflyRoom {
     private final int[] blockedPrefix=createBlockedPrefix();
     private final Rectangle bossZone=new Rectangle(1140,710,130,110);
     private final Rectangle gate=new Rectangle(1096,180,50,132);
-    private final SpriteAnimator animation=new SpriteAnimator();
+    private final SpriteAnimator animation=new SpriteAnimator(SpriteAnimator.Lighting.BUTTERFLY);
     private double x,y,cameraX,cameraY;
     private boolean cleared,battleRequested,backRequested,exitReached,showCollision;
 
@@ -153,7 +153,7 @@ public final class ButterflyRoom {
         g.dispose();
         graphics.setColor(new Color(15,20,19));graphics.fillRect(0,0,960,60);graphics.fillRect(0,580,960,60);
         graphics.setColor(Color.WHITE);graphics.setFont(new Font(Font.MONOSPACED,Font.BOLD,18));
-        graphics.drawString("BUTTERFLY FOREST v3.28  |  "+(cleared?"Roots released":"Follow the lower trail"),20,25);
+        graphics.drawString("BUTTERFLY FOREST v3.29  |  "+(cleared?"Roots released":"Follow the lower trail"),20,25);
         graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
         graphics.drawString("WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip map",20,47);
         graphics.setColor(Color.LIGHT_GRAY);

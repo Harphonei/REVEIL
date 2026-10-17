@@ -14,7 +14,7 @@ public final class TempleRoom {
     private final BufferedImage objectsDebug=loadDebugMask("temple-objects.png",new Color(250,50,40,120));
     private final int[] blockedPrefix=createBlockedPrefix();
     private final Rectangle exitDoor=new Rectangle(1110,120,84,20);
-    private final SpriteAnimator animation=new SpriteAnimator();
+    private final SpriteAnimator animation=new SpriteAnimator(SpriteAnimator.Lighting.TEMPLE);
     private double x,y,cameraX,cameraY;
     private boolean backRequested,exitReached,showCollision,cleared,battleRequested;
     private final Rectangle firstStep=new Rectangle(1077,346,152,12);
@@ -125,7 +125,7 @@ public final class TempleRoom {
         g.dispose();
         graphics.setColor(new Color(15,20,19));graphics.fillRect(0,0,960,60);graphics.fillRect(0,580,960,60);
         graphics.setColor(Color.WHITE);graphics.setFont(new Font(Font.MONOSPACED,Font.BOLD,18));
-        graphics.drawString("RUINED TEMPLE v3.28  |  The silent forecourt",20,25);
+        graphics.drawString("RUINED TEMPLE v3.29  |  The silent forecourt",20,25);
         graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
         graphics.drawString("WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip map",20,47);
         graphics.setColor(Color.LIGHT_GRAY);

@@ -41,7 +41,7 @@ public class ExplorationRoom {
     private boolean cleared, battleRequested, mineReached;
     private String message;
     private boolean showCollision;
-    private final SpriteAnimator animation = new SpriteAnimator();
+    private final SpriteAnimator animation = new SpriteAnimator(SpriteAnimator.Lighting.FOREST);
 
     public ExplorationRoom() {
         try {
@@ -219,7 +219,7 @@ public class ExplorationRoom {
         graphics.fillRect(0,TOP+VIEW_H,VIEW_W,60);
         graphics.setFont(new Font(Font.MONOSPACED,Font.BOLD,18));
         graphics.setColor(Color.WHITE);
-        graphics.drawString("FOREST v3.28  |  "+(cleared?"Route to mine: OPEN":"Follow the trail"),20,25);
+        graphics.drawString("FOREST v3.29  |  "+(cleared?"Route to mine: OPEN":"Follow the trail"),20,25);
         graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
         graphics.drawString(cleared ? "WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip map" : "WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip map",20,47);
         graphics.setColor(mineReached?new Color(175,210,175):Color.LIGHT_GRAY);

@@ -11,6 +11,26 @@ public final class SpriteAnimator {
     public static final int DOWN_RIGHT=4, DOWN_LEFT=5, UP_RIGHT=6, UP_LEFT=7;
     private static final int WIDTH=24, HEIGHT=36;
     private static final BufferedImage SHEET=loadSheet();
+    public enum Lighting {
+        NEUTRAL(1,1,1,0), FOREST(.82,.85,.80,.12),
+        MINE(.63,.69,.76,.20), BUTTERFLY(.57,.63,.70,.24),
+        TEMPLE(.56,.62,.72,.25);
+        private final BufferedImage sheet;
+        Lighting(double red,double green,double blue,double desaturation) {
+            sheet=new BufferedImage(SHEET.getWidth(),SHEET.getHeight(),BufferedImage.TYPE_INT_ARGB);
+            for(int y=0;y<SHEET.getHeight();y++)for(int x=0;x<SHEET.getWidth();x++) {
+                int argb=SHEET.getRGB(x,y),r=(argb>>16)&255,g=(argb>>8)&255,b=argb&255;
+                double gray=.2126*r+.7152*g+.0722*b;
+                int rr=(int)Math.round((r*(1-desaturation)+gray*desaturation)*red);
+                int gg=(int)Math.round((g*(1-desaturation)+gray*desaturation)*green);
+                int bb=(int)Math.round((b*(1-desaturation)+gray*desaturation)*blue);
+                sheet.setRGB(x,y,(argb&0xff000000)|(rr<<16)|(gg<<8)|bb);
+            }
+        }
+    }
+    private final Lighting lighting;
+    public SpriteAnimator(){this(Lighting.NEUTRAL);}
+    public SpriteAnimator(Lighting lighting){this.lighting=java.util.Objects.requireNonNull(lighting);}
     private int facing=DOWN;
     private double clock;
     private boolean moving, running;
@@ -54,7 +74,7 @@ public final class SpriteAnimator {
     /** Feet anchor stays fixed; artwork may extend above the collision box. */
     public void draw(Graphics g,int footX,int footY,int width,int height) {
         int frame=getFrame(),sx=frame*WIDTH,sy=facing*HEIGHT;
-        g.drawImage(SHEET,footX-width/2,footY-height,footX-width/2+width,footY,
+        g.drawImage(lighting.sheet,footX-width/2,footY-height,footX-width/2+width,footY,
                 sx,sy,sx+WIDTH,sy+HEIGHT,null);
     }
 }
