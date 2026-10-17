@@ -7,18 +7,22 @@ import javax.imageio.ImageIO;
 
 /** Temple world uses native artwork pixels; collision is always at the feet. */
 public final class TempleRoom {
-    private static final double ZOOM=1.35, SPEED=90;
+    private static final double ZOOM=1.10;
+    // Keep actors and movement the same screen size/speed as the other rooms.
+    private static final double ACTOR_SCALE=1.35/ZOOM, SPEED=90*ACTOR_SCALE;
+    private static final int HERO_WIDTH=(int)Math.round(36*ACTOR_SCALE);
+    private static final int HERO_HEIGHT=(int)Math.round(54*ACTOR_SCALE);
     private final BufferedImage background;
     private final BufferedImage foreground;
     private final BufferedImage floorDebug=loadDebugMask("temple-floor.png",new Color(30,240,80,65));
     private final BufferedImage objectsDebug=loadDebugMask("temple-objects.png",new Color(250,50,40,120));
     private final int[] blockedPrefix=createBlockedPrefix();
-    private final Rectangle exitDoor=new Rectangle(1110,120,84,20);
+    private final Rectangle exitDoor=new Rectangle(1142,166,92,14);
     private final SpriteAnimator animation=new SpriteAnimator(SpriteAnimator.Lighting.TEMPLE);
     private double x,y,cameraX,cameraY;
     private boolean backRequested,exitReached,showCollision,cleared,battleRequested;
-    private final Rectangle firstStep=new Rectangle(1077,346,152,12);
-    private final Rectangle upperStairs=new Rectangle(1072,110,160,236);
+    private final Rectangle encounterStep=new Rectangle(1110,272,152,12);
+    private final Rectangle upperStairs=new Rectangle(1106,150,164,122);
 
     public TempleRoom() {
         try {
@@ -92,7 +96,7 @@ public final class TempleRoom {
             }
         }
         animation.update(x-ox,y-oy,seconds,running);
-        if(!cleared && firstStep.contains(x+8,y+13))battleRequested=true;
+        if(!cleared && encounterStep.contains(x+8,y+13))battleRequested=true;
         if(x<12)backRequested=true;
         if(exitDoor.contains(x+4,y+10,8,6))exitReached=true;
         updateCamera();
@@ -102,33 +106,33 @@ public final class TempleRoom {
         cameraY=Math.max(0,Math.min(y+8-520/(2*ZOOM),background.getHeight()-520/ZOOM));
     }
     public boolean consumeBattleRequest(){boolean b=battleRequested;battleRequested=false;return b;}
-    public void returnFromBattle(){cleared=true;battleRequested=false;x=1140;y=367;animation.reset(SpriteAnimator.UP);updateCamera();}
+    public void returnFromBattle(){cleared=true;battleRequested=false;x=1180;y=286;animation.reset(SpriteAnimator.UP);updateCamera();}
     public boolean consumeBackRequest(){boolean b=backRequested;backRequested=false;return b;}
-    public void skipToExit(){cleared=true;battleRequested=false;x=1140;y=112;exitReached=true;animation.reset(SpriteAnimator.UP);updateCamera();}
+    public void skipToExit(){cleared=true;battleRequested=false;x=1180;y=155;exitReached=true;animation.reset(SpriteAnimator.UP);updateCamera();}
     public void draw(Graphics graphics) {
         Graphics2D g=(Graphics2D)graphics.create();
         g.setClip(0,60,960,520);
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
         g.translate(0,60);g.scale(ZOOM,ZOOM);g.translate(-Math.round(cameraX),-Math.round(cameraY));
         g.drawImage(background,0,0,null);
-        if(!cleared)BossArtwork.drawKnightMap(g,1308,258);
+        if(!cleared)BossArtwork.drawKnightMap(g,1377,273,ACTOR_SCALE);
         Graphics2D actor=(Graphics2D)g.create();
-        if(x+8>=1110 && x+8<1194 && y+16<200)actor.clipRect(1105,116,96,120);
-        animation.draw(actor,(int)Math.round(x+8),(int)Math.round(y+16),36,54);actor.dispose();
+        if(x+8>=1140 && x+8<1240 && y+16<200)actor.clipRect(1136,154,108,100);
+        animation.draw(actor,(int)Math.round(x+8),(int)Math.round(y+16),HERO_WIDTH,HERO_HEIGHT);actor.dispose();
         g.drawImage(foreground,0,0,null);
         if(showCollision) {
             g.drawImage(floorDebug,0,0,null);
             g.drawImage(objectsDebug,0,0,null);
             g.setColor(Color.CYAN);g.draw(new Rectangle2D.Double(x+4,y+10,8,6));
             g.setColor(Color.ORANGE);g.draw(exitDoor);
-            if(!cleared){g.setColor(Color.MAGENTA);g.draw(firstStep);}
+            if(!cleared){g.setColor(Color.MAGENTA);g.draw(encounterStep);}
         }
         g.dispose();
         graphics.setColor(new Color(15,20,19));graphics.fillRect(0,0,960,60);graphics.fillRect(0,580,960,60);
         graphics.setColor(Color.WHITE);graphics.setFont(new Font(Font.MONOSPACED,Font.BOLD,18));
-        graphics.drawString("RUINED TEMPLE v3.33  |  The silent forecourt",20,25);
+        graphics.drawString("RUINED TEMPLE v3.42  |  The silent forecourt",20,25);
         graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
-        graphics.drawString("WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip map",20,47);
+        graphics.drawString("WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip",20,47);
         graphics.setColor(Color.LIGHT_GRAY);
         graphics.drawString(exitReached?"Inner temple reached. The next area is coming soon.":
             "Follow the stone path to the temple entrance.",20,612);

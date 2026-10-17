@@ -55,8 +55,12 @@ public final class BossArtwork {
         draw(g,MOTH_BATTLE,bounds.x,bounds.y,bounds.width,bounds.height);
     }
     public static void drawKnightMap(Graphics g,int footX,int footY) {
-        // Feet anchor is the centre of the pedestal top; sword tip extends 5px below.
-        draw(g,KNIGHT_MAP,footX-32,footY-111,64,116);
+        drawKnightMap(g,footX,footY,1.0);
+    }
+    public static void drawKnightMap(Graphics g,int footX,int footY,double scale) {
+        int width=(int)Math.round(64*scale),height=(int)Math.round(116*scale);
+        int swordTip=(int)Math.round(5*scale);
+        draw(g,KNIGHT_MAP,footX-width/2,footY-height+swordTip,width,height);
     }
     public static void drawKnightBattle(Graphics g,Rectangle bounds) {
         draw(g,KNIGHT_BATTLE,bounds.x,bounds.y,bounds.width,bounds.height);
