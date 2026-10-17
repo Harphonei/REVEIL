@@ -133,10 +133,18 @@ public final class MineRoom {
             g.setColor(Color.CYAN);g.draw(new Rectangle2D.Double(x+4,y+10,8,6));
             g.setColor(Color.ORANGE);if(!cleared)g.draw(bossZone);
         }
-        animation.draw(g,(int)Math.round(x+8),(int)Math.round(y+16),36,54);g.dispose();
+        int feetX=(int)Math.round(x+8),feetY=(int)Math.round(y+16);
+        if(!cleared && feetY<265) {
+            animation.draw(g,feetX,feetY,36,54);
+            BossArtwork.drawScientistMap(g,910,265);
+        } else {
+            if(!cleared)BossArtwork.drawScientistMap(g,910,265);
+            animation.draw(g,feetX,feetY,36,54);
+        }
+        g.dispose();
         graphics.setColor(new Color(15,20,19));graphics.fillRect(0,0,960,60);graphics.fillRect(0,580,960,60);
         graphics.setColor(Color.WHITE);graphics.setFont(new Font(Font.MONOSPACED,Font.BOLD,18));
-        graphics.drawString("MINE v3.16  |  "+(cleared?"Laboratory cleared":"Follow the rails"),20,25);
+        graphics.drawString("MINE v3.17  |  "+(cleared?"Laboratory cleared":"Follow the rails"),20,25);
         graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
         graphics.drawString("WASD: Walk | Shift: Run | Esc: Pause | F3: Collision view",20,47);
         graphics.setColor(Color.LIGHT_GRAY);

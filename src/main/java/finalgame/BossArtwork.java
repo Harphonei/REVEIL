@@ -9,6 +9,8 @@ import javax.imageio.ImageIO;
 public final class BossArtwork {
     private static final BufferedImage MAP=load("forest-boss-map.png");
     private static final BufferedImage BATTLE=load("forest-boss-battle.png");
+    private static final BufferedImage SCIENTIST_MAP=load("scientist-map.png");
+    private static final BufferedImage SCIENTIST_BATTLE=load("scientist-battle.png");
     private BossArtwork() {}
     private static BufferedImage load(String name) {
         try {
@@ -31,6 +33,14 @@ public final class BossArtwork {
     }
     public static void drawBattle(Graphics g,Rectangle bounds) {
         draw(g,BATTLE,bounds.x,bounds.y,bounds.width,bounds.height);
+    }
+    public static void drawScientistMap(Graphics g,int footX,int footY) {
+        int height=65;
+        int width=(int)Math.round(SCIENTIST_MAP.getWidth()*height/(double)SCIENTIST_MAP.getHeight());
+        draw(g,SCIENTIST_MAP,footX-width/2,footY-height,width,height);
+    }
+    public static void drawScientistBattle(Graphics g,Rectangle bounds) {
+        draw(g,SCIENTIST_BATTLE,bounds.x,bounds.y,bounds.width,bounds.height);
     }
     private static void draw(Graphics graphics,BufferedImage image,int x,int y,int w,int h) {
         Graphics2D g=(Graphics2D)graphics.create();
