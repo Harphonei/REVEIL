@@ -13,6 +13,8 @@ public final class BossArtwork {
     private static final BufferedImage SCIENTIST_BATTLE=load("scientist-battle.png");
     private static final BufferedImage MOTH_MAP=SpriteAnimator.Lighting.BUTTERFLY.tint(load("moth-map.png"));
     private static final BufferedImage MOTH_BATTLE=load("moth-battle.png");
+    private static final BufferedImage KNIGHT_MAP=SpriteAnimator.Lighting.TEMPLE.tint(load("knight-map.png"));
+    private static final BufferedImage KNIGHT_BATTLE=load("knight-battle.png");
     private BossArtwork() {}
     private static BufferedImage load(String name) {
         try {
@@ -51,6 +53,14 @@ public final class BossArtwork {
     }
     public static void drawMothBattle(Graphics g,Rectangle bounds) {
         draw(g,MOTH_BATTLE,bounds.x,bounds.y,bounds.width,bounds.height);
+    }
+    public static void drawKnightMap(Graphics g,int footX,int footY) {
+        // Cropped sprite: soles sit four pixels above the planted sword tip.
+        draw(g,KNIGHT_MAP,footX-KNIGHT_MAP.getWidth()/2,footY-92,
+                KNIGHT_MAP.getWidth(),96);
+    }
+    public static void drawKnightBattle(Graphics g,Rectangle bounds) {
+        draw(g,KNIGHT_BATTLE,bounds.x,bounds.y,bounds.width,bounds.height);
     }
     private static void draw(Graphics graphics,BufferedImage image,int x,int y,int w,int h) {
         Graphics2D g=(Graphics2D)graphics.create();

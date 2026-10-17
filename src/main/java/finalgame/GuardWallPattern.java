@@ -11,13 +11,14 @@ public class GuardWallPattern implements AttackPattern {
     public void emit(Rectangle arena, Rectangle source,
             ArrayList<EnemyProjectile> projectiles) {
         double gapCentre = arena.getCenterX() + Math.sin(wave * 0.65) * 85;
-        double gapLeft = gapCentre - 48;
-        double gapRight = gapCentre + 48;
+        // A 56px opening leaves 32px of horizontal tolerance for the 24px heart.
+        double gapLeft = gapCentre - 28;
+        double gapRight = gapCentre + 28;
         int diameter = EnemyProjectile.NORMAL_DIAMETER;
-        for (int x = arena.x + 3; x + diameter <= arena.x + arena.width; x += 18) {
-            if (x + diameter > gapLeft && x < gapRight) {
-                continue;
-            }
+        for (int x = arena.x; x + diameter <= gapLeft; x += diameter) {
+            projectiles.add(new EnemyProjectile(x, arena.y - 20, 0.0, 165.0));
+        }
+        for (int x = (int)Math.ceil(gapRight); x + diameter <= arena.x + arena.width; x += diameter) {
             projectiles.add(new EnemyProjectile(x, arena.y - 20, 0.0, 165.0));
         }
         wave++;

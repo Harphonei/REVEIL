@@ -8,6 +8,25 @@ import java.util.Random;
 
 // A disciplined guardian: committed telegraphs, precise strikes and recovery windows.
 public class KnightBoss extends Boss {
+    @Override
+    public Rectangle getBounds() {
+        Rectangle base=super.getBounds();
+        return new Rectangle(base.x+base.width/2-61,base.y+base.height-162,122,168);
+    }
+    @Override
+    public void draw(Graphics graphics) {
+        if(!isAlive())return;
+        Graphics g=graphics.create();Rectangle art=getBounds();
+        g.setFont(new java.awt.Font(java.awt.Font.MONOSPACED,java.awt.Font.PLAIN,16));g.setColor(Color.WHITE);
+        String title="THE LAST GUARDIAN";
+        g.drawString(title,art.x+art.width/2-g.getFontMetrics().stringWidth(title)/2,50);
+        String hp="HP: "+getHp()+"/"+getMaxHp();
+        g.drawString(hp,art.x+art.width/2-g.getFontMetrics().stringWidth(hp)/2,75);
+        g.setColor(Color.DARK_GRAY);g.fillRect(art.x,85,art.width,7);
+        g.setColor(Color.GREEN);g.fillRect(art.x,85,art.width*getHp()/getMaxHp(),7);
+        BossArtwork.drawKnightBattle(g,art);g.dispose();
+    }
+
     private final RandomAttackOrder order = new RandomAttackOrder(4);
     private final AttackPattern rain = new RainPattern(new Random(), 165.0);
     private final GuardWallPattern wall = new GuardWallPattern();
@@ -19,6 +38,7 @@ public class KnightBoss extends Boss {
     private double phaseTime;
     private double attackCooldown;
     private int thrustsCreated = 0;
+    private int gridVolleys = 0;
 
     public KnightBoss(int startX, int startY) {
         super(startX, startY, 1800, "THE LAST GUARDIAN");
@@ -27,11 +47,12 @@ public class KnightBoss extends Boss {
 
     private void beginAttack() {
         attackIndex = order.next();
-        double[] durations = {5.2, 5.8, 4.0, 5.5};
+        double[] durations = {5.2, 7.5, 4.0, 5.5};
         phaseTime = durations[attackIndex];
         attackCooldown = 0.7;
         recovering = false;
         thrustsCreated = 0;
+        gridVolleys = 0;
         wall.reset();
     }
 
@@ -66,7 +87,7 @@ public class KnightBoss extends Boss {
         attackCooldown = Math.max(0.0, attackCooldown - seconds / CombatTuning.ATTACK_INTERVAL_MULTIPLIER);
         if (attackCooldown <= 0.0) {
             attack(projectiles);
-            double[] intervals = {0.42, 1.8, 0.95, 1.15};
+            double[] intervals = {0.42, 1.10, 0.95, 1.15};
             attackCooldown = intervals[attackIndex];
         }
     }
@@ -81,12 +102,9 @@ public class KnightBoss extends Boss {
                 rain.emit(arena, getBounds(), projectiles);
                 break;
             case 1:
-                strikes.add(new SwordStrike(arena.x, arena.y,
-                        arena.x + arena.width, arena.y + arena.height,
-                        16.0f, 0.85, 0.25, arena));
-                strikes.add(new SwordStrike(arena.x + arena.width, arena.y,
-                        arena.x, arena.y + arena.height,
-                        16.0f, 0.85, 0.25, arena));
+                if (gridVolleys < GuardianGridPattern.VOLLEYS) {
+                    GuardianGridPattern.emit(arena, gridVolleys++, strikes);
+                }
                 break;
             case 2:
                 if (thrustsCreated < 3) {
@@ -130,7 +148,7 @@ public class KnightBoss extends Boss {
         if (recovering) {
             return "RECOVERY";
         }
-        String[] names = {"RAIN", "CROSS SLASH", "SPEAR THRUST", "GUARD WALL"};
+        String[] names = {"RAIN", "SHIFTING GRID", "SPEAR THRUST", "GUARD WALL"};
         return names[attackIndex];
     }
 
