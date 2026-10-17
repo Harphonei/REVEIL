@@ -9,21 +9,9 @@ import javax.imageio.ImageIO;
 public final class MineRoom {
     private static final double ZOOM=1.35, SPEED=90;
     private final BufferedImage background;
-    private final Area floor=new Area();
-    private final Shape[] obstacles={
-        new Rectangle(570,145,75,118), new Rectangle(566,277,46,70),
-        new Rectangle(611,73,100,54), new Rectangle(714,78,77,51),
-        new Rectangle(801,49,74,78), new Rectangle(884,75,119,52),
-        new Rectangle(1033,79,86,50), new Rectangle(1115,57,80,70),
-        new Rectangle(1135,145,79,123), new Rectangle(1169,265,51,93),
-        new Rectangle(674,397,25,56), new Rectangle(794,478,21,40),
-        new Rectangle(414,668,63,49), new Rectangle(397,686,23,45),
-        new Rectangle(588,726,21,25), new Rectangle(584,826,23,22),
-        new Rectangle(1236,484,35,31), new Rectangle(1307,486,26,29),
-        new Rectangle(55,834,23,14), new Rectangle(350,881,22,24),
-        new Rectangle(482,892,22,24), new Rectangle(598,870,18,22),
-        new Rectangle(1026,481,29,27), new Rectangle(1060,508,24,25)
-    };
+    private final Area floor=loadMask("mine-floor.png");
+    private final Shape[] obstacles={loadMask("mine-objects.png")};
+    private final int[] blockedPrefix=createBlockedPrefix();
     private final Rectangle bossZone=new Rectangle(850,205,120,90);
     private final Rectangle gate=new Rectangle(1005,357,119,22);
     private final SpriteAnimator animation=new SpriteAnimator();
@@ -36,22 +24,41 @@ public final class MineRoom {
             if(background==null || background.getWidth()!=1536 || background.getHeight()!=1024)
                 throw new IllegalStateException("Invalid mine map");
         } catch(Exception ex) {throw new IllegalStateException("Cannot load mine-map.png",ex);}
-        floor.add(polygon(new int[][]{{0,839},{293,840},{322,850},{517,850},
-            {520,684},{540,660},{551,626},{592,580},{637,532},{681,488},
-            {704,477},{704,350},{814,350},{814,495},{786,518},{741,552},
-            {699,597},{655,641},{617,680},{599,704},{599,892},{576,917},
-            {527,925},{327,921},{299,903},{0,900}}));
-        floor.add(polygon(new int[][]{{586,119},{1209,119},{1219,353},
-            {1117,353},{1117,493},{1158,511},{1536,511},{1536,554},
-            {1104,554},{1052,538},{1028,511},{1017,350},{586,350}}));
-        floor.add(new Area(new Rectangle(704,337,110,40)));
-        floor.add(new Area(new Rectangle(370,686,159,44)));
         reset();
     }
-    private static Area polygon(int[][] points) {
-        Path2D p=new Path2D.Double();p.moveTo(points[0][0],points[0][1]);
-        for(int i=1;i<points.length;i++)p.lineTo(points[i][0],points[i][1]);
-        p.closePath();return new Area(p);
+    private static Area loadMask(String name) {
+        try {
+            BufferedImage mask=ImageIO.read(MineRoom.class.getResource("/finalgame/"+name));
+            if(mask==null || mask.getWidth()!=1536 || mask.getHeight()!=1024)
+                throw new IllegalStateException("Invalid mine collision mask: "+name);
+            Path2D path=new Path2D.Double(Path2D.WIND_NON_ZERO);
+            for(int row=0;row<mask.getHeight();row++) {
+                int col=0;
+                while(col<mask.getWidth()) {
+                    while(col<mask.getWidth() && (mask.getRGB(col,row)&255)<128)col++;
+                    int first=col;
+                    while(col<mask.getWidth() && (mask.getRGB(col,row)&255)>=128)col++;
+                    if(col>first)path.append(new Rectangle2D.Double(first,row,col-first,1),false);
+                }
+            }
+            return new Area(path);
+        } catch(Exception ex) {throw new IllegalStateException("Cannot load "+name,ex);}
+    }
+    private static int[] createBlockedPrefix() {
+        try {
+            BufferedImage ground=ImageIO.read(MineRoom.class.getResource("/finalgame/mine-floor.png"));
+            BufferedImage objects=ImageIO.read(MineRoom.class.getResource("/finalgame/mine-objects.png"));
+            int stride=1537;
+            int[] sums=new int[stride*1025];
+            for(int y=0;y<1024;y++) {
+                int row=0;
+                for(int x=0;x<1536;x++) {
+                    if((ground.getRGB(x,y)&255)<128 || (objects.getRGB(x,y)&255)>=128)row++;
+                    sums[(y+1)*stride+x+1]=sums[y*stride+x+1]+row;
+                }
+            }
+            return sums;
+        } catch(Exception ex) {throw new IllegalStateException("Cannot index mine collision masks",ex);}
     }
     public void reset() {
         cleared=false;exitReached=false;enter();
@@ -64,9 +71,15 @@ public final class MineRoom {
     public void toggleCollisionView(){showCollision=!showCollision;}
     private boolean canStand(double px,double py) {
         Rectangle2D feet=new Rectangle2D.Double(px+4,py+10,8,6);
-        if(!floor.contains(feet))return false;
+        // Test every mask pixel touched by the feet in constant time. Artwork
+        // contours stay exact without scanning a complex Area on every step.
+        int left=(int)Math.floor(feet.getMinX()),top=(int)Math.floor(feet.getMinY());
+        int right=(int)Math.ceil(feet.getMaxX()),bottom=(int)Math.ceil(feet.getMaxY());
+        if(left<0||top<0||right>1536||bottom>1024)return false;
+        int stride=1537;
+        if(blockedPrefix[bottom*stride+right]-blockedPrefix[top*stride+right]
+                -blockedPrefix[bottom*stride+left]+blockedPrefix[top*stride+left]>0)return false;
         if(!cleared && gate.intersects(feet))return false;
-        for(Shape obstacle:obstacles)if(obstacle.intersects(feet))return false;
         return true;
     }
     public void update(int dx,int dy,double seconds,boolean running) {
@@ -123,7 +136,7 @@ public final class MineRoom {
         animation.draw(g,(int)Math.round(x+8),(int)Math.round(y+16),36,54);g.dispose();
         graphics.setColor(new Color(15,20,19));graphics.fillRect(0,0,960,60);graphics.fillRect(0,580,960,60);
         graphics.setColor(Color.WHITE);graphics.setFont(new Font(Font.MONOSPACED,Font.BOLD,18));
-        graphics.drawString("MINE v3.14  |  "+(cleared?"Laboratory cleared":"Follow the rails"),20,25);
+        graphics.drawString("MINE v3.16  |  "+(cleared?"Laboratory cleared":"Follow the rails"),20,25);
         graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
         graphics.drawString("WASD: Walk | Shift: Run | Esc: Pause | F3: Collision view",20,47);
         graphics.setColor(Color.LIGHT_GRAY);

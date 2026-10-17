@@ -15,7 +15,7 @@ public class ExplorationRoom {
     private final BufferedImage background;
     private final Area floor = createFloor();
     private final Rectangle2D bossZone = new Rectangle2D.Double(1435, 390, 60, 45);
-    private final Rectangle2D mineZone = new Rectangle2D.Double(1940, 312, 70, 90);
+    private final Rectangle2D mineZone = new Rectangle2D.Double(1960, 328, 38, 12);
     private final Shape[] obstacles = {
         polygon(new double[][]{{73,208},{90,202},{147,220},{145,240},{128,246},{76,225}}),
         polygon(new double[][]{{339,358},{359,341},{399,338},{432,351},{454,377},{439,389},{349,386}}),
@@ -117,7 +117,7 @@ public class ExplorationRoom {
         animation.update(x-oldX,y-oldY,seconds,running);
         if(!cleared && !battleRequested && bossZone.intersects(x,y,SIZE,SIZE))
             battleRequested=true;
-        if(mineZone.intersects(x,y,SIZE,SIZE)) {
+        if(mineZone.contains(x+4,y+10,8,6)) {
             if(cleared) {
                 mineReached=true;
                 message="Entering the mine...";
@@ -211,7 +211,7 @@ public class ExplorationRoom {
         graphics.fillRect(0,TOP+VIEW_H,VIEW_W,60);
         graphics.setFont(new Font(Font.MONOSPACED,Font.BOLD,18));
         graphics.setColor(Color.WHITE);
-        graphics.drawString("FOREST v3.14  |  "+(cleared?"Route to mine: OPEN":"Follow the trail"),20,25);
+        graphics.drawString("FOREST v3.16  |  "+(cleared?"Route to mine: OPEN":"Follow the trail"),20,25);
         graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
         graphics.drawString(cleared ? "WASD: Walk | Shift: Run | Esc: Pause | F3: Collision view" : "WASD: Walk | Shift: Run | Esc: Pause | F3: Collision view",20,47);
         graphics.setColor(mineReached?new Color(175,210,175):Color.LIGHT_GRAY);
