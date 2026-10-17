@@ -24,6 +24,8 @@ public class GamePanel extends JPanel {
     private GameState state = GameState.MENU;
     private GameState stateBeforePause = GameState.EXPLORATION;
     private final ExplorationRoom exploration = new ExplorationRoom();
+    private final MineRoom mine = new MineRoom();
+    private boolean inMine;
     private final Rectangle startButton = new Rectangle(340, 280, 280, 60);
     private final Rectangle resumeButton = new Rectangle(340, 270, 280, 60);
     private final Rectangle menuButton = new Rectangle(340, 350, 280, 60);
@@ -65,7 +67,7 @@ public class GamePanel extends JPanel {
         bindBossSelection("4", 4);
         bindBossSelection("5", 5);
         bindScreenAction("released F3", "collision-view", () -> {
-            if (state == GameState.EXPLORATION) { exploration.toggleCollisionView(); repaint(); }
+            if (state == GameState.EXPLORATION) { if(inMine) mine.toggleCollisionView(); else exploration.toggleCollisionView(); repaint(); }
         });
         bindScreenAction("released ESCAPE", "pause", () -> togglePause());
         bindScreenAction("released ENTER", "confirm", () -> confirmScreen());
@@ -171,6 +173,8 @@ public class GamePanel extends JPanel {
 
     private void startNewGame() {
         exploration.reset();
+        mine.reset();
+        inMine=false;
         selectedBoss = 1;
         boss = new ForestBoss(430, 210);
         restartBattle();
@@ -190,7 +194,8 @@ public class GamePanel extends JPanel {
         if (state == GameState.MENU) startNewGame();
         else if (state == GameState.PAUSED) togglePause();
         else if (state == GameState.BATTLE && !boss.isAlive() && player.isAlive()) {
-            if (selectedBoss == 1) exploration.returnFromBattle();
+            if (!inMine && selectedBoss == 1) exploration.returnFromBattle();
+            if (inMine && selectedBoss == 2) mine.returnFromBattle();
             projectiles.clear();
             enemyProjectiles.clear();
             laser.reset();
@@ -204,10 +209,17 @@ public class GamePanel extends JPanel {
         } else if (state == GameState.PAUSED) {
             if (resumeButton.contains(x, y)) togglePause();
             else if (menuButton.contains(x, y)) changeState(GameState.MENU);
-        } else if (state == GameState.EXPLORATION && exploration.interact(x, y)) {
-            startForestBattle();
+        } else if (state == GameState.EXPLORATION && (inMine ? mine.interact(x,y) : exploration.interact(x, y))) {
+            if(inMine) startMineBattle(); else startForestBattle();
         }
         repaint();
+    }
+
+    private void startMineBattle() {
+        selectedBoss=2;
+        boss=new ScientistBoss(430,210);
+        restartBattle();
+        changeState(GameState.BATTLE);
     }
 
     private void startForestBattle() {
@@ -288,8 +300,17 @@ public class GamePanel extends JPanel {
         if (state == GameState.EXPLORATION) {
             int dx = (pressed[3] ? 1 : 0) - (pressed[1] ? 1 : 0);
             int dy = (pressed[2] ? 1 : 0) - (pressed[0] ? 1 : 0);
-            exploration.update(dx, dy, seconds, running);
-            if (exploration.consumeBattleRequest()) startForestBattle();
+            if(inMine) {
+                mine.update(dx,dy,seconds,running);
+                if(mine.consumeBackRequest()) {
+                    inMine=false; exploration.returnFromMine(); clearInput();
+                } else if(mine.consumeBattleRequest()) startMineBattle();
+            } else {
+                exploration.update(dx,dy,seconds,running);
+                if(exploration.consumeMineRequest()) {
+                    inMine=true; mine.enter(); clearInput();
+                } else if(exploration.consumeBattleRequest()) startForestBattle();
+            }
             repaint();
             return;
         }
@@ -409,6 +430,7 @@ public class GamePanel extends JPanel {
     public void clearInput() {
         running = false;
         exploration.stopMovement();
+        mine.stopMovement();
         for (int i = 0; i < pressed.length; i++) {
             pressed[i] = false;
         }
@@ -428,7 +450,7 @@ public class GamePanel extends JPanel {
             return;
         }
         GameState visibleState = state == GameState.PAUSED ? stateBeforePause : state;
-        if (visibleState == GameState.EXPLORATION) exploration.draw(g);
+        if (visibleState == GameState.EXPLORATION) { if(inMine) mine.draw(g); else exploration.draw(g); }
         else drawBattle(g);
         if (state == GameState.PAUSED) drawPause(g);
     }

@@ -11,6 +11,7 @@ public class ExplorationRoom {
     private final double scaleX, scaleY;
     private static final int VIEW_W = 960, VIEW_H = 520, TOP = 60;
     private static final double SPEED = 90, SIZE = 16;
+    private static final double ZOOM = 1.35;
     private final BufferedImage background;
     private final Area floor = createFloor();
     private final Rectangle2D bossZone = new Rectangle2D.Double(1435, 390, 60, 45);
@@ -119,7 +120,7 @@ public class ExplorationRoom {
         if(mineZone.intersects(x,y,SIZE,SIZE)) {
             if(cleared) {
                 mineReached=true;
-                message="Mine entrance reached! Next area is coming in the next update.";
+                message="Entering the mine...";
             } else message="The forest guardian blocks the route. Clear the encounter first.";
         }
         updateCamera();
@@ -134,8 +135,16 @@ public class ExplorationRoom {
     }
 
     private void updateCamera() {
-        cameraX=Math.max(0,Math.min(x*scaleX+SIZE*scaleX/2-VIEW_W/2.0,background.getWidth()-VIEW_W));
-        cameraY=Math.max(0,Math.min(y*scaleY+SIZE*scaleY/2-VIEW_H/2.0,background.getHeight()-VIEW_H));
+        cameraX=Math.max(0,Math.min(x*scaleX+SIZE*scaleX/2-VIEW_W/(2.0*ZOOM),background.getWidth()-VIEW_W/ZOOM));
+        cameraY=Math.max(0,Math.min(y*scaleY+SIZE*scaleY/2-VIEW_H/(2.0*ZOOM),background.getHeight()-VIEW_H/ZOOM));
+    }
+
+    public boolean consumeMineRequest() {
+        boolean pending=mineReached; mineReached=false; return pending;
+    }
+
+    public void returnFromMine() {
+        x=1908; y=380; mineReached=false; animation.reset(SpriteAnimator.LEFT); updateCamera();
     }
 
     public boolean consumeBattleRequest() {
@@ -145,12 +154,12 @@ public class ExplorationRoom {
     }
 
     public boolean interact(int mouseX,int mouseY) {
-        double wx=(mouseX+Math.round(cameraX))/scaleX;
-        double wy=(mouseY-TOP+Math.round(cameraY))/scaleY;
+        double wx=(mouseX/ZOOM+Math.round(cameraX))/scaleX;
+        double wy=((mouseY-TOP)/ZOOM+Math.round(cameraY))/scaleY;
         if(mouseY<TOP || mouseY>TOP+VIEW_H) return false;
         if(!cleared && bossZone.contains(wx,wy) && Point2D.distance(x,y,wx,wy)<110) return true;
         if(mineZone.contains(wx,wy))
-            message=cleared?"Walk into the mine entrance to finish this map.":"Defeat the forest guardian first.";
+            message=cleared?"Walk into the mine entrance to enter the next map.":"Defeat the forest guardian first.";
         return false;
     }
 
@@ -165,8 +174,10 @@ public class ExplorationRoom {
         Graphics2D g=(Graphics2D)graphics.create();
         g.setClip(0,TOP,VIEW_W,VIEW_H);
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-        g.translate(-Math.round(cameraX),TOP-Math.round(cameraY));
-        // Draw source pixels 1:1: no resize filter or palette adjustment.
+        g.translate(0,TOP);
+        g.scale(ZOOM,ZOOM);
+        g.translate(-Math.round(cameraX),-Math.round(cameraY));
+        // Zoom the complete world together with nearest-neighbor pixels.
         g.drawImage(background,0,0,null);
         if(showCollision) {
             Graphics2D debug=(Graphics2D)g.create();
@@ -200,7 +211,7 @@ public class ExplorationRoom {
         graphics.fillRect(0,TOP+VIEW_H,VIEW_W,60);
         graphics.setFont(new Font(Font.MONOSPACED,Font.BOLD,18));
         graphics.setColor(Color.WHITE);
-        graphics.drawString("FOREST v3.11  |  "+(cleared?"Route to mine: OPEN":"Follow the trail"),20,25);
+        graphics.drawString("FOREST v3.14  |  "+(cleared?"Route to mine: OPEN":"Follow the trail"),20,25);
         graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
         graphics.drawString(cleared ? "WASD: Walk | Shift: Run | Esc: Pause | F3: Collision view" : "WASD: Walk | Shift: Run | Esc: Pause | F3: Collision view",20,47);
         graphics.setColor(mineReached?new Color(175,210,175):Color.LIGHT_GRAY);
