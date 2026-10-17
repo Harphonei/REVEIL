@@ -13,6 +13,7 @@ public final class MineRoom {
     private final Shape[] obstacles={loadMask("mine-objects.png")};
     private final int[] blockedPrefix=createBlockedPrefix();
     private final Rectangle bossZone=new Rectangle(850,205,120,90);
+    private final Rectangle exitDoor=new Rectangle(1494,478,32,16);
     private final Rectangle gate=new Rectangle(1005,357,119,22);
     private final SpriteAnimator animation=new SpriteAnimator();
     private double x,y,cameraX,cameraY;
@@ -97,7 +98,7 @@ public final class MineRoom {
         animation.update(x-ox,y-oy,seconds,running);
         if(!cleared && bossZone.intersects(x,y,16,16))battleRequested=true;
         if(x<12)backRequested=true;
-        if(cleared && x>1508)exitReached=true;
+        if(cleared && exitDoor.contains(x+4,y+10,8,6))exitReached=true;
         updateCamera();
     }
     private void updateCamera() {
@@ -136,6 +137,8 @@ public final class MineRoom {
             g.setColor(Color.ORANGE);if(!cleared)g.draw(bossZone);
         }
         int feetX=(int)Math.round(x+8),feetY=(int)Math.round(y+16);
+        // The north-facing exit lintel hides the actor as they enter the tunnel.
+        if(feetX>=1494 && feetX<1526 && feetY<521)g.clipRect(1491,476,37,100);
         if(!cleared && feetY<265) {
             animation.draw(g,feetX,feetY,36,54);
             BossArtwork.drawScientistMap(g,910,265);
@@ -146,12 +149,12 @@ public final class MineRoom {
         g.dispose();
         graphics.setColor(new Color(15,20,19));graphics.fillRect(0,0,960,60);graphics.fillRect(0,580,960,60);
         graphics.setColor(Color.WHITE);graphics.setFont(new Font(Font.MONOSPACED,Font.BOLD,18));
-        graphics.drawString("MINE v3.19  |  "+(cleared?"Laboratory cleared":"Follow the rails"),20,25);
+        graphics.drawString("MINE v3.20  |  "+(cleared?"Laboratory cleared":"Follow the rails"),20,25);
         graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
         graphics.drawString("WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip map",20,47);
         graphics.setColor(Color.LIGHT_GRAY);
         graphics.drawString(exitReached?"Entering the butterfly forest...":
-            cleared?"The eastern passage is open. Follow it out of the mine.":
+            cleared?"Follow the eastern passage, then walk UP into the dark doorway.":
             "A hidden laboratory lies ahead. Explore the room to meet its keeper.",20,612);
     }
 }
