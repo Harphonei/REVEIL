@@ -97,13 +97,15 @@ public final class MineRoom {
         animation.update(x-ox,y-oy,seconds,running);
         if(!cleared && bossZone.intersects(x,y,16,16))battleRequested=true;
         if(x<12)backRequested=true;
-        if(cleared && x>1480)exitReached=true;
+        if(cleared && x>1508)exitReached=true;
         updateCamera();
     }
     private void updateCamera() {
         cameraX=Math.max(0,Math.min(x+8-960/(2*ZOOM),background.getWidth()-960/ZOOM));
         cameraY=Math.max(0,Math.min(y+8-520/(2*ZOOM),background.getHeight()-520/ZOOM));
     }
+    public boolean consumeExitRequest(){boolean b=exitReached;exitReached=false;return b;}
+    public void returnFromButterfly(){x=1465;y=522;exitReached=false;battleRequested=false;animation.reset(SpriteAnimator.LEFT);updateCamera();}
     public boolean consumeBattleRequest(){boolean b=battleRequested;battleRequested=false;return b;}
     public boolean consumeBackRequest(){boolean b=backRequested;backRequested=false;return b;}
     public boolean interact(int mx,int my) {
@@ -144,11 +146,11 @@ public final class MineRoom {
         g.dispose();
         graphics.setColor(new Color(15,20,19));graphics.fillRect(0,0,960,60);graphics.fillRect(0,580,960,60);
         graphics.setColor(Color.WHITE);graphics.setFont(new Font(Font.MONOSPACED,Font.BOLD,18));
-        graphics.drawString("MINE v3.17  |  "+(cleared?"Laboratory cleared":"Follow the rails"),20,25);
+        graphics.drawString("MINE v3.19  |  "+(cleared?"Laboratory cleared":"Follow the rails"),20,25);
         graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
-        graphics.drawString("WASD: Walk | Shift: Run | Esc: Pause | F3: Collision view",20,47);
+        graphics.drawString("WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip map",20,47);
         graphics.setColor(Color.LIGHT_GRAY);
-        graphics.drawString(exitReached?"Butterfly forest entrance reached. Next map is coming soon.":
+        graphics.drawString(exitReached?"Entering the butterfly forest...":
             cleared?"The eastern passage is open. Follow it out of the mine.":
             "A hidden laboratory lies ahead. Explore the room to meet its keeper.",20,612);
     }

@@ -35,7 +35,7 @@ public final class BossArtwork {
         draw(g,BATTLE,bounds.x,bounds.y,bounds.width,bounds.height);
     }
     public static void drawScientistMap(Graphics g,int footX,int footY) {
-        int height=65;
+        int height=78;
         int width=(int)Math.round(SCIENTIST_MAP.getWidth()*height/(double)SCIENTIST_MAP.getHeight());
         draw(g,SCIENTIST_MAP,footX-width/2,footY-height,width,height);
     }
