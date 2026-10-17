@@ -45,7 +45,7 @@ public final class BossArtwork {
         draw(g,SCIENTIST_BATTLE,bounds.x,bounds.y,bounds.width,bounds.height);
     }
     public static void drawMothMap(Graphics g,int anchorX,int anchorY) {
-        int height=100;
+        int height=120;
         int width=(int)Math.round(MOTH_MAP.getWidth()*height/(double)MOTH_MAP.getHeight());
         draw(g,MOTH_MAP,anchorX-width/2,anchorY-height,width,height);
     }
