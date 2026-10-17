@@ -125,7 +125,7 @@ public final class TempleRoom {
         g.dispose();
         graphics.setColor(new Color(15,20,19));graphics.fillRect(0,0,960,60);graphics.fillRect(0,580,960,60);
         graphics.setColor(Color.WHITE);graphics.setFont(new Font(Font.MONOSPACED,Font.BOLD,18));
-        graphics.drawString("RUINED TEMPLE v3.29  |  The silent forecourt",20,25);
+        graphics.drawString("RUINED TEMPLE v3.30  |  The silent forecourt",20,25);
         graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
         graphics.drawString("WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip map",20,47);
         graphics.setColor(Color.LIGHT_GRAY);

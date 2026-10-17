@@ -16,16 +16,22 @@ public final class SpriteAnimator {
         MINE(.63,.69,.76,.20), BUTTERFLY(.57,.63,.70,.24),
         TEMPLE(.56,.62,.72,.25);
         private final BufferedImage sheet;
+        private final double red,green,blue,desaturation;
         Lighting(double red,double green,double blue,double desaturation) {
-            sheet=new BufferedImage(SHEET.getWidth(),SHEET.getHeight(),BufferedImage.TYPE_INT_ARGB);
-            for(int y=0;y<SHEET.getHeight();y++)for(int x=0;x<SHEET.getWidth();x++) {
-                int argb=SHEET.getRGB(x,y),r=(argb>>16)&255,g=(argb>>8)&255,b=argb&255;
+            this.red=red;this.green=green;this.blue=blue;this.desaturation=desaturation;
+            sheet=tint(SHEET);
+        }
+        BufferedImage tint(BufferedImage source) {
+            BufferedImage result=new BufferedImage(source.getWidth(),source.getHeight(),BufferedImage.TYPE_INT_ARGB);
+            for(int y=0;y<source.getHeight();y++)for(int x=0;x<source.getWidth();x++) {
+                int argb=source.getRGB(x,y),r=(argb>>16)&255,g=(argb>>8)&255,b=argb&255;
                 double gray=.2126*r+.7152*g+.0722*b;
                 int rr=(int)Math.round((r*(1-desaturation)+gray*desaturation)*red);
                 int gg=(int)Math.round((g*(1-desaturation)+gray*desaturation)*green);
                 int bb=(int)Math.round((b*(1-desaturation)+gray*desaturation)*blue);
-                sheet.setRGB(x,y,(argb&0xff000000)|(rr<<16)|(gg<<8)|bb);
+                result.setRGB(x,y,(argb&0xff000000)|(rr<<16)|(gg<<8)|bb);
             }
+            return result;
         }
     }
     private final Lighting lighting;

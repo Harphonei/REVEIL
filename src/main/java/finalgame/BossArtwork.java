@@ -7,11 +7,11 @@ import javax.imageio.ImageIO;
 
 /** Static artwork; animation/cutscene poses will be added later. */
 public final class BossArtwork {
-    private static final BufferedImage MAP=load("forest-boss-map.png");
+    private static final BufferedImage MAP=SpriteAnimator.Lighting.FOREST.tint(load("forest-boss-map.png"));
     private static final BufferedImage BATTLE=load("forest-boss-battle.png");
-    private static final BufferedImage SCIENTIST_MAP=load("scientist-map.png");
+    private static final BufferedImage SCIENTIST_MAP=SpriteAnimator.Lighting.MINE.tint(load("scientist-map.png"));
     private static final BufferedImage SCIENTIST_BATTLE=load("scientist-battle.png");
-    private static final BufferedImage MOTH_MAP=load("moth-map.png");
+    private static final BufferedImage MOTH_MAP=SpriteAnimator.Lighting.BUTTERFLY.tint(load("moth-map.png"));
     private static final BufferedImage MOTH_BATTLE=load("moth-battle.png");
     private BossArtwork() {}
     private static BufferedImage load(String name) {
