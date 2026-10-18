@@ -13,7 +13,7 @@ public final class BossArtwork {
     private static final BufferedImage SCIENTIST_BATTLE=load("scientist-battle.png");
     private static final BufferedImage MOTH_MAP=SpriteAnimator.Lighting.BUTTERFLY.tint(load("moth-map.png"));
     private static final BufferedImage MOTH_BATTLE=load("moth-battle.png");
-    private static final BufferedImage KNIGHT_MAP=SpriteAnimator.Lighting.TEMPLE_STONE.tint(load("knight-map.png"));
+    private static final BufferedImage KNIGHT_MAP=SpriteAnimator.Lighting.TEMPLE_STATUE.tint(load("knight-map.png"));
     private static final BufferedImage KNIGHT_BATTLE=load("knight-battle.png");
     private BossArtwork() {}
     private static BufferedImage load(String name) {
@@ -58,8 +58,10 @@ public final class BossArtwork {
         drawKnightMap(g,footX,footY,1.0);
     }
     public static void drawKnightMap(Graphics g,int footX,int footY,double scale) {
-        int width=(int)Math.round(64*scale),height=(int)Math.round(116*scale);
-        int swordTip=(int)Math.round(5*scale);
+        int height=(int)Math.round(116*scale);
+        int width=(int)Math.round(KNIGHT_MAP.getWidth()*height/(double)KNIGHT_MAP.getHeight());
+        // The approved blade ends two native rows below the boot soles.
+        int swordTip=(int)Math.round(2*height/(double)KNIGHT_MAP.getHeight());
         draw(g,KNIGHT_MAP,footX-width/2,footY-height+swordTip,width,height);
     }
     public static void drawKnightBattle(Graphics g,Rectangle bounds) {

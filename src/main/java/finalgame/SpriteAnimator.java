@@ -15,6 +15,7 @@ public final class SpriteAnimator {
         NEUTRAL(1,1,1,0), FOREST(.82,.85,.80,.12),
         MINE(.63,.69,.76,.20), BUTTERFLY(.57,.63,.70,.24),
         TEMPLE(.64,.66,.76,.30), TEMPLE_STONE(.78,.80,.90,.65),
+        TEMPLE_STATUE(.66,.68,.75,.72),
         THRONE_CORRIDOR(.53,.55,.65,.38), THRONE_ANTECHAMBER(.44,.46,.57,.42),
         THRONE_HALL(.30,.33,.44,.50);
         private final BufferedImage sheet;
