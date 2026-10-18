@@ -27,13 +27,14 @@ public class ScientistBoss extends Boss {
         g.setColor(Color.GREEN);g.fillRect(art.x,85,art.width*getHp()/getMaxHp(),7);
         BossArtwork.drawScientistBattle(g,art);g.dispose();
     }
+    private boolean openingRain=true;
     private final RandomAttackOrder order = new RandomAttackOrder(3);
     private enum Phase {
         RAIN, REST_AFTER_RAIN, REACTION, REST_AFTER_REACTION,
         GRID, REST_AFTER_GRID
     }
 
-    private final AttackPattern rain = new RainPattern();
+    private final AttackPattern rain = new RainPattern(new Random(),140.0,8,2);
     private final ArrayList<ExperimentZone> zones = new ArrayList<>();
     private final Random random = new Random();
     private Phase phase = Phase.RAIN;
@@ -69,7 +70,7 @@ public class ScientistBoss extends Boss {
         if (attackCooldown <= 0.0) {
             attack(projectiles);
             switch (phase) {
-                case RAIN: attackCooldown = 0.55; break;
+                case RAIN: attackCooldown = 0.50; break;
                 case REACTION: attackCooldown = 1.8; break;
                 case GRID: attackCooldown = 1.6; break;
                 default: break;
@@ -118,9 +119,10 @@ public class ScientistBoss extends Boss {
 
     private void selectAttack() {
         Phase[] attacks = {Phase.RAIN, Phase.REACTION, Phase.GRID};
-        int selected = order.next();
+        int selected = openingRain ? 0 : order.next();
+        if(openingRain){openingRain=false;order.reset(0);}
         phase = attacks[selected];
-        double[] durations = {5.2, 6.2, 6.8};
+        double[] durations = {5.6, 6.2, 6.8};
         phaseTime = durations[selected];
         attackCooldown = 0.7;
         experimentWave = 0;
@@ -191,6 +193,7 @@ public class ScientistBoss extends Boss {
     public void reset() {
         super.reset();
         zones.clear();
+        openingRain=true;
         order.reset();
         selectAttack();
     }

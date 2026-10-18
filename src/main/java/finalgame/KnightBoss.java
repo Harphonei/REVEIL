@@ -28,8 +28,9 @@ public class KnightBoss extends Boss {
         BossArtwork.drawKnightBattle(g,art);g.dispose();
     }
 
+    private boolean openingRain=true;
     private final RandomAttackOrder order = new RandomAttackOrder(4);
-    private final AttackPattern rain = new RainPattern(new Random(), 165.0);
+    private final AttackPattern rain = new RainPattern(new Random(),165.0,12,3);
     private final GuardWallPattern wall = new GuardWallPattern();
     private final ArrayList<SwordStrike> strikes = new ArrayList<>();
     private Rectangle arena = new Rectangle(300, 300, 360, 260);
@@ -47,8 +48,9 @@ public class KnightBoss extends Boss {
     }
 
     private void beginAttack() {
-        attackIndex = order.next();
-        double[] durations = {5.2, 7.5, 4.0, 5.5};
+        attackIndex = openingRain ? 0 : order.next();
+        if(openingRain){openingRain=false;order.reset(0);}
+        double[] durations = {6.2, 7.5, 4.0, 5.5};
         phaseTime = durations[attackIndex];
         attackCooldown = 0.7;
         recovering = false;
@@ -167,6 +169,7 @@ public class KnightBoss extends Boss {
     public void reset() {
         super.reset();
         strikes.clear();
+        openingRain=true;
         order.reset();
         beginAttack();
     }

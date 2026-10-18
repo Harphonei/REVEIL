@@ -28,8 +28,9 @@ public class MothBoss extends Boss {
         g.setColor(Color.GREEN);g.fillRect(art.x,85,art.width*getHp()/getMaxHp(),7);
         BossArtwork.drawMothBattle(g,art);g.dispose();
     }
+    private boolean openingRain=true;
     private final RandomAttackOrder order = new RandomAttackOrder(4);
-    private final AttackPattern rain = new RainPattern(new Random(), 145.0);
+    private final AttackPattern rain = new RainPattern(new Random(),155.0,10,2);
     private final WingPattern wings = new WingPattern();
     private final SpiralPattern spiral = new SpiralPattern();
     private final ArrayList<MemoryEcho> echoes = new ArrayList<>();
@@ -46,8 +47,9 @@ public class MothBoss extends Boss {
     }
 
     private void beginAttack() {
-        attackIndex = order.next();
-        double[] durations = {5.2, 5.4, 4.6, 5.8};
+        attackIndex = openingRain ? 0 : order.next();
+        if(openingRain){openingRain=false;order.reset(0);}
+        double[] durations = {5.9, 5.4, 4.6, 5.8};
         phaseTime = durations[attackIndex];
         attackCooldown = 0.7;
         recovering = false;
@@ -97,7 +99,7 @@ public class MothBoss extends Boss {
             attackCooldown = 1.1;
         } else {
             attack(projectiles);
-            double[] intervals = {0.45, 0.60, 1.1, 0.95};
+            double[] intervals = {0.44, 0.60, 1.1, 0.95};
             attackCooldown = intervals[attackIndex];
         }
     }
@@ -147,6 +149,7 @@ public class MothBoss extends Boss {
     public void reset() {
         super.reset();
         echoes.clear();
+        openingRain=true;
         order.reset();
         beginAttack();
     }

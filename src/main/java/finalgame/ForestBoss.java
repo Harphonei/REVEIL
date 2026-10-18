@@ -8,6 +8,7 @@ import java.util.ArrayList;
 
 // A frenzied monster: the bodies in the forest are its victims.
 public class ForestBoss extends Boss {
+    private boolean openingRain=true;
     private final RandomAttackOrder order = new RandomAttackOrder(3);
     private enum Phase {
         RAIN, REST_AFTER_RAIN, CLAWS, REST_AFTER_CLAWS, ROOTS, REST_AFTER_ROOTS
@@ -106,7 +107,8 @@ public class ForestBoss extends Boss {
 
     private void selectAttack() {
         Phase[] attacks = {Phase.RAIN, Phase.CLAWS, Phase.ROOTS};
-        int selected = order.next();
+        int selected = openingRain ? 0 : order.next();
+        if(openingRain){openingRain=false;order.reset(0);}
         phase = attacks[selected];
         phaseTime = selected == 2 ? 4.6 : 5.2;
         attackCooldown = 0.7;
@@ -162,6 +164,7 @@ public class ForestBoss extends Boss {
         super.reset();
         roots.clear();
         claws.reset();
+        openingRain=true;
         order.reset();
         selectAttack();
     }

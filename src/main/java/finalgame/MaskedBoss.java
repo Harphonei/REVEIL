@@ -49,7 +49,8 @@ public class MaskedBoss extends Boss {
 
     public MaskedBoss(int startX, int startY) {
         super(startX, startY, MAX_HP, "THE MASKED ONE");
-        beginAttack(phaseOneOrder.next());
+        phaseOneOrder.reset(0);
+        beginAttack(0);
     }
 
     @Override
@@ -314,6 +315,7 @@ public class MaskedBoss extends Boss {
         phaseTwoOrder.reset();
         phaseTwo = false;
         transitionTime = 0.0;
-        beginAttack(phaseOneOrder.next());
+        phaseOneOrder.reset(0);
+        beginAttack(0);
     }
 }
