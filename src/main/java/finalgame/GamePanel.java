@@ -211,6 +211,7 @@ public class GamePanel extends JPanel {
             if (inMine && selectedBoss == 2) mine.returnFromBattle();
             if (inButterfly && selectedBoss == 3) butterfly.returnFromBattle();
             if (inTemple && selectedBoss == 4) temple.returnFromBattle();
+            if (inThrone && selectedBoss == 5) throne.returnFromBattle();
             projectiles.clear();
             enemyProjectiles.clear();
             laser.reset();
@@ -245,6 +246,11 @@ public class GamePanel extends JPanel {
             exploration.returnFromBattle(); inMine=true; mine.enter();
         }
         clearInput();repaint();
+    }
+
+    private void startThroneBattle() {
+        selectedBoss=5;boss=new MaskedBoss(430,210);
+        restartBattle();changeState(GameState.BATTLE);
     }
 
     private void startTempleBattle() {
@@ -346,7 +352,7 @@ public class GamePanel extends JPanel {
                 throne.update(dx,dy,seconds,running);
                 if(throne.consumeBackRequest()) {
                     inThrone=false;inTemple=true;temple.returnFromThrone();clearInput();
-                }
+                } else if(throne.consumeBattleRequest()) startThroneBattle();
             } else if(inTemple) {
                 temple.update(dx,dy,seconds,running);
                 if(temple.consumeBackRequest()) {

@@ -15,6 +15,24 @@ public final class BossArtwork {
     private static final BufferedImage MOTH_BATTLE=load("moth-battle.png");
     private static final BufferedImage KNIGHT_MAP=SpriteAnimator.Lighting.TEMPLE_STATUE.tint(load("knight-map.png"));
     private static final BufferedImage KNIGHT_BATTLE=load("knight-battle.png");
+    private static final BufferedImage MASKED_MAP=SpriteAnimator.Lighting.THRONE_HALL.tint(load("masked-map.png"));
+    private static final BufferedImage MASKED_ONE=load("masked-battle-1.png");
+    private static final BufferedImage MASKED_TWO=load("masked-battle-2.png");
+    public static void drawMaskedMap(Graphics g,int footX,int footY,int height) {
+        int width=(int)Math.round(MASKED_MAP.getWidth()*height/(double)MASKED_MAP.getHeight());
+        draw(g,MASKED_MAP,footX-width/2,footY-height,width,height);
+    }
+    public static void drawMaskedBattle(Graphics graphics,Rectangle bounds,boolean phaseTwo,double transition) {
+        Graphics2D g=(Graphics2D)graphics.create();
+        if(phaseTwo && transition>0) {
+            float blend=(float)Math.max(0,Math.min(1,1-transition/1.1));
+            g.setComposite(AlphaComposite.SrcOver.derive(1-blend));
+            draw(g,MASKED_ONE,bounds.x,bounds.y,bounds.width,bounds.height);
+            g.setComposite(AlphaComposite.SrcOver.derive(blend));
+        }
+        draw(g,phaseTwo?MASKED_TWO:MASKED_ONE,bounds.x,bounds.y,bounds.width,bounds.height);
+        g.dispose();
+    }
     private BossArtwork() {}
     private static BufferedImage load(String name) {
         try {

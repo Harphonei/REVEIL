@@ -4,7 +4,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 
-/** The unlit inner sanctuary. No boss is placed until its design is approved. */
+/** The unlit inner sanctuary and the masked guardian of the throne. */
 public final class ThroneRoom {
     private static final double ZOOM=1.10,ACTOR_SCALE=1.35/ZOOM,SPEED=90*ACTOR_SCALE;
     private static final int HERO_WIDTH=(int)Math.round(36*ACTOR_SCALE);
@@ -16,7 +16,8 @@ public final class ThroneRoom {
     private final int[] blockedPrefix=makePrefix();
     private final SpriteAnimator animation=new SpriteAnimator();
     private double x,y,cameraX,cameraY;
-    private boolean backRequested,showCollision;
+    private boolean backRequested,showCollision,battleRequested,cleared;
+    private static final int BOSS_X=1560,BOSS_Y=420;
 
     public ThroneRoom(){reset();}
     private static BufferedImage load(String name) {
@@ -47,8 +48,8 @@ public final class ThroneRoom {
         }
         return im;
     }
-    public void reset(){enter();}
-    public void enter(){x=100;y=392;backRequested=false;animation.reset(SpriteAnimator.RIGHT);updateCamera();}
+    public void reset(){cleared=false;battleRequested=false;enter();}
+    public void enter(){x=100;y=392;backRequested=false;battleRequested=false;animation.reset(SpriteAnimator.RIGHT);updateCamera();}
     public void stopMovement(){animation.stop();}
     public void toggleCollisionView(){showCollision=!showCollision;}
     private boolean canStand(double px,double py) {
@@ -69,6 +70,7 @@ public final class ThroneRoom {
                 double ny=y+dy/length*distance/steps;if(canStand(x,ny))y=ny;
             }
         }
+        if(!cleared && Math.hypot(x+8-BOSS_X,y+16-BOSS_Y)<=70)battleRequested=true;
         animation.update(x-ox,y-oy,seconds,running);
         // Return only when the left edge of the feet reaches the end of the corridor.
         if(x+4<=54)backRequested=true;
@@ -79,7 +81,9 @@ public final class ThroneRoom {
         cameraY=Math.max(0,Math.min(y+8-520/(2*ZOOM),Math.max(0,height-520/ZOOM)));
     }
     public boolean consumeBackRequest(){boolean b=backRequested;backRequested=false;return b;}
-    public void skipToHall(){x=1530;y=400;backRequested=false;animation.reset(SpriteAnimator.RIGHT);updateCamera();}
+    public boolean consumeBattleRequest(){boolean b=battleRequested;battleRequested=false;return b;}
+    public void returnFromBattle(){cleared=true;battleRequested=false;stopMovement();}
+    public void skipToHall(){x=1445;y=404;backRequested=false;battleRequested=false;animation.reset(SpriteAnimator.RIGHT);updateCamera();}
     private int ambientShade() {
         if(x<=590)return 0;
         if(x<1090)return (int)Math.round((x-590)/500*16);
@@ -90,14 +94,16 @@ public final class ThroneRoom {
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
         g.translate(0,60);g.scale(ZOOM,ZOOM);g.translate(-Math.round(cameraX),-Math.round(cameraY));
         g.drawImage(background,0,0,null);
+        if(!cleared && y+16<BOSS_Y)BossArtwork.drawMaskedMap(g,BOSS_X,BOSS_Y,(int)Math.round(HERO_HEIGHT*1.30));
         Graphics2D actor=(Graphics2D)g.create();
         animation.drawInThrone(actor,(int)Math.round(x+8),(int)Math.round(y+16),HERO_WIDTH,HERO_HEIGHT,ambientShade());
         actor.dispose();
+        if(!cleared && y+16>=BOSS_Y)BossArtwork.drawMaskedMap(g,BOSS_X,BOSS_Y,(int)Math.round(HERO_HEIGHT*1.30));
         if(showCollision){g.drawImage(collision,0,0,null);g.setColor(Color.CYAN);g.drawRect((int)x+4,(int)y+10,8,6);}
         g.dispose();
         graphics.setColor(new Color(10,13,18));graphics.fillRect(0,0,960,60);graphics.fillRect(0,580,960,60);
         graphics.setColor(new Color(190,194,205));graphics.setFont(new Font(Font.MONOSPACED,Font.BOLD,18));
-        graphics.drawString("INNER SANCTUARY v3.45  |  The empty throne",20,25);
+        graphics.drawString("INNER SANCTUARY v3.58  |  The masked one",20,25);
         graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
         graphics.drawString("WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip",20,47);
         graphics.setColor(new Color(150,156,172));
