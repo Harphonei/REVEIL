@@ -5,6 +5,9 @@ import java.util.ArrayList;
 
 public class CrownPattern implements AttackPattern {
     private int wave = 0;
+    private final double speed;
+    public CrownPattern(){this(175.0);}
+    public CrownPattern(double speed){this.speed=speed;}
 
     public static double emitterX(Rectangle arena, int index) {
         return arena.getCenterX() + Math.sin(Math.toRadians(-70 + index * 35)) * 150;
@@ -26,7 +29,7 @@ public class CrownPattern implements AttackPattern {
         for (int i = -1; i <= 1; i++) {
             double angle = centreAngle + Math.toRadians(i * 12);
             projectiles.add(new EnemyProjectile(x - 6, y,
-                    Math.sin(angle) * 175.0, Math.cos(angle) * 175.0));
+                    Math.sin(angle) * speed, Math.cos(angle) * speed));
         }
         wave++;
     }

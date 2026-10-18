@@ -11,7 +11,7 @@ import java.awt.geom.Line2D;
 
 // The warning line and damaging area share exactly the same fixed geometry.
 public class SwordStrike {
-    private final Line2D line;
+    private final Shape line;
     private final Shape hitArea;
     private final Rectangle arena;
     private final double warningTime;
@@ -22,7 +22,12 @@ public class SwordStrike {
 
     public SwordStrike(double x1, double y1, double x2, double y2,
             float width, double warningTime, double activeTime, Rectangle arena) {
-        line = new Line2D.Double(x1, y1, x2, y2);
+        this(new Line2D.Double(x1,y1,x2,y2),width,warningTime,activeTime,arena);
+    }
+
+    public SwordStrike(Shape shape,float width,double warningTime,
+            double activeTime,Rectangle arena) {
+        line = shape;
         this.width = width;
         this.warningTime = warningTime * CombatTuning.WARNING_TIME_MULTIPLIER;
         this.activeTime = activeTime;
