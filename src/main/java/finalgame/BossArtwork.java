@@ -28,7 +28,7 @@ public final class BossArtwork {
     public static void drawMap(Graphics g,int footX,int footY) {
         g.setColor(new Color(0,0,0,65));
         // Anchor visible soles, not transparent canvas padding.
-        int height=90;
+        int height=108;
         int width=(int)Math.round(MAP.getWidth()*height/(double)MAP.getHeight());
         int left=footX-width/2;
         g.fillOval(left+width/5-5,footY-4,16,5);
