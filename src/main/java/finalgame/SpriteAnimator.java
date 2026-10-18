@@ -14,7 +14,9 @@ public final class SpriteAnimator {
     public enum Lighting {
         NEUTRAL(1,1,1,0), FOREST(.82,.85,.80,.12),
         MINE(.63,.69,.76,.20), BUTTERFLY(.57,.63,.70,.24),
-        TEMPLE(.64,.66,.76,.30), TEMPLE_STONE(.78,.80,.90,.65);
+        TEMPLE(.64,.66,.76,.30), TEMPLE_STONE(.78,.80,.90,.65),
+        THRONE_CORRIDOR(.53,.55,.65,.38), THRONE_ANTECHAMBER(.44,.46,.57,.42),
+        THRONE_HALL(.30,.33,.44,.50);
         private final BufferedImage sheet;
         private final double red,green,blue,desaturation;
         Lighting(double red,double green,double blue,double desaturation) {
@@ -79,8 +81,37 @@ public final class SpriteAnimator {
 
     /** Feet anchor stays fixed; artwork may extend above the collision box. */
     public void draw(Graphics g,int footX,int footY,int width,int height) {
+        drawSheet(g,lighting.sheet,footX,footY,width,height);
+    }
+    public void drawInThrone(Graphics g,int footX,int footY,int width,int height,int shade) {
+        drawSheet(g,ThroneLighting.SHEETS[Math.max(0,Math.min(32,shade))],footX,footY,width,height);
+    }
+    private void drawSheet(Graphics g,BufferedImage sheet,int footX,int footY,int width,int height) {
         int frame=getFrame(),sx=frame*WIDTH,sy=facing*HEIGHT;
-        g.drawImage(lighting.sheet,footX-width/2,footY-height,footX-width/2+width,footY,
+        g.drawImage(sheet,footX-width/2,footY-height,footX-width/2+width,footY,
                 sx,sy,sx+WIDTH,sy+HEIGHT,null);
     }
+    /** Cache 33 lighting levels once; movement/animation frames never restart on zone changes. */
+    private static final class ThroneLighting {
+        static final BufferedImage[] SHEETS=build();
+        private static BufferedImage[] build() {
+            BufferedImage[] result=new BufferedImage[33];
+            BufferedImage[] anchors={Lighting.THRONE_CORRIDOR.sheet,Lighting.THRONE_ANTECHAMBER.sheet,Lighting.THRONE_HALL.sheet};
+            for(int level=0;level<=32;level++) {
+                int segment=Math.min(1,level/16);double t=(level-segment*16)/16.0;
+                BufferedImage image=new BufferedImage(SHEET.getWidth(),SHEET.getHeight(),BufferedImage.TYPE_INT_ARGB);
+                for(int y=0;y<image.getHeight();y++)for(int x=0;x<image.getWidth();x++) {
+                    int a=anchors[segment].getRGB(x,y),b=anchors[segment+1].getRGB(x,y),pixel=a&0xff000000;
+                    for(int shift:new int[]{16,8,0}) {
+                        int channel=(int)Math.round(((a>>shift)&255)*(1-t)+((b>>shift)&255)*t);
+                        pixel|=channel<<shift;
+                    }
+                    image.setRGB(x,y,pixel);
+                }
+                result[level]=image;
+            }
+            return result;
+        }
+    }
+
 }

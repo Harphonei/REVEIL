@@ -30,6 +30,8 @@ public class GamePanel extends JPanel {
     private boolean inButterfly;
     private final TempleRoom temple=new TempleRoom();
     private boolean inTemple;
+    private final ThroneRoom throne=new ThroneRoom();
+    private boolean inThrone;
     private final Rectangle startButton = new Rectangle(340, 280, 280, 60);
     private final Rectangle resumeButton = new Rectangle(340, 270, 280, 60);
     private final Rectangle menuButton = new Rectangle(340, 350, 280, 60);
@@ -71,7 +73,7 @@ public class GamePanel extends JPanel {
         bindBossSelection("4", 4);
         bindBossSelection("5", 5);
         bindScreenAction("released F3", "collision-view", () -> {
-            if (state == GameState.EXPLORATION) { if(inTemple) temple.toggleCollisionView(); else if(inButterfly) butterfly.toggleCollisionView(); else if(inMine) mine.toggleCollisionView(); else exploration.toggleCollisionView(); repaint(); }
+            if (state == GameState.EXPLORATION) { if(inThrone) throne.toggleCollisionView(); else if(inTemple) temple.toggleCollisionView(); else if(inButterfly) butterfly.toggleCollisionView(); else if(inMine) mine.toggleCollisionView(); else exploration.toggleCollisionView(); repaint(); }
         });
         bindScreenAction("released F6", "skip-map", () -> skipMap());
         bindScreenAction("released ESCAPE", "pause", () -> togglePause());
@@ -181,6 +183,8 @@ public class GamePanel extends JPanel {
         mine.reset();
         butterfly.reset();
         temple.reset();
+        throne.reset();
+        inThrone=false;
         inTemple=false;
         inMine=false;
         inButterfly=false;
@@ -203,7 +207,7 @@ public class GamePanel extends JPanel {
         if (state == GameState.MENU) startNewGame();
         else if (state == GameState.PAUSED) togglePause();
         else if (state == GameState.BATTLE && !boss.isAlive() && player.isAlive()) {
-            if (!inMine && !inButterfly && !inTemple && selectedBoss == 1) exploration.returnFromBattle();
+            if (!inMine && !inButterfly && !inTemple && !inThrone && selectedBoss == 1) exploration.returnFromBattle();
             if (inMine && selectedBoss == 2) mine.returnFromBattle();
             if (inButterfly && selectedBoss == 3) butterfly.returnFromBattle();
             if (inTemple && selectedBoss == 4) temple.returnFromBattle();
@@ -220,7 +224,7 @@ public class GamePanel extends JPanel {
         } else if (state == GameState.PAUSED) {
             if (resumeButton.contains(x, y)) togglePause();
             else if (menuButton.contains(x, y)) changeState(GameState.MENU);
-        } else if (state == GameState.EXPLORATION && (inTemple ? false : inButterfly ? butterfly.interact(x,y) : inMine ? mine.interact(x,y) : exploration.interact(x, y))) {
+        } else if (state == GameState.EXPLORATION && (inThrone || inTemple ? false : inButterfly ? butterfly.interact(x,y) : inMine ? mine.interact(x,y) : exploration.interact(x, y))) {
             if(inButterfly) startButterflyBattle(); else if(inMine) startMineBattle(); else startForestBattle();
         }
         repaint();
@@ -228,7 +232,10 @@ public class GamePanel extends JPanel {
 
     private void skipMap() {
         if(state!=GameState.EXPLORATION)return;
-        if(inTemple) temple.skipToExit();
+        if(inThrone) throne.skipToHall();
+        else if(inTemple) {
+            temple.skipToExit();temple.consumeExitRequest();inTemple=false;inThrone=true;throne.enter();
+        }
         else if(inButterfly) {
             butterfly.returnFromBattle();inButterfly=false;inTemple=true;temple.enter();
         }
@@ -335,11 +342,19 @@ public class GamePanel extends JPanel {
         if (state == GameState.EXPLORATION) {
             int dx = (pressed[3] ? 1 : 0) - (pressed[1] ? 1 : 0);
             int dy = (pressed[2] ? 1 : 0) - (pressed[0] ? 1 : 0);
-            if(inTemple) {
+            if(inThrone) {
+                throne.update(dx,dy,seconds,running);
+                if(throne.consumeBackRequest()) {
+                    inThrone=false;inTemple=true;temple.returnFromThrone();clearInput();
+                }
+            } else if(inTemple) {
                 temple.update(dx,dy,seconds,running);
                 if(temple.consumeBackRequest()) {
                     inTemple=false;inButterfly=true;butterfly.returnFromTemple();clearInput();
                 } else if(temple.consumeBattleRequest()) startTempleBattle();
+                else if(temple.consumeExitRequest()) {
+                    inTemple=false;inThrone=true;throne.enter();clearInput();
+                }
             } else if(inButterfly) {
                 butterfly.update(dx,dy,seconds,running);
                 if(butterfly.consumeBackRequest()) {
@@ -482,6 +497,7 @@ public class GamePanel extends JPanel {
         mine.stopMovement();
         butterfly.stopMovement();
         temple.stopMovement();
+        throne.stopMovement();
         for (int i = 0; i < pressed.length; i++) {
             pressed[i] = false;
         }
@@ -501,7 +517,7 @@ public class GamePanel extends JPanel {
             return;
         }
         GameState visibleState = state == GameState.PAUSED ? stateBeforePause : state;
-        if (visibleState == GameState.EXPLORATION) { if(inTemple) temple.draw(g); else if(inButterfly) butterfly.draw(g); else if(inMine) mine.draw(g); else exploration.draw(g); }
+        if (visibleState == GameState.EXPLORATION) { if(inThrone) throne.draw(g); else if(inTemple) temple.draw(g); else if(inButterfly) butterfly.draw(g); else if(inMine) mine.draw(g); else exploration.draw(g); }
         else drawBattle(g);
         if (state == GameState.PAUSED) drawPause(g);
     }
@@ -630,7 +646,7 @@ public class GamePanel extends JPanel {
             g.drawString("Press R to retry",
                     battleArea.x + 95, battleArea.y + 165);
             if (player.isAlive()) {
-                g.drawString("Enter: Return to forest", 365, 495);
+                g.drawString("Enter: Return to map", 365, 495);
             }
         }
     }

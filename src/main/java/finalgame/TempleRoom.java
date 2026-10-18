@@ -105,6 +105,8 @@ public final class TempleRoom {
         cameraX=Math.max(0,Math.min(x+8-960/(2*ZOOM),background.getWidth()-960/ZOOM));
         cameraY=Math.max(0,Math.min(y+8-520/(2*ZOOM),background.getHeight()-520/ZOOM));
     }
+    public boolean consumeExitRequest(){boolean exit=exitReached;exitReached=false;return exit;}
+    public void returnFromThrone(){x=1180;y=200;exitReached=false;backRequested=false;battleRequested=false;animation.reset(SpriteAnimator.DOWN);updateCamera();}
     public boolean consumeBattleRequest(){boolean b=battleRequested;battleRequested=false;return b;}
     public void returnFromBattle(){cleared=true;battleRequested=false;x=1180;y=286;animation.reset(SpriteAnimator.UP);updateCamera();}
     public boolean consumeBackRequest(){boolean b=backRequested;backRequested=false;return b;}
@@ -130,11 +132,11 @@ public final class TempleRoom {
         g.dispose();
         graphics.setColor(new Color(15,20,19));graphics.fillRect(0,0,960,60);graphics.fillRect(0,580,960,60);
         graphics.setColor(Color.WHITE);graphics.setFont(new Font(Font.MONOSPACED,Font.BOLD,18));
-        graphics.drawString("RUINED TEMPLE v3.42  |  The silent forecourt",20,25);
+        graphics.drawString("RUINED TEMPLE v3.43  |  The silent forecourt",20,25);
         graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
         graphics.drawString("WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip",20,47);
         graphics.setColor(Color.LIGHT_GRAY);
-        graphics.drawString(exitReached?"Inner temple reached. The next area is coming soon.":
+        graphics.drawString(exitReached?"The inner sanctuary lies beyond.":
             "Follow the stone path to the temple entrance.",20,612);
     }
 }
