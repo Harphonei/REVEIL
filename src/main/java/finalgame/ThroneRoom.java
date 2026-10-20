@@ -6,7 +6,7 @@ import javax.imageio.ImageIO;
 
 /** The unlit inner sanctuary and the masked guardian of the throne. */
 public final class ThroneRoom {
-    private static final double ZOOM=1.10,ACTOR_SCALE=1.35/ZOOM,SPEED=90*ACTOR_SCALE;
+    private static final double ZOOM=1.18,ACTOR_SCALE=1.35/1.10,SPEED=90*ACTOR_SCALE;
     private static final int HERO_WIDTH=(int)Math.round(36*ACTOR_SCALE);
     private static final int HERO_HEIGHT=(int)Math.round(54*ACTOR_SCALE);
     private final BufferedImage background=load("throne-map.png");

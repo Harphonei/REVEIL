@@ -7,7 +7,7 @@ import javax.imageio.ImageIO;
 
 /** Mine world uses native artwork pixels; collision is always at the feet. */
 public final class MineRoom {
-    private static final double ZOOM=1.35, SPEED=90;
+    private static final double ZOOM=1.45, SPEED=90;
     private final BufferedImage background;
     private final Area floor=loadMask("mine-floor.png");
     private final Shape[] obstacles={loadMask("mine-objects.png")};

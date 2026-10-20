@@ -11,7 +11,7 @@ public class ExplorationRoom {
     private final double scaleX, scaleY;
     private static final int VIEW_W = 960, VIEW_H = 520, TOP = 60;
     private static final double SPEED = 90, SIZE = 16;
-    private static final double ZOOM = 1.35;
+    private static final double ZOOM = 1.45;
     private final BufferedImage background;
     private final Area floor = createFloor();
     private final Rectangle2D bossZone = new Rectangle2D.Double(1435, 390, 60, 45);
@@ -43,9 +43,9 @@ public class ExplorationRoom {
     private boolean showCollision;
     private final SpriteAnimator animation = new SpriteAnimator(SpriteAnimator.Lighting.FOREST);
     private int storyHeroPose;
-    private double storyRise;
     private double storyStrike;
-    private int storyBossPose;
+    private int storyBossPose=1;
+    private double feedingClock;
     private double storyBossX=1465,storyBossY=425,storyBossBob;
     private double storyZoom=ZOOM;
     private boolean storyCamera;
@@ -53,10 +53,22 @@ public class ExplorationRoom {
     public double storyX(){return x;}
     public double storyY(){return y;}
     public boolean isCleared(){return cleared;}
+    public static double explorationZoom(){return ZOOM;}
+    public void focusStoryHero(double zoom){focusStory(x+SIZE/2,y+SIZE/2,zoom);}
     public void setStoryHeroPose(int pose){storyHeroPose=pose;}
-    public void setStoryRise(double progress){storyHeroPose=2;storyRise=progress;}
     public void setStoryStrike(double progress){storyStrike=progress;}
     public void faceStoryHero(int facing){animation.reset(facing);}
+    public void faceStoryPoint(double targetX,double targetY) {
+        double dx=targetX-(x+SIZE/2),dy=targetY-(y+SIZE);
+        double ax=Math.abs(dx),ay=Math.abs(dy);
+        int direction;
+        if(Math.min(ax,ay)>Math.max(ax,ay)*0.41421356237)
+            direction=dy>0?(dx>0?SpriteAnimator.DOWN_RIGHT:SpriteAnimator.DOWN_LEFT)
+                          :(dx>0?SpriteAnimator.UP_RIGHT:SpriteAnimator.UP_LEFT);
+        else direction=ax>=ay?(dx>=0?SpriteAnimator.RIGHT:SpriteAnimator.LEFT)
+                            :(dy>=0?SpriteAnimator.DOWN:SpriteAnimator.UP);
+        animation.reset(direction);
+    }
     public void setStoryBoss(int pose,double feetX,double feetY,double bob) {
         storyBossPose=pose;storyBossX=feetX;storyBossY=feetY;storyBossBob=bob;
     }
@@ -66,7 +78,7 @@ public class ExplorationRoom {
         cameraY=Math.max(0,Math.min(centreY*scaleY-VIEW_H/(2*zoom),Math.max(0,background.getHeight()-VIEW_H/zoom)));
     }
     public void finishStory() {
-        storyHeroPose=0;storyRise=0;storyStrike=0;storyBossPose=0;storyBossX=1465;storyBossY=425;storyBossBob=0;
+        storyHeroPose=0;storyStrike=0;storyBossPose=1;storyBossX=1465;storyBossY=425;storyBossBob=0;
         storyCamera=false;storyZoom=ZOOM;updateCamera();
     }
 
@@ -119,7 +131,7 @@ public class ExplorationRoom {
     public void reset() {
         animation.reset(SpriteAnimator.DOWN);
         x=135; y=312; cleared=false; battleRequested=false; mineReached=false;
-        storyHeroPose=0;storyRise=0;storyStrike=0;storyBossPose=0;storyBossX=1465;storyBossY=425;storyBossBob=0;
+        storyHeroPose=0;storyStrike=0;storyBossPose=1;storyBossX=1465;storyBossY=425;storyBossBob=0;feedingClock=0;
         storyCamera=false;storyZoom=ZOOM;
         message="You wake in the forest. Follow the trail to the right.";
         updateCamera();
@@ -130,6 +142,7 @@ public class ExplorationRoom {
     }
 
     public void update(int dx, int dy, double seconds, boolean running) {
+        feedingClock+=Math.max(0,Math.min(seconds,.1));
         double oldX=x,oldY=y;
         // Small axis-separated steps prevent tunnelling and allow sliding along walls.
         double length=Math.hypot(dx,dy);
@@ -208,13 +221,13 @@ public class ExplorationRoom {
         if(storyHeroPose==1) {
             actor.translate(feetX,feetY-12);actor.rotate(-Math.PI/2);
             animation.draw(actor,0,22,36,54);
-        } else animation.draw(actor,feetX,feetY,36,storyHeroPose==2?39+(int)Math.round(storyRise*15):54);
+        } else animation.draw(actor,feetX,feetY,36,54);
         actor.dispose();
     }
 
     private void drawStoryBoss(Graphics2D g,int feetX,int feetY) {
-        if(storyBossPose==0)BossArtwork.drawMap(g,feetX,feetY);
-        else BossArtwork.drawForestPose(g,feetX,feetY+(int)Math.round(storyBossBob),storyBossPose-1);
+        double idleBob=!storyCamera&&storyBossPose==1?Math.sin(feedingClock*5)*1.2:0;
+        BossArtwork.drawForestPose(g,feetX,feetY+(int)Math.round(storyBossBob+idleBob),Math.max(0,storyBossPose-1));
         if(storyStrike>0 && storyStrike<1) {
             Graphics2D impact=(Graphics2D)g.create();
             impact.setStroke(new BasicStroke(2));impact.setColor(new Color(110,36,34));

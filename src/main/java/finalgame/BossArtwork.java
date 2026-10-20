@@ -13,7 +13,7 @@ public final class BossArtwork {
     public static void drawForestPose(Graphics graphics,int footX,int footY,int pose) {
         Graphics2D g=(Graphics2D)graphics.create();
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-        int width=173,height=130,left=footX-width/2,top=footY-122;
+        int width=128,height=96,left=footX-width/2,top=footY-90;
         int sx=Math.max(0,Math.min(2,pose))*128;
         g.drawImage(FOREST_POSES,left,top,left+width,top+height,sx,0,sx+128,96,null);
         g.dispose();

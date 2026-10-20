@@ -56,7 +56,7 @@ public class GamePanel extends JPanel {
     private final StoryDirector story=new StoryDirector(dialogue);
     private boolean forestCorpseSeen,forestEncounterSeen,forestVictorySeen,forestStoryBattle;
     private boolean storySkippable;
-    private double storyFade,battleSlide=1,battleReadyTime;
+    private double storyFade,battleReadyTime;
 
     public GamePanel() {
         setPreferredSize(new Dimension(VIEW_WIDTH, VIEW_HEIGHT));
@@ -191,7 +191,7 @@ public class GamePanel extends JPanel {
     }
 
     private void startNewGame() {
-        story.cancel();storyFade=0;battleSlide=1;storySkippable=false;
+        story.cancel();storyFade=0;storySkippable=false;
         forestCorpseSeen=false;forestEncounterSeen=false;forestVictorySeen=false;forestStoryBattle=false;
         exploration.reset();
         mine.reset();
@@ -205,8 +205,8 @@ public class GamePanel extends JPanel {
         selectedBoss = 1;
         boss = new ForestBoss(430, 210);
         restartBattle();
-        changeState(GameState.EXPLORATION);
         playForestOpening();
+        changeState(GameState.EXPLORATION);
     }
 
     private void togglePause() {
@@ -308,23 +308,26 @@ public class GamePanel extends JPanel {
 
     private void playForestOpening() {
         clearInput();storyFade=0;exploration.setStoryHeroPose(1);
+        final double closeZoom=2.15;
+        exploration.focusStoryHero(closeZoom);
         story.play(this::endForestScene,
             StoryDirector.motion("fade-from-menu",.7,p->storyFade=p),
             StoryDirector.waitFor("black",.3),
             StoryDirector.motion("wake-fade",1.3,p->storyFade=1-p),
             StoryDirector.waitFor("unconscious",.8),
-            StoryDirector.action("sit-up",()->exploration.setStoryHeroPose(2)),
+            StoryDirector.action("wake-up",()->exploration.setStoryHeroPose(0)),
             StoryDirector.say(DialogueBox.Face.NEUTRAL,"อึก…"),
             StoryDirector.say(DialogueBox.Face.CONFUSED,"ที่นี่…ที่ไหนกัน…"),
             StoryDirector.say(DialogueBox.Face.CONFUSED,"แล้วฉัน…อึก…เป็นใครกัน"),
             StoryDirector.waitFor("hold-head",.6),
-            StoryDirector.motion("rise-to-feet",.7,p->exploration.setStoryRise(p)),
-            StoryDirector.action("stand-up",()->exploration.setStoryHeroPose(0)),
-            StoryDirector.waitFor("standing",.5));
+            StoryDirector.motion("opening-pull-back",1.5,p->{
+                double ease=p*p*(3-2*p);
+                exploration.focusStoryHero(closeZoom+(ExplorationRoom.explorationZoom()-closeZoom)*ease);
+            }));
     }
 
     private void playForestCorpse() {
-        forestCorpseSeen=true;clearInput();exploration.faceStoryHero(SpriteAnimator.DOWN_RIGHT);
+        forestCorpseSeen=true;clearInput();exploration.faceStoryPoint(390,367);
         story.play(this::endForestScene,
             StoryDirector.waitFor("notice-corpse",.35),
             StoryDirector.say(DialogueBox.Face.SHOCKED,"นี่มันตัวอะไรกันเนี่ย…"),
@@ -337,7 +340,12 @@ public class GamePanel extends JPanel {
         exploration.faceStoryHero(SpriteAnimator.RIGHT);
         exploration.setStoryBoss(1,1465,425,0);
         story.play(()->{forestEncounterSeen=true;storySkippable=false;battleReadyTime=3;clearInput();},
-            StoryDirector.motion("pan-to-feeding",1.2,p->exploration.focusStory(hx+(1465-hx)*p,hy+(390-hy)*p,1.35+.25*p)),
+            StoryDirector.waitFor("notice-feeding",.3),
+            StoryDirector.motion("pan-to-feeding",1.4,p->{
+                double ease=p*p*(3-2*p);
+                double zoom=ExplorationRoom.explorationZoom();
+                exploration.focusStory(hx+(1465-hx)*ease,hy-8+(390-(hy-8))*ease,zoom+(1.50-zoom)*ease);
+            }),
             StoryDirector.motion("beast-strikes-prey",.4,p->{exploration.setStoryStrike(p);exploration.setStoryBoss(1,1465,425,Math.sin(p*Math.PI*2)*4);}),
             StoryDirector.action("strike-ends",()->exploration.setStoryStrike(0)),
             StoryDirector.motion("feeding",2.8,p->exploration.setStoryBoss(1,1465,425,Math.sin(p*Math.PI*12)*3)),
@@ -346,26 +354,29 @@ public class GamePanel extends JPanel {
             StoryDirector.action("beast-looks-up",()->exploration.setStoryBoss(2,1465,425,0)),
             StoryDirector.waitFor("growl",.8),
             StoryDirector.say(DialogueBox.Face.SHOCKED,"แย่แล้ว…"),
-            StoryDirector.motion("beast-approaches",1.5,p->{
-                exploration.setStoryBoss(2,1465+(hx+95-1465)*p,425+(hy-425)*p,Math.sin(p*Math.PI*8)*2);
-                exploration.focusStory(1465+((hx+1465)/2-1465)*p,390+(hy-25-390)*p,1.6);
+            StoryDirector.motion("beast-approaches",.9,p->{
+                double ease=p*p*(3-2*p);
+                exploration.setStoryBoss(2,1465+(hx+240-1465)*ease,425+(hy-425)*ease,Math.sin(p*Math.PI*4)*1.5);
+                exploration.focusStory(1465+((hx+1465)/2-1465)*ease,390+(hy-25-390)*ease,1.50);
             }),
-            StoryDirector.motion("beast-leaps",.42,p->{
-                exploration.setStoryBoss(3,hx+95-85*p,hy-Math.sin(p*Math.PI)*50,0);
-                storyFade=Math.max(0,(p-.35)/.65);
+            StoryDirector.waitFor("beast-poised",.15),
+            StoryDirector.motion("beast-leaps",.65,p->{
+                exploration.setStoryBoss(3,hx+240-230*p,hy-Math.sin(p*Math.PI)*65,0);
+                storyFade=Math.max(0,(p-.65)/.35);
             }),
             StoryDirector.action("enter-battle",()->{
                 selectedBoss=1;boss=new ForestBoss(430,210);restartBattle();changeState(GameState.BATTLE);
-                exploration.finishStory();storyFade=1;battleSlide=0;
+                exploration.finishStory();storyFade=1;
             }),
-            StoryDirector.motion("battle-fade",.45,p->storyFade=1-p),
-            StoryDirector.motion("battle-slide",.8,p->battleSlide=1-Math.pow(1-p,3)),
-            StoryDirector.say(DialogueBox.Face.SHOCKED,"อึก…แย่แล้ว ฉันต้องสู้กับมันเหรอเนี่ย"));
+            StoryDirector.waitFor("battle-black",.18),
+            StoryDirector.motion("battle-fade",.65,p->storyFade=1-p),
+            StoryDirector.waitFor("battle-settle",.35),
+            StoryDirector.say(DialogueBox.Face.SHOCKED,"ยะ...อย่าเข้ามานะ!"));
     }
 
     private void finishForestEntrance() {
         story.cancel();selectedBoss=1;boss=new ForestBoss(430,210);forestStoryBattle=true;
-        exploration.finishStory();storyFade=0;battleSlide=1;storySkippable=false;
+        exploration.finishStory();storyFade=0;storySkippable=false;
         restartBattle();changeState(GameState.BATTLE);
     }
 
@@ -486,7 +497,7 @@ public class GamePanel extends JPanel {
                 exploration.update(dx,dy,seconds,running);
                 if(!forestCorpseSeen && exploration.storyX()>=290 && exploration.storyX()<1100) {
                     playForestCorpse();
-                } else if(!forestEncounterSeen && !exploration.isCleared() && exploration.storyX()>=1330) {
+                } else if(!forestEncounterSeen && !exploration.isCleared() && exploration.storyX()>=1090) {
                     startForestBattle();
                 } else if(exploration.consumeMineRequest()) {
                     inMine=true; mine.enter(); clearInput();
@@ -601,7 +612,7 @@ public class GamePanel extends JPanel {
         enemyProjectiles.clear();
         player.reset(468, 500);
         boss.reset();
-        battleReadyTime=3;battleSlide=1;
+        battleReadyTime=3;
         shotCooldown = 0.0;
         repaint();
     }
@@ -645,9 +656,9 @@ public class GamePanel extends JPanel {
             return;
         }
         GameState visibleState = state == GameState.PAUSED ? stateBeforePause : state;
-        if (visibleState == GameState.EXPLORATION) { if(inThrone) throne.draw(g); else if(inTemple) temple.draw(g); else if(inButterfly) butterfly.draw(g); else if(inMine) mine.draw(g); else exploration.draw(g); }
-        else drawBattle(g);
         if(story.currentId().equals("fade-from-menu"))drawMenu(g);
+        else if (visibleState == GameState.EXPLORATION) { if(inThrone) throne.draw(g); else if(inTemple) temple.draw(g); else if(inButterfly) butterfly.draw(g); else if(inMine) mine.draw(g); else exploration.draw(g); }
+        else drawBattle(g);
         if(story.active()) {
             if(storyFade>0) {
                 Graphics2D fade=(Graphics2D)g.create();fade.setColor(new Color(0,0,0,(int)(Math.min(1,storyFade)*255)));
@@ -674,6 +685,8 @@ public class GamePanel extends JPanel {
     }
 
     private void drawMenu(Graphics g) {
+        g.setColor(Color.BLACK);
+        g.fillRect(0,0,VIEW_WIDTH,VIEW_HEIGHT);
         g.setColor(Color.WHITE);
         g.setFont(new Font(Font.MONOSPACED, Font.BOLD, 72));
         g.drawString("FINAL", 370, 190);
@@ -681,7 +694,7 @@ public class GamePanel extends JPanel {
         g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 18));
         g.setColor(Color.LIGHT_GRAY);
         g.drawString("Click PLAY or press Enter", 340, 395);
-        g.drawString("Forest story preview  |  v3.65", 310, 500);
+        g.drawString("Forest story preview  |  v3.67", 310, 500);
         g.drawString("No saved progress yet", 365, 535);
     }
 
@@ -722,7 +735,7 @@ public class GamePanel extends JPanel {
             laser.draw(g);
         }
         Graphics2D bossGraphics=(Graphics2D)g.create();
-        bossGraphics.translate((int)Math.round((battleSlide-1)*480),0);boss.draw(bossGraphics);bossGraphics.dispose();
+        boss.draw(bossGraphics);bossGraphics.dispose();
         player.draw(g);
         for (Projectile projectile : projectiles) {
             projectile.draw(g);

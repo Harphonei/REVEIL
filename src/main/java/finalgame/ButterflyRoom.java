@@ -7,7 +7,7 @@ import javax.imageio.ImageIO;
 
 /** Butterfly forest world uses native artwork pixels; collision is always at the feet. */
 public final class ButterflyRoom {
-    private static final double ZOOM=1.35, SPEED=90;
+    private static final double ZOOM=1.45, SPEED=90;
     private final BufferedImage background;
     private final BufferedImage rootArtwork;
     private final Area floor=loadMask("butterfly-floor.png");

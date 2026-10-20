@@ -7,9 +7,9 @@ import javax.imageio.ImageIO;
 
 /** Temple world uses native artwork pixels; collision is always at the feet. */
 public final class TempleRoom {
-    private static final double ZOOM=1.10;
+    private static final double ZOOM=1.18;
     // Keep actors and movement the same screen size/speed as the other rooms.
-    private static final double ACTOR_SCALE=1.35/ZOOM, SPEED=90*ACTOR_SCALE;
+    private static final double ACTOR_SCALE=1.35/1.10, SPEED=90*ACTOR_SCALE;
     private static final int HERO_WIDTH=(int)Math.round(36*ACTOR_SCALE);
     private static final int HERO_HEIGHT=(int)Math.round(54*ACTOR_SCALE);
     private final BufferedImage background;
