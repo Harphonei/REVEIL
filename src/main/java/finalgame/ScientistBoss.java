@@ -163,6 +163,10 @@ public class ScientistBoss extends Boss {
     /** Give the new ability dialogue a clean, safe return to combat. */
     public void clearStoryHazards(){zones.clear();attackCooldown=Math.max(attackCooldown,.7);}
 
+    public void resumeAfterSkillReveal(){
+        zones.clear();phase=Phase.RAIN;phaseTime=5.6;attackCooldown=0;
+    }
+
     @Override
     public void drawHazards(Graphics g) {
         if (isAlive()) {

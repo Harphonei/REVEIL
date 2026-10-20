@@ -321,8 +321,9 @@ public class GamePanel extends JPanel {
     private void playMineEntrance(){
         clearInput();
         final double hx=mine.storyX(),hy=mine.storyY();
+        final double[] walkProgress={0};
         mine.faceStoryHero(SpriteAnimator.UP);
-        story.play(()->{mineEncounterSeen=true;mine.finishStory();storyFade=0;battleReadyTime=3;clearInput();},
+        story.play(()->{mineEncounterSeen=true;mine.finishStory();storyFade=0;battleReadyTime=2;clearInput();},
             StoryDirector.waitFor("mine-notice-work",.3),
             StoryDirector.motion("mine-pan-to-work",1.3,p->{
                 double ease=p*p*(3-2*p);
@@ -332,9 +333,10 @@ public class GamePanel extends JPanel {
             StoryDirector.motion("scientist-working",1.2,p->mine.setWorkBob(Math.sin(p*Math.PI*8))),
             StoryDirector.say(DialogueBox.Face.NONE,"หืม…หนูทดลองตัวใหม่งั้นเหรอ"),
             StoryDirector.say(DialogueBox.Face.NEUTRAL,"…"),
-            StoryDirector.motion("careful-walk-past",1.8,p->{
+            StoryDirector.motion("careful-walk-past",4.5,p->{
                 double ease=p*p*(3-2*p);
-                mine.moveStoryHero(hx+(900-hx)*ease,hy+(280-hy)*ease,.05);
+                mine.moveStoryHero(hx+(900-hx)*ease,hy+(280-hy)*ease,(p-walkProgress[0])*4.5*.5);
+                walkProgress[0]=p;
                 mine.focusStory(910-10*ease,200+30*ease,1.6);
             }),
             StoryDirector.action("stop-in-lab",()->mine.faceStoryHero(SpriteAnimator.UP)),
@@ -356,16 +358,44 @@ public class GamePanel extends JPanel {
     }
 
     private boolean tryUnlockMineE(){
-        if(!mineStoryBattle||skillEUnlocked||!boss.isAlive()||boss.getHp()*5>boss.getMaxHp()*4)return false;
+        if(!mineStoryBattle||skillEUnlocked||!boss.isAlive()||!player.isAlive()
+                ||(boss.getHp()*5>boss.getMaxHp()*4&&player.getHp()*10>player.getMaxHp()*7))return false;
         clearInput();projectiles.clear();enemyProjectiles.clear();laser.reset();
         if(boss instanceof ScientistBoss)((ScientistBoss)boss).clearStoryHazards();
-        story.play(()->{battleReadyTime=3;clearInput();},
-            StoryDirector.say(DialogueBox.Face.SHOCKED,"อึก…มือฉัน…ร้อนขึ้นมา…"),
-            StoryDirector.say(DialogueBox.Face.CONFUSED,"พลังนี่…ทำไมฉันถึงรู้วิธีใช้มัน…"),
-            StoryDirector.say(DialogueBox.Face.NONE,"หืม…แม้แต่พลังนั่นก็คุ้นเคยเสียจริง"),
-            StoryDirector.say(DialogueBox.Face.NEUTRAL,"ถ้าอย่างนั้น…ลองใช้มันดูแล้วกัน"),
+        final double[] chargeProgress={0},flightProgress={0};
+        story.play(()->{
+                battleReadyTime=0;clearInput();
+                if(boss instanceof ScientistBoss)((ScientistBoss)boss).resumeAfterSkillReveal();
+            },
+            StoryDirector.action("skill-e-hit-reaction",player::showHitReaction),
+            StoryDirector.say(DialogueBox.Face.SHOCKED,"อ้าก!"),
+            StoryDirector.say(DialogueBox.Face.NONE,"อ่อนแอเสียจริง"),
+            StoryDirector.say(DialogueBox.Face.NEUTRAL,"งั้นเจอนี่ ย้าก!!"),
+            StoryDirector.action("skill-e-auto-charge",()->{
+                projectiles.clear();enemyProjectiles.clear();laser.reset();player.useSkillE();
+            }),
+            StoryDirector.motion("skill-e-charge",.6,p->{
+                player.update((p-chargeProgress[0])*.6);chargeProgress[0]=p;
+            }),
+            StoryDirector.action("skill-e-auto-fire",()->{
+                Projectile charged=player.pollSkillProjectile();
+                if(charged!=null){
+                    Rectangle heart=player.getBounds(),target=boss.getBounds();
+                    projectiles.add(new SkillProjectile(heart.getCenterX(),heart.y,target.getCenterX(),target.getCenterY()));
+                }
+            }),
+            StoryDirector.motion("skill-e-flight",1.2,p->{
+                double dt=(p-flightProgress[0])*1.2;flightProgress[0]=p;player.update(dt);
+                java.util.Iterator<Projectile> shots=projectiles.iterator();
+                while(shots.hasNext()){
+                    Projectile shot=shots.next();shot.update(dt);
+                    if(shot.getBounds().intersects(boss.getBounds())){boss.takeDamage(shot.getDamage());shots.remove();}
+                }
+            }),
+            StoryDirector.action("skill-e-clear-arena",()->projectiles.clear()),
+            StoryDirector.say(DialogueBox.Face.NONE,"....น่าสนใจจริงๆ"),
             StoryDirector.action("unlock-skill-e",()->skillEUnlocked=true),
-            StoryDirector.say(DialogueBox.Face.NONE,"ปลดล็อกสกิล E\nกด E เพื่อชาร์จแล้วยิงพลังไปข้างหน้า"));
+            StoryDirector.say(DialogueBox.Face.NONE,"ปลดล็อคสกิล Heavy Attact\nกด E เพื่อรวบรวมพลังและโจมตี"));
         return true;
     }
 
@@ -420,7 +450,7 @@ public class GamePanel extends JPanel {
         final double hx=exploration.storyX()+8,hy=exploration.storyY()+16;
         exploration.faceStoryHero(SpriteAnimator.RIGHT);
         exploration.setStoryBoss(1,1465,425,0);
-        story.play(()->{forestEncounterSeen=true;storySkippable=false;battleReadyTime=3;clearInput();},
+        story.play(()->{forestEncounterSeen=true;storySkippable=false;battleReadyTime=2;clearInput();},
             StoryDirector.waitFor("notice-feeding",.3),
             StoryDirector.motion("pan-to-feeding",1.4,p->{
                 double ease=p*p*(3-2*p);
@@ -698,7 +728,7 @@ public class GamePanel extends JPanel {
         enemyProjectiles.clear();
         player.reset(468, 500);
         boss.reset();
-        battleReadyTime=3;
+        battleReadyTime=2;
         shotCooldown = 0.0;
         repaint();
     }
@@ -780,7 +810,7 @@ public class GamePanel extends JPanel {
         g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 18));
         g.setColor(Color.LIGHT_GRAY);
         g.drawString("Click PLAY or press Enter", 340, 395);
-        g.drawString("Forest + Mine story  |  v3.68", 310, 500);
+        g.drawString("Forest + Mine story  |  v3.69", 310, 500);
         g.drawString("No saved progress yet", 365, 535);
     }
 

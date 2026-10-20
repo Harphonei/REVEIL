@@ -158,6 +158,9 @@ public class Player {
         return new Rectangle(laserX, 0, laserWidth, laserHeight);
     }
 
+    /** Visual reaction for the scripted hit; does not add hidden HP damage. */
+    public void showHitReaction(){invincibleTime=Math.max(invincibleTime,.75);}
+
     public void takeDamage(int damage) {
         if (damage > 0 && isAlive() && invincibleTime <= 0.0) {
             hp = Math.max(0, hp - damage);
