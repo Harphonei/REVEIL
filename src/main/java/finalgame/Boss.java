@@ -33,6 +33,11 @@ public abstract class Boss {
         return new Rectangle(x, y, width, height);
     }
 
+    /** Damage target may be smaller than the full sprite (e.g. the moth's wings). */
+    public Rectangle getHitBounds() {
+        return getBounds();
+    }
+
     public void takeDamage(int damage) {
         if (damage > 0) {
             hp = Math.max(0, hp - damage);

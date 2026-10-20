@@ -42,6 +42,33 @@ public class ExplorationRoom {
     private String message;
     private boolean showCollision;
     private final SpriteAnimator animation = new SpriteAnimator(SpriteAnimator.Lighting.FOREST);
+    private int storyHeroPose;
+    private double storyRise;
+    private double storyStrike;
+    private int storyBossPose;
+    private double storyBossX=1465,storyBossY=425,storyBossBob;
+    private double storyZoom=ZOOM;
+    private boolean storyCamera;
+
+    public double storyX(){return x;}
+    public double storyY(){return y;}
+    public boolean isCleared(){return cleared;}
+    public void setStoryHeroPose(int pose){storyHeroPose=pose;}
+    public void setStoryRise(double progress){storyHeroPose=2;storyRise=progress;}
+    public void setStoryStrike(double progress){storyStrike=progress;}
+    public void faceStoryHero(int facing){animation.reset(facing);}
+    public void setStoryBoss(int pose,double feetX,double feetY,double bob) {
+        storyBossPose=pose;storyBossX=feetX;storyBossY=feetY;storyBossBob=bob;
+    }
+    public void focusStory(double centreX,double centreY,double zoom) {
+        storyCamera=true;storyZoom=zoom;
+        cameraX=Math.max(0,Math.min(centreX*scaleX-VIEW_W/(2*zoom),Math.max(0,background.getWidth()-VIEW_W/zoom)));
+        cameraY=Math.max(0,Math.min(centreY*scaleY-VIEW_H/(2*zoom),Math.max(0,background.getHeight()-VIEW_H/zoom)));
+    }
+    public void finishStory() {
+        storyHeroPose=0;storyRise=0;storyStrike=0;storyBossPose=0;storyBossX=1465;storyBossY=425;storyBossBob=0;
+        storyCamera=false;storyZoom=ZOOM;updateCamera();
+    }
 
     public ExplorationRoom() {
         try {
@@ -92,6 +119,8 @@ public class ExplorationRoom {
     public void reset() {
         animation.reset(SpriteAnimator.DOWN);
         x=135; y=312; cleared=false; battleRequested=false; mineReached=false;
+        storyHeroPose=0;storyRise=0;storyStrike=0;storyBossPose=0;storyBossX=1465;storyBossY=425;storyBossBob=0;
+        storyCamera=false;storyZoom=ZOOM;
         message="You wake in the forest. Follow the trail to the right.";
         updateCamera();
     }
@@ -135,6 +164,7 @@ public class ExplorationRoom {
     }
 
     private void updateCamera() {
+        if(storyCamera)return;
         cameraX=Math.max(0,Math.min(x*scaleX+SIZE*scaleX/2-VIEW_W/(2.0*ZOOM),background.getWidth()-VIEW_W/ZOOM));
         cameraY=Math.max(0,Math.min(y*scaleY+SIZE*scaleY/2-VIEW_H/(2.0*ZOOM),background.getHeight()-VIEW_H/ZOOM));
     }
@@ -175,7 +205,24 @@ public class ExplorationRoom {
         if(x+SIZE/2>=1960 && x+SIZE/2<1998 && y+SIZE<350) {
             actor.clip(new Rectangle2D.Double(1955*scaleX,290*scaleY,45*scaleX,90*scaleY));
         }
-        animation.draw(actor,feetX,feetY,36,54);actor.dispose();
+        if(storyHeroPose==1) {
+            actor.translate(feetX,feetY-12);actor.rotate(-Math.PI/2);
+            animation.draw(actor,0,22,36,54);
+        } else animation.draw(actor,feetX,feetY,36,storyHeroPose==2?39+(int)Math.round(storyRise*15):54);
+        actor.dispose();
+    }
+
+    private void drawStoryBoss(Graphics2D g,int feetX,int feetY) {
+        if(storyBossPose==0)BossArtwork.drawMap(g,feetX,feetY);
+        else BossArtwork.drawForestPose(g,feetX,feetY+(int)Math.round(storyBossBob),storyBossPose-1);
+        if(storyStrike>0 && storyStrike<1) {
+            Graphics2D impact=(Graphics2D)g.create();
+            impact.setStroke(new BasicStroke(2));impact.setColor(new Color(110,36,34));
+            int offset=(int)Math.round(storyStrike*22);
+            impact.drawLine(feetX-35+offset,feetY-25,feetX-12+offset,feetY-7);
+            impact.drawLine(feetX-29+offset,feetY-26,feetX-6+offset,feetY-8);
+            impact.dispose();
+        }
     }
 
     public void draw(Graphics graphics) {
@@ -183,7 +230,7 @@ public class ExplorationRoom {
         g.setClip(0,TOP,VIEW_W,VIEW_H);
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
         g.translate(0,TOP);
-        g.scale(ZOOM,ZOOM);
+        g.scale(storyZoom,storyZoom);
         g.translate(-Math.round(cameraX),-Math.round(cameraY));
         // Zoom the complete world together with nearest-neighbor pixels.
         g.drawImage(background,0,0,null);
@@ -204,13 +251,13 @@ public class ExplorationRoom {
         }
         int feetX=(int)Math.round((x+SIZE/2)*scaleX);
         int feetY=(int)Math.round((y+SIZE)*scaleY);
-        int bossFeetX=(int)Math.round(1465*scaleX);
-        int bossFeetY=(int)Math.round(425*scaleY);
+        int bossFeetX=(int)Math.round(storyBossX*scaleX);
+        int bossFeetY=(int)Math.round(storyBossY*scaleY);
         if(!cleared && feetY<bossFeetY) {
             drawPlayer(g,feetX,feetY);
-            BossArtwork.drawMap(g,bossFeetX,bossFeetY);
+            drawStoryBoss(g,bossFeetX,bossFeetY);
         } else {
-            if(!cleared) BossArtwork.drawMap(g,bossFeetX,bossFeetY);
+            if(!cleared) drawStoryBoss(g,bossFeetX,bossFeetY);
             drawPlayer(g,feetX,feetY);
         }
         g.dispose();
@@ -219,7 +266,7 @@ public class ExplorationRoom {
         graphics.fillRect(0,TOP+VIEW_H,VIEW_W,60);
         graphics.setFont(new Font(Font.MONOSPACED,Font.BOLD,18));
         graphics.setColor(Color.WHITE);
-        graphics.drawString("FOREST v3.46  |  "+(cleared?"Route to mine: OPEN":"Follow the trail"),20,25);
+        graphics.drawString("THE FOREST  |  "+(cleared?"Route to mine: OPEN":"Follow the trail"),20,25);
         graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
         graphics.drawString(cleared ? "WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip map" : "WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip map",20,47);
         graphics.setColor(mineReached?new Color(175,210,175):Color.LIGHT_GRAY);

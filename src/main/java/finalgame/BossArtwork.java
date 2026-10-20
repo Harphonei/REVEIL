@@ -9,6 +9,15 @@ import javax.imageio.ImageIO;
 public final class BossArtwork {
     private static final BufferedImage MAP=SpriteAnimator.Lighting.FOREST.tint(load("forest-boss-map.png"));
     private static final BufferedImage BATTLE=load("forest-boss-battle.png");
+    private static final BufferedImage FOREST_POSES=SpriteAnimator.Lighting.FOREST.tint(load("forest-boss-poses.png"));
+    public static void drawForestPose(Graphics graphics,int footX,int footY,int pose) {
+        Graphics2D g=(Graphics2D)graphics.create();
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+        int width=173,height=130,left=footX-width/2,top=footY-122;
+        int sx=Math.max(0,Math.min(2,pose))*128;
+        g.drawImage(FOREST_POSES,left,top,left+width,top+height,sx,0,sx+128,96,null);
+        g.dispose();
+    }
     private static final BufferedImage SCIENTIST_MAP=SpriteAnimator.Lighting.MINE.tint(load("scientist-map.png"));
     private static final BufferedImage SCIENTIST_BATTLE=load("scientist-battle.png");
     private static final BufferedImage MOTH_MAP=SpriteAnimator.Lighting.BUTTERFLY.tint(load("moth-map.png"));

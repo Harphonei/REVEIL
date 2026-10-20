@@ -16,6 +16,13 @@ public class MothBoss extends Boss {
     }
 
     @Override
+    public Rectangle getHitBounds() {
+        Rectangle art=getBounds();
+        // Central head/torso/abdomen only; wings, antennae and cocoons are excluded.
+        return new Rectangle(art.x+94,art.y+40,40,108);
+    }
+
+    @Override
     public void draw(Graphics graphics) {
         if(!isAlive())return;
         Graphics g=graphics.create();Rectangle art=getBounds();
@@ -99,7 +106,7 @@ public class MothBoss extends Boss {
             attackCooldown = 1.1;
         } else {
             attack(projectiles);
-            double[] intervals = {0.44, 0.60, 1.1, 0.95};
+            double[] intervals = {0.44, 0.60, 1.1, 1.10};
             attackCooldown = intervals[attackIndex];
         }
     }

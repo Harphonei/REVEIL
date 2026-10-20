@@ -52,6 +52,11 @@ public class GamePanel extends JPanel {
     private boolean qHeld = false;
     private double shotCooldown = 0.0;
     private static final double SHOT_INTERVAL = 0.5;
+    private final DialogueBox dialogue=new DialogueBox();
+    private final StoryDirector story=new StoryDirector(dialogue);
+    private boolean forestCorpseSeen,forestEncounterSeen,forestVictorySeen,forestStoryBattle;
+    private boolean storySkippable;
+    private double storyFade,battleSlide=1,battleReadyTime;
 
     public GamePanel() {
         setPreferredSize(new Dimension(VIEW_WIDTH, VIEW_HEIGHT));
@@ -78,6 +83,12 @@ public class GamePanel extends JPanel {
         bindScreenAction("released F6", "skip-map", () -> skipMap());
         bindScreenAction("released ESCAPE", "pause", () -> togglePause());
         bindScreenAction("released ENTER", "confirm", () -> confirmScreen());
+        bindScreenAction("released SPACE", "dialogue-next", () -> {
+            if(state!=GameState.PAUSED && story.active())story.advance();
+        });
+        bindScreenAction("released TAB", "skip-seen-scene", () -> {
+            if(state!=GameState.PAUSED && story.active() && storySkippable)finishForestEntrance();
+        });
         bindScreenAction("released M", "menu", () -> {
             if (state == GameState.PAUSED) changeState(GameState.MENU);
         });
@@ -88,6 +99,7 @@ public class GamePanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent event) {
                 if (state == GameState.BATTLE
+                        && !story.active()
                         && (!player.isAlive() || !boss.isAlive())) {
                     restartBattle();
                 }
@@ -101,7 +113,7 @@ public class GamePanel extends JPanel {
         getActionMap().put("skill-e-press", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent event) {
-                if (state == GameState.BATTLE && !eHeld) {
+                if (canActInBattle() && !forestStoryBattle && !eHeld) {
                     eHeld = true;
                     useSkillE();
                 }
@@ -121,7 +133,7 @@ public class GamePanel extends JPanel {
         getActionMap().put("skill-q-press", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent event) {
-                if (state == GameState.BATTLE && !qHeld) {
+                if (canActInBattle() && !forestStoryBattle && !qHeld) {
                     qHeld = true;
                     if (player.isAlive() && boss.isAlive()) {
                         player.useSkillQ();
@@ -142,7 +154,7 @@ public class GamePanel extends JPanel {
                 if (SwingUtilities.isLeftMouseButton(event)) {
                     handleClick(event.getX(), event.getY());
                 }
-                if (state == GameState.BATTLE
+                if (canActInBattle()
                         && SwingUtilities.isRightMouseButton(event)) {
                     shooting = true;
                 }
@@ -179,6 +191,8 @@ public class GamePanel extends JPanel {
     }
 
     private void startNewGame() {
+        story.cancel();storyFade=0;battleSlide=1;storySkippable=false;
+        forestCorpseSeen=false;forestEncounterSeen=false;forestVictorySeen=false;forestStoryBattle=false;
         exploration.reset();
         mine.reset();
         butterfly.reset();
@@ -192,6 +206,7 @@ public class GamePanel extends JPanel {
         boss = new ForestBoss(430, 210);
         restartBattle();
         changeState(GameState.EXPLORATION);
+        playForestOpening();
     }
 
     private void togglePause() {
@@ -206,7 +221,9 @@ public class GamePanel extends JPanel {
     private void confirmScreen() {
         if (state == GameState.MENU) startNewGame();
         else if (state == GameState.PAUSED) togglePause();
+        else if(story.active()){story.advance();repaint();}
         else if (state == GameState.BATTLE && !boss.isAlive() && player.isAlive()) {
+            if(forestStoryBattle&&!forestVictorySeen){playForestVictory();return;}
             if (!inMine && !inButterfly && !inTemple && !inThrone && selectedBoss == 1) exploration.returnFromBattle();
             if (inMine && selectedBoss == 2) mine.returnFromBattle();
             if (inButterfly && selectedBoss == 3) butterfly.returnFromBattle();
@@ -220,6 +237,7 @@ public class GamePanel extends JPanel {
     }
 
     private void handleClick(int x, int y) {
+        if(state!=GameState.PAUSED && story.active()){story.advance();repaint();return;}
         if (state == GameState.MENU && startButton.contains(x, y)) {
             startNewGame();
         } else if (state == GameState.PAUSED) {
@@ -232,7 +250,8 @@ public class GamePanel extends JPanel {
     }
 
     private void skipMap() {
-        if(state!=GameState.EXPLORATION)return;
+        if(state!=GameState.EXPLORATION || story.active())return;
+        exploration.finishStory();forestStoryBattle=false;
         if(inThrone) throne.skipToHall();
         else if(inTemple) {
             temple.skipToExit();temple.consumeExitRequest();inTemple=false;inThrone=true;throne.enter();
@@ -249,21 +268,25 @@ public class GamePanel extends JPanel {
     }
 
     private void startThroneBattle() {
+        forestStoryBattle=false;
         selectedBoss=5;boss=new MaskedBoss(430,210);
         restartBattle();changeState(GameState.BATTLE);
     }
 
     private void startTempleBattle() {
+        forestStoryBattle=false;
         selectedBoss=4;boss=new KnightBoss(430,210);
         restartBattle();changeState(GameState.BATTLE);
     }
 
     private void startButterflyBattle() {
+        forestStoryBattle=false;
         selectedBoss=3; boss=new MothBoss(430,210);
         restartBattle(); changeState(GameState.BATTLE);
     }
 
     private void startMineBattle() {
+        forestStoryBattle=false;
         selectedBoss=2;
         boss=new ScientistBoss(430,210);
         restartBattle();
@@ -271,10 +294,92 @@ public class GamePanel extends JPanel {
     }
 
     private void startForestBattle() {
-        selectedBoss = 1;
-        boss = new ForestBoss(430, 210);
-        restartBattle();
-        changeState(GameState.BATTLE);
+        if(story.active())return;
+        playForestEntrance();
+    }
+
+    private boolean canActInBattle() {
+        return state==GameState.BATTLE && !story.active() && battleReadyTime<=0;
+    }
+
+    private void endForestScene() {
+        storyFade=0;storySkippable=false;exploration.finishStory();clearInput();
+    }
+
+    private void playForestOpening() {
+        clearInput();storyFade=0;exploration.setStoryHeroPose(1);
+        story.play(this::endForestScene,
+            StoryDirector.motion("fade-from-menu",.7,p->storyFade=p),
+            StoryDirector.waitFor("black",.3),
+            StoryDirector.motion("wake-fade",1.3,p->storyFade=1-p),
+            StoryDirector.waitFor("unconscious",.8),
+            StoryDirector.action("sit-up",()->exploration.setStoryHeroPose(2)),
+            StoryDirector.say(DialogueBox.Face.NEUTRAL,"อึก…"),
+            StoryDirector.say(DialogueBox.Face.CONFUSED,"ที่นี่…ที่ไหนกัน…"),
+            StoryDirector.say(DialogueBox.Face.CONFUSED,"แล้วฉัน…อึก…เป็นใครกัน"),
+            StoryDirector.waitFor("hold-head",.6),
+            StoryDirector.motion("rise-to-feet",.7,p->exploration.setStoryRise(p)),
+            StoryDirector.action("stand-up",()->exploration.setStoryHeroPose(0)),
+            StoryDirector.waitFor("standing",.5));
+    }
+
+    private void playForestCorpse() {
+        forestCorpseSeen=true;clearInput();exploration.faceStoryHero(SpriteAnimator.DOWN_RIGHT);
+        story.play(this::endForestScene,
+            StoryDirector.waitFor("notice-corpse",.35),
+            StoryDirector.say(DialogueBox.Face.SHOCKED,"นี่มันตัวอะไรกันเนี่ย…"),
+            StoryDirector.say(DialogueBox.Face.CONFUSED,"ศพ…งั้นเหรอ?"));
+    }
+
+    private void playForestEntrance() {
+        clearInput();storySkippable=forestEncounterSeen;forestStoryBattle=true;
+        final double hx=exploration.storyX()+8,hy=exploration.storyY()+16;
+        exploration.faceStoryHero(SpriteAnimator.RIGHT);
+        exploration.setStoryBoss(1,1465,425,0);
+        story.play(()->{forestEncounterSeen=true;storySkippable=false;battleReadyTime=3;clearInput();},
+            StoryDirector.motion("pan-to-feeding",1.2,p->exploration.focusStory(hx+(1465-hx)*p,hy+(390-hy)*p,1.35+.25*p)),
+            StoryDirector.motion("beast-strikes-prey",.4,p->{exploration.setStoryStrike(p);exploration.setStoryBoss(1,1465,425,Math.sin(p*Math.PI*2)*4);}),
+            StoryDirector.action("strike-ends",()->exploration.setStoryStrike(0)),
+            StoryDirector.motion("feeding",2.8,p->exploration.setStoryBoss(1,1465,425,Math.sin(p*Math.PI*12)*3)),
+            StoryDirector.say(DialogueBox.Face.SHOCKED,"…"),
+            StoryDirector.say(DialogueBox.Face.SHOCKED,"นั่นมัน…"),
+            StoryDirector.action("beast-looks-up",()->exploration.setStoryBoss(2,1465,425,0)),
+            StoryDirector.waitFor("growl",.8),
+            StoryDirector.say(DialogueBox.Face.SHOCKED,"แย่แล้ว…"),
+            StoryDirector.motion("beast-approaches",1.5,p->{
+                exploration.setStoryBoss(2,1465+(hx+95-1465)*p,425+(hy-425)*p,Math.sin(p*Math.PI*8)*2);
+                exploration.focusStory(1465+((hx+1465)/2-1465)*p,390+(hy-25-390)*p,1.6);
+            }),
+            StoryDirector.motion("beast-leaps",.42,p->{
+                exploration.setStoryBoss(3,hx+95-85*p,hy-Math.sin(p*Math.PI)*50,0);
+                storyFade=Math.max(0,(p-.35)/.65);
+            }),
+            StoryDirector.action("enter-battle",()->{
+                selectedBoss=1;boss=new ForestBoss(430,210);restartBattle();changeState(GameState.BATTLE);
+                exploration.finishStory();storyFade=1;battleSlide=0;
+            }),
+            StoryDirector.motion("battle-fade",.45,p->storyFade=1-p),
+            StoryDirector.motion("battle-slide",.8,p->battleSlide=1-Math.pow(1-p,3)),
+            StoryDirector.say(DialogueBox.Face.SHOCKED,"อึก…แย่แล้ว ฉันต้องสู้กับมันเหรอเนี่ย"));
+    }
+
+    private void finishForestEntrance() {
+        story.cancel();selectedBoss=1;boss=new ForestBoss(430,210);forestStoryBattle=true;
+        exploration.finishStory();storyFade=0;battleSlide=1;storySkippable=false;
+        restartBattle();changeState(GameState.BATTLE);
+    }
+
+    private void playForestVictory() {
+        forestVictorySeen=true;clearInput();projectiles.clear();enemyProjectiles.clear();laser.reset();
+        story.play(this::endForestScene,
+            StoryDirector.waitFor("victory-breath",.65),
+            StoryDirector.motion("victory-fade-out",.65,p->storyFade=p),
+            StoryDirector.action("back-to-forest",()->{
+                exploration.returnFromBattle();changeState(GameState.EXPLORATION);storyFade=1;
+            }),
+            StoryDirector.motion("victory-fade-in",.8,p->storyFade=1-p),
+            StoryDirector.say(DialogueBox.Face.RELIEVED,"เฮือก!…เกือบไป"),
+            StoryDirector.say(DialogueBox.Face.CONFUSED,"ตกลงที่นี่มันที่ไหนกันเนี่ย…"));
     }
 
     public void onFocusLost() {
@@ -318,7 +423,8 @@ public class GamePanel extends JPanel {
         getActionMap().put(action, new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent event) {
-                if (state != GameState.BATTLE) return;
+                if (state != GameState.BATTLE || story.active()) return;
+                forestStoryBattle=false;
                 selectedBoss = number;
                 switch (number) {
                     case 1: boss = new ForestBoss(430, 210); break;
@@ -333,7 +439,7 @@ public class GamePanel extends JPanel {
     }
 
     private void useSkillE() {
-        if (!player.isAlive() || !boss.isAlive()) {
+        if (!canActInBattle() || forestStoryBattle || !player.isAlive() || !boss.isAlive()) {
             return;
         }
         player.useSkillE();
@@ -345,6 +451,7 @@ public class GamePanel extends JPanel {
         previousTime = now;
 
         if (state == GameState.MENU || state == GameState.PAUSED) return;
+        if(story.active()){story.update(seconds);repaint();return;}
         if (state == GameState.EXPLORATION) {
             int dx = (pressed[3] ? 1 : 0) - (pressed[1] ? 1 : 0);
             int dy = (pressed[2] ? 1 : 0) - (pressed[0] ? 1 : 0);
@@ -377,7 +484,11 @@ public class GamePanel extends JPanel {
                 } else if(mine.consumeBattleRequest()) startMineBattle();
             } else {
                 exploration.update(dx,dy,seconds,running);
-                if(exploration.consumeMineRequest()) {
+                if(!forestCorpseSeen && exploration.storyX()>=290 && exploration.storyX()<1100) {
+                    playForestCorpse();
+                } else if(!forestEncounterSeen && !exploration.isCleared() && exploration.storyX()>=1330) {
+                    startForestBattle();
+                } else if(exploration.consumeMineRequest()) {
                     inMine=true; mine.enter(); clearInput();
                 } else if(exploration.consumeBattleRequest()) startForestBattle();
             }
@@ -386,11 +497,20 @@ public class GamePanel extends JPanel {
         }
 
         if (!player.isAlive() || !boss.isAlive()) {
+            if(!boss.isAlive() && player.isAlive() && forestStoryBattle && !forestVictorySeen) {
+                playForestVictory();repaint();return;
+            }
             projectiles.clear();
             enemyProjectiles.clear();
             laser.reset();
             repaint();
             return;
+        }
+
+        if(battleReadyTime>0) {
+            battleReadyTime=Math.max(0,battleReadyTime-seconds);
+            player.move((pressed[3]?1:0)-(pressed[1]?1:0),(pressed[2]?1:0)-(pressed[0]?1:0),seconds,battleArea);
+            shooting=false;repaint();return;
         }
 
         player.update(seconds);
@@ -420,7 +540,7 @@ public class GamePanel extends JPanel {
             Projectile projectile = projectiles.get(i);
             projectile.update(seconds);
             if (boss.isAlive()
-                    && projectile.getBounds().intersects(boss.getBounds())) {
+                    && projectile.getBounds().intersects(boss.getHitBounds())) {
                 boss.takeDamage(projectile.getDamage());
                 projectiles.remove(i);
             } else if (projectile.isOutsideScreen()) {
@@ -431,13 +551,14 @@ public class GamePanel extends JPanel {
         boolean laserEnabled =
                 shooting && player.isUltimateActive() && boss.isAlive();
         int laserDamage = laser.update(
-                laserEnabled, player.getLaserBounds(), boss.getBounds(), seconds);
+                laserEnabled, player.getLaserBounds(), boss.getHitBounds(), seconds);
         boss.takeDamage(laserDamage);
 
         if (!boss.isAlive()) {
             projectiles.clear();
             enemyProjectiles.clear();
             laser.reset();
+            if(forestStoryBattle&&!forestVictorySeen)playForestVictory();
             repaint();
             return;
         }
@@ -480,6 +601,7 @@ public class GamePanel extends JPanel {
         enemyProjectiles.clear();
         player.reset(468, 500);
         boss.reset();
+        battleReadyTime=3;battleSlide=1;
         shotCooldown = 0.0;
         repaint();
     }
@@ -511,7 +633,7 @@ public class GamePanel extends JPanel {
         eHeld = false;
         qHeld = false;
         // Stop the visible beam but retain any pending gap when focus is lost.
-        laser.update(false, player.getLaserBounds(), boss.getBounds(), 0.0);
+        laser.update(false, player.getLaserBounds(), boss.getHitBounds(), 0.0);
         previousTime = System.nanoTime();
     }
 
@@ -525,6 +647,18 @@ public class GamePanel extends JPanel {
         GameState visibleState = state == GameState.PAUSED ? stateBeforePause : state;
         if (visibleState == GameState.EXPLORATION) { if(inThrone) throne.draw(g); else if(inTemple) temple.draw(g); else if(inButterfly) butterfly.draw(g); else if(inMine) mine.draw(g); else exploration.draw(g); }
         else drawBattle(g);
+        if(story.currentId().equals("fade-from-menu"))drawMenu(g);
+        if(story.active()) {
+            if(storyFade>0) {
+                Graphics2D fade=(Graphics2D)g.create();fade.setColor(new Color(0,0,0,(int)(Math.min(1,storyFade)*255)));
+                fade.fillRect(0,0,VIEW_WIDTH,VIEW_HEIGHT);fade.dispose();
+            }
+            dialogue.draw(g);
+            if(storySkippable) {
+                g.setColor(new Color(200,196,180));g.setFont(DialogueBox.font(16));
+                g.drawString("Tab: ข้ามฉากที่เคยดูแล้ว",690,36);
+            }
+        }
         if (state == GameState.PAUSED) drawPause(g);
     }
 
@@ -543,11 +677,11 @@ public class GamePanel extends JPanel {
         g.setColor(Color.WHITE);
         g.setFont(new Font(Font.MONOSPACED, Font.BOLD, 72));
         g.drawString("FINAL", 370, 190);
-        drawButton(g, startButton, "NEW GAME");
+        drawButton(g, startButton, "PLAY");
         g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 18));
         g.setColor(Color.LIGHT_GRAY);
-        g.drawString("Click NEW GAME or press Enter", 320, 395);
-        g.drawString("Forest map + guardian encounter", 265, 500);
+        g.drawString("Click PLAY or press Enter", 340, 395);
+        g.drawString("Forest story preview  |  v3.65", 310, 500);
         g.drawString("No saved progress yet", 365, 535);
     }
 
@@ -587,7 +721,8 @@ public class GamePanel extends JPanel {
             boss.drawHazards(g);
             laser.draw(g);
         }
-        boss.draw(g);
+        Graphics2D bossGraphics=(Graphics2D)g.create();
+        bossGraphics.translate((int)Math.round((battleSlide-1)*480),0);boss.draw(bossGraphics);bossGraphics.dispose();
         player.draw(g);
         for (Projectile projectile : projectiles) {
             projectile.draw(g);
@@ -605,7 +740,9 @@ public class GamePanel extends JPanel {
                 battleArea.x, battleArea.y + battleArea.height + 35);
 
         String skillEText;
-        if (player.getSkillEChargeTime() > 0.0) {
+        if(forestStoryBattle) {
+            skillEText="E: LOCKED";
+        } else if (player.getSkillEChargeTime() > 0.0) {
             skillEText = "E: CHARGING";
         } else if (player.getSkillECooldown() <= 0.0) {
             skillEText = "E: READY";
@@ -617,7 +754,9 @@ public class GamePanel extends JPanel {
         g.drawString(skillEText, 700, 335);
 
         String skillQText;
-        if (player.getSkillQChargeTime() > 0.0) {
+        if(forestStoryBattle) {
+            skillQText="Q: LOCKED";
+        } else if (player.getSkillQChargeTime() > 0.0) {
             skillQText = "Q: POWER UP";
         } else if (player.isUltimateActive()) {
             int remaining = (int) Math.ceil(player.getUltimateTime());
@@ -639,6 +778,12 @@ public class GamePanel extends JPanel {
         g.drawString(boss.getPhaseLabel(), 700, 495);
         g.setColor(Color.ORANGE);
         g.drawString("Tuning: +1 STEP", 700, 525);
+
+        if(!story.active() && battleReadyTime>0 && player.isAlive() && boss.isAlive()) {
+            g.setFont(DialogueBox.font(28));g.setColor(new Color(220,212,185));
+            String ready="เตรียมตัว  "+(int)Math.ceil(battleReadyTime);
+            g.drawString(ready,battleArea.x+(battleArea.width-g.getFontMetrics().stringWidth(ready))/2,battleArea.y+130);
+        }
 
         if (!player.isAlive()) {
             g.setColor(Color.RED);
