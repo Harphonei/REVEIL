@@ -12,9 +12,14 @@ import javax.imageio.ImageIO;
 
 /** Name-free portrait dialogue with Thai shaping and grapheme-safe typewriter text. */
 public final class DialogueBox {
-    public enum Face { NEUTRAL, CONFUSED, SHOCKED, RELIEVED, NONE }
+    public enum Face { NEUTRAL, CONFUSED, SHOCKED, RELIEVED, NONE, SCIENTIST }
     private static final Font FONT=loadFont();
     private static final BufferedImage PORTRAITS=loadPortraits();
+    private static final BufferedImage SCIENTIST=loadScientist();
+    private static BufferedImage loadScientist(){
+        try{return ImageIO.read(DialogueBox.class.getResource("/finalgame/scientist-portrait.png"));}
+        catch(Exception e){throw new IllegalStateException("Cannot load scientist portrait",e);}
+    }
     private String text="";
     private Face face=Face.NONE;
     private int[] ends=new int[0];
@@ -67,7 +72,10 @@ public final class DialogueBox {
         g.setColor(new Color(107,111,120));g.setStroke(new BasicStroke(3));g.drawRect(21,437,918,184);
         g.setColor(new Color(53,58,68));g.drawRect(27,443,906,172);
         int textX=face==Face.NONE?52:202;
-        if(face!=Face.NONE) {
+        if(face==Face.SCIENTIST){
+            g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+            g.drawImage(SCIENTIST,40,460,144,144,null);
+        }else if(face!=Face.NONE) {
             int cell=PORTRAITS.getWidth()/2;
             int col=face.ordinal()%2,row=face.ordinal()/2;
             g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);

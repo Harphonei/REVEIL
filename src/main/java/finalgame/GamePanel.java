@@ -355,7 +355,7 @@ public class GamePanel extends JPanel {
                 mine.setWorkBob(Math.sin(p*Math.PI*8));
             }),
             StoryDirector.motion("scientist-working",1.2,p->mine.setWorkBob(Math.sin(p*Math.PI*8))),
-            StoryDirector.say(DialogueBox.Face.NONE,"หืม…หนูทดลองตัวใหม่งั้นเหรอ"),
+            StoryDirector.say(DialogueBox.Face.SCIENTIST,"หืม…หนูทดลองตัวใหม่งั้นเหรอ"),
             StoryDirector.say(DialogueBox.Face.NEUTRAL,"…"),
             StoryDirector.motion("careful-walk-past",4.5,p->{
                 double ease=p*p*(3-2*p);
@@ -364,12 +364,12 @@ public class GamePanel extends JPanel {
                 mine.focusStory(910-10*ease,200+30*ease,1.6);
             }),
             StoryDirector.action("stop-in-lab",()->mine.faceStoryHero(SpriteAnimator.UP)),
-            StoryDirector.say(DialogueBox.Face.NONE,"…หึ…อย่าเพิ่งไปสิครับ"),
-            StoryDirector.say(DialogueBox.Face.NONE,"ให้ผมได้ชำแหละดูตัวคุณสักนิดก่อนสิ"),
+            StoryDirector.say(DialogueBox.Face.SCIENTIST,"…หึ…อย่าเพิ่งไปสิครับ"),
+            StoryDirector.say(DialogueBox.Face.SCIENTIST,"ให้ผมได้ชำแหละดูตัวคุณสักนิดก่อนสิ"),
             StoryDirector.action("scientist-turns",()->mine.faceScientistFront()),
             StoryDirector.waitFor("scientist-recognises",.7),
-            StoryDirector.say(DialogueBox.Face.NONE,"…"),
-            StoryDirector.say(DialogueBox.Face.NONE,"อ่า…นี่คุณ\nช่างเป็นหนูทดลองที่คุ้นเคยเสียจริง"),
+            StoryDirector.say(DialogueBox.Face.SCIENTIST,"…"),
+            StoryDirector.say(DialogueBox.Face.SCIENTIST,"อ่า…นี่คุณ\nช่างเป็นหนูทดลองที่คุ้นเคยเสียจริง"),
             StoryDirector.say(DialogueBox.Face.SHOCKED,"หมายความว่ายัง-"),
             StoryDirector.motion("mine-battle-fade-out",.5,p->storyFade=p),
             StoryDirector.action("mine-enter-battle",()->{
@@ -378,7 +378,7 @@ public class GamePanel extends JPanel {
             StoryDirector.waitFor("mine-battle-black",.18),
             StoryDirector.motion("mine-battle-fade-in",.65,p->storyFade=1-p),
             StoryDirector.say(DialogueBox.Face.CONFUSED,"นี่แก…หมายความว่ายังไงที่ว่าคุ้นเคย"),
-            StoryDirector.say(DialogueBox.Face.NONE,"ผมไม่ได้มีหน้าที่ให้คำตอบอะไร\nกับหนูทดลองหรอกนะครับ"));
+            StoryDirector.say(DialogueBox.Face.SCIENTIST,"ผมไม่ได้มีหน้าที่ให้คำตอบอะไร\nกับหนูทดลองหรอกนะครับ"));
     }
 
     private boolean tryUnlockMineE(){
@@ -393,7 +393,7 @@ public class GamePanel extends JPanel {
             },
             StoryDirector.action("skill-e-hit-reaction",player::showHitReaction),
             StoryDirector.say(DialogueBox.Face.SHOCKED,"อ้าก!"),
-            StoryDirector.say(DialogueBox.Face.NONE,"อ่อนแอเสียจริง"),
+            StoryDirector.say(DialogueBox.Face.SCIENTIST,"อ่อนแอเสียจริง"),
             StoryDirector.say(DialogueBox.Face.NEUTRAL,"งั้นเจอนี่ ย้าก!!"),
             StoryDirector.action("skill-e-auto-charge",()->{
                 projectiles.clear();enemyProjectiles.clear();laser.reset();player.useSkillE();
@@ -417,7 +417,7 @@ public class GamePanel extends JPanel {
                 }
             }),
             StoryDirector.action("skill-e-clear-arena",()->projectiles.clear()),
-            StoryDirector.say(DialogueBox.Face.NONE,"....น่าสนใจจริงๆ"),
+            StoryDirector.say(DialogueBox.Face.SCIENTIST,"....น่าสนใจจริงๆ"),
             StoryDirector.action("unlock-skill-e",()->skillEUnlocked=true),
             StoryDirector.say(DialogueBox.Face.NONE,"ปลดล็อคสกิล Heavy Attact\nกด E เพื่อรวบรวมพลังและโจมตี"));
         return true;
@@ -834,7 +834,7 @@ public class GamePanel extends JPanel {
         g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 18));
         g.setColor(Color.LIGHT_GRAY);
         g.drawString("Click PLAY or press Enter", 340, 395);
-        g.drawString("Forest + Mine story  |  v3.70", 310, 500);
+        g.drawString("Forest + Mine story  |  v3.71", 310, 500);
         g.drawString("No saved progress yet", 365, 535);
     }
 
