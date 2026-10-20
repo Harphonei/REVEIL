@@ -55,6 +55,7 @@ public class GamePanel extends JPanel {
     private final DialogueBox dialogue=new DialogueBox();
     private final StoryDirector story=new StoryDirector(dialogue);
     private boolean forestCorpseSeen,forestEncounterSeen,forestVictorySeen,forestStoryBattle;
+    private boolean mineEntrySeen,mineEncounterSeen,mineVictorySeen,mineStoryBattle,skillEUnlocked;
     private boolean storySkippable;
     private double storyFade,battleReadyTime;
 
@@ -113,7 +114,7 @@ public class GamePanel extends JPanel {
         getActionMap().put("skill-e-press", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent event) {
-                if (canActInBattle() && !forestStoryBattle && !eHeld) {
+                if (canActInBattle() && canUseSkillE() && !eHeld) {
                     eHeld = true;
                     useSkillE();
                 }
@@ -133,7 +134,7 @@ public class GamePanel extends JPanel {
         getActionMap().put("skill-q-press", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent event) {
-                if (canActInBattle() && !forestStoryBattle && !qHeld) {
+                if (canActInBattle() && canUseSkillQ() && !qHeld) {
                     qHeld = true;
                     if (player.isAlive() && boss.isAlive()) {
                         player.useSkillQ();
@@ -193,6 +194,7 @@ public class GamePanel extends JPanel {
     private void startNewGame() {
         story.cancel();storyFade=0;storySkippable=false;
         forestCorpseSeen=false;forestEncounterSeen=false;forestVictorySeen=false;forestStoryBattle=false;
+        mineEntrySeen=false;mineEncounterSeen=false;mineVictorySeen=false;mineStoryBattle=false;skillEUnlocked=false;
         exploration.reset();
         mine.reset();
         butterfly.reset();
@@ -224,6 +226,7 @@ public class GamePanel extends JPanel {
         else if(story.active()){story.advance();repaint();}
         else if (state == GameState.BATTLE && !boss.isAlive() && player.isAlive()) {
             if(forestStoryBattle&&!forestVictorySeen){playForestVictory();return;}
+            if(mineStoryBattle&&!mineVictorySeen){playMineVictory();return;}
             if (!inMine && !inButterfly && !inTemple && !inThrone && selectedBoss == 1) exploration.returnFromBattle();
             if (inMine && selectedBoss == 2) mine.returnFromBattle();
             if (inButterfly && selectedBoss == 3) butterfly.returnFromBattle();
@@ -251,7 +254,7 @@ public class GamePanel extends JPanel {
 
     private void skipMap() {
         if(state!=GameState.EXPLORATION || story.active())return;
-        exploration.finishStory();forestStoryBattle=false;
+        exploration.finishStory();mine.finishStory();forestStoryBattle=false;mineStoryBattle=false;
         if(inThrone) throne.skipToHall();
         else if(inTemple) {
             temple.skipToExit();temple.consumeExitRequest();inTemple=false;inThrone=true;throne.enter();
@@ -260,42 +263,120 @@ public class GamePanel extends JPanel {
             butterfly.returnFromBattle();inButterfly=false;inTemple=true;temple.enter();
         }
         else if(inMine) {
+            skillEUnlocked=true;
             mine.returnFromBattle(); inMine=false; inButterfly=true; butterfly.enter();
         } else {
-            exploration.returnFromBattle(); inMine=true; mine.enter();
+            exploration.returnFromBattle(); enterMine();
         }
         clearInput();repaint();
     }
 
     private void startThroneBattle() {
-        forestStoryBattle=false;
+        forestStoryBattle=false;mineStoryBattle=false;
         selectedBoss=5;boss=new MaskedBoss(430,210);
         restartBattle();changeState(GameState.BATTLE);
     }
 
     private void startTempleBattle() {
-        forestStoryBattle=false;
+        forestStoryBattle=false;mineStoryBattle=false;
         selectedBoss=4;boss=new KnightBoss(430,210);
         restartBattle();changeState(GameState.BATTLE);
     }
 
     private void startButterflyBattle() {
-        forestStoryBattle=false;
+        forestStoryBattle=false;mineStoryBattle=false;
         selectedBoss=3; boss=new MothBoss(430,210);
         restartBattle(); changeState(GameState.BATTLE);
     }
 
     private void startMineBattle() {
-        forestStoryBattle=false;
-        selectedBoss=2;
-        boss=new ScientistBoss(430,210);
-        restartBattle();
-        changeState(GameState.BATTLE);
+        if(story.active())return;
+        forestStoryBattle=false;mineStoryBattle=true;
+        if(!mineEncounterSeen){playMineEntrance();return;}
+        selectedBoss=2;boss=new ScientistBoss(430,210);
+        restartBattle();changeState(GameState.BATTLE);
     }
 
     private void startForestBattle() {
         if(story.active())return;
+        mineStoryBattle=false;
         playForestEntrance();
+    }
+
+    private boolean canUseSkillE(){return !forestStoryBattle&&(!mineStoryBattle||skillEUnlocked);}
+    private boolean canUseSkillQ(){return !forestStoryBattle&&!mineStoryBattle;}
+
+    private void enterMine(){
+        inMine=true;mine.enter();clearInput();
+        if(!mineEntrySeen){
+            mineEntrySeen=true;storyFade=1;
+            story.play(this::endMineScene,
+                StoryDirector.motion("mine-arrival-fade",.6,p->storyFade=1-p),
+                StoryDirector.say(DialogueBox.Face.CONFUSED,"ที่นี่…เหมืองงั้นเหรอ"));
+        }
+    }
+
+    private void endMineScene(){storyFade=0;mine.finishStory();clearInput();}
+
+    private void playMineEntrance(){
+        clearInput();
+        final double hx=mine.storyX(),hy=mine.storyY();
+        mine.faceStoryHero(SpriteAnimator.UP);
+        story.play(()->{mineEncounterSeen=true;mine.finishStory();storyFade=0;battleReadyTime=3;clearInput();},
+            StoryDirector.waitFor("mine-notice-work",.3),
+            StoryDirector.motion("mine-pan-to-work",1.3,p->{
+                double ease=p*p*(3-2*p);
+                mine.focusStory(hx+8+(910-hx-8)*ease,hy+8+(200-hy-8)*ease,1.45+.15*ease);
+                mine.setWorkBob(Math.sin(p*Math.PI*8));
+            }),
+            StoryDirector.motion("scientist-working",1.2,p->mine.setWorkBob(Math.sin(p*Math.PI*8))),
+            StoryDirector.say(DialogueBox.Face.NONE,"หืม…หนูทดลองตัวใหม่งั้นเหรอ"),
+            StoryDirector.say(DialogueBox.Face.NEUTRAL,"…"),
+            StoryDirector.motion("careful-walk-past",1.8,p->{
+                double ease=p*p*(3-2*p);
+                mine.moveStoryHero(hx+(900-hx)*ease,hy+(280-hy)*ease,.05);
+                mine.focusStory(910-10*ease,200+30*ease,1.6);
+            }),
+            StoryDirector.action("stop-in-lab",()->mine.faceStoryHero(SpriteAnimator.UP)),
+            StoryDirector.say(DialogueBox.Face.NONE,"…หึ…อย่าเพิ่งไปสิครับ"),
+            StoryDirector.say(DialogueBox.Face.NONE,"ให้ผมได้ชำแหละดูตัวคุณสักนิดก่อนสิ"),
+            StoryDirector.action("scientist-turns",()->mine.faceScientistFront()),
+            StoryDirector.waitFor("scientist-recognises",.7),
+            StoryDirector.say(DialogueBox.Face.NONE,"…"),
+            StoryDirector.say(DialogueBox.Face.NONE,"อ่า…นี่คุณ\nช่างเป็นหนูทดลองที่คุ้นเคยเสียจริง"),
+            StoryDirector.say(DialogueBox.Face.SHOCKED,"หมายความว่าไง—"),
+            StoryDirector.motion("mine-battle-fade-out",.5,p->storyFade=p),
+            StoryDirector.action("mine-enter-battle",()->{
+                selectedBoss=2;boss=new ScientistBoss(430,210);restartBattle();changeState(GameState.BATTLE);storyFade=1;
+            }),
+            StoryDirector.waitFor("mine-battle-black",.18),
+            StoryDirector.motion("mine-battle-fade-in",.65,p->storyFade=1-p),
+            StoryDirector.say(DialogueBox.Face.CONFUSED,"นี่แก…หมายความว่ายังไงที่ว่าคุ้นเคย"),
+            StoryDirector.say(DialogueBox.Face.NONE,"ผมไม่ได้มีหน้าที่ให้คำตอบอะไร\nกับหนูทดลองหรอกนะครับ"));
+    }
+
+    private boolean tryUnlockMineE(){
+        if(!mineStoryBattle||skillEUnlocked||!boss.isAlive()||boss.getHp()*5>boss.getMaxHp()*4)return false;
+        clearInput();projectiles.clear();enemyProjectiles.clear();laser.reset();
+        if(boss instanceof ScientistBoss)((ScientistBoss)boss).clearStoryHazards();
+        story.play(()->{battleReadyTime=3;clearInput();},
+            StoryDirector.say(DialogueBox.Face.SHOCKED,"อึก…มือฉัน…ร้อนขึ้นมา…"),
+            StoryDirector.say(DialogueBox.Face.CONFUSED,"พลังนี่…ทำไมฉันถึงรู้วิธีใช้มัน…"),
+            StoryDirector.say(DialogueBox.Face.NONE,"หืม…แม้แต่พลังนั่นก็คุ้นเคยเสียจริง"),
+            StoryDirector.say(DialogueBox.Face.NEUTRAL,"ถ้าอย่างนั้น…ลองใช้มันดูแล้วกัน"),
+            StoryDirector.action("unlock-skill-e",()->skillEUnlocked=true),
+            StoryDirector.say(DialogueBox.Face.NONE,"ปลดล็อกสกิล E\nกด E เพื่อชาร์จแล้วยิงพลังไปข้างหน้า"));
+        return true;
+    }
+
+    private void playMineVictory(){
+        mineVictorySeen=true;clearInput();projectiles.clear();enemyProjectiles.clear();laser.reset();
+        story.play(this::endMineScene,
+            StoryDirector.waitFor("mine-victory-breath",.6),
+            StoryDirector.motion("mine-victory-fade-out",.6,p->storyFade=p),
+            StoryDirector.action("mine-return-from-battle",()->{mine.returnFromBattle();changeState(GameState.EXPLORATION);storyFade=1;}),
+            StoryDirector.motion("mine-victory-fade-in",.7,p->storyFade=1-p),
+            StoryDirector.say(DialogueBox.Face.CONFUSED,"…ไม่เข้าใจอะไรเลยแฮะ"));
     }
 
     private boolean canActInBattle() {
@@ -435,7 +516,7 @@ public class GamePanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent event) {
                 if (state != GameState.BATTLE || story.active()) return;
-                forestStoryBattle=false;
+                forestStoryBattle=false;mineStoryBattle=false;
                 selectedBoss = number;
                 switch (number) {
                     case 1: boss = new ForestBoss(430, 210); break;
@@ -450,7 +531,7 @@ public class GamePanel extends JPanel {
     }
 
     private void useSkillE() {
-        if (!canActInBattle() || forestStoryBattle || !player.isAlive() || !boss.isAlive()) {
+        if (!canActInBattle() || !canUseSkillE() || !player.isAlive() || !boss.isAlive()) {
             return;
         }
         player.useSkillE();
@@ -500,7 +581,7 @@ public class GamePanel extends JPanel {
                 } else if(!forestEncounterSeen && !exploration.isCleared() && exploration.storyX()>=1090) {
                     startForestBattle();
                 } else if(exploration.consumeMineRequest()) {
-                    inMine=true; mine.enter(); clearInput();
+                    enterMine();
                 } else if(exploration.consumeBattleRequest()) startForestBattle();
             }
             repaint();
@@ -511,12 +592,15 @@ public class GamePanel extends JPanel {
             if(!boss.isAlive() && player.isAlive() && forestStoryBattle && !forestVictorySeen) {
                 playForestVictory();repaint();return;
             }
+            if(!boss.isAlive()&&player.isAlive()&&mineStoryBattle&&!mineVictorySeen){playMineVictory();repaint();return;}
             projectiles.clear();
             enemyProjectiles.clear();
             laser.reset();
             repaint();
             return;
         }
+
+        if(tryUnlockMineE()){repaint();return;}
 
         if(battleReadyTime>0) {
             battleReadyTime=Math.max(0,battleReadyTime-seconds);
@@ -570,10 +654,12 @@ public class GamePanel extends JPanel {
             enemyProjectiles.clear();
             laser.reset();
             if(forestStoryBattle&&!forestVictorySeen)playForestVictory();
+            else if(mineStoryBattle&&!mineVictorySeen)playMineVictory();
             repaint();
             return;
         }
 
+        if(tryUnlockMineE()){repaint();return;}
         boss.update(seconds, battleArea, player.getBounds(), enemyProjectiles);
 
         for (int i = enemyProjectiles.size() - 1; i >= 0; i--) {
@@ -694,7 +780,7 @@ public class GamePanel extends JPanel {
         g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 18));
         g.setColor(Color.LIGHT_GRAY);
         g.drawString("Click PLAY or press Enter", 340, 395);
-        g.drawString("Forest story preview  |  v3.67", 310, 500);
+        g.drawString("Forest + Mine story  |  v3.68", 310, 500);
         g.drawString("No saved progress yet", 365, 535);
     }
 
@@ -753,7 +839,7 @@ public class GamePanel extends JPanel {
                 battleArea.x, battleArea.y + battleArea.height + 35);
 
         String skillEText;
-        if(forestStoryBattle) {
+        if(!canUseSkillE()) {
             skillEText="E: LOCKED";
         } else if (player.getSkillEChargeTime() > 0.0) {
             skillEText = "E: CHARGING";
@@ -767,7 +853,7 @@ public class GamePanel extends JPanel {
         g.drawString(skillEText, 700, 335);
 
         String skillQText;
-        if(forestStoryBattle) {
+        if(!canUseSkillQ()) {
             skillQText="Q: LOCKED";
         } else if (player.getSkillQChargeTime() > 0.0) {
             skillQText = "Q: POWER UP";
@@ -791,12 +877,6 @@ public class GamePanel extends JPanel {
         g.drawString(boss.getPhaseLabel(), 700, 495);
         g.setColor(Color.ORANGE);
         g.drawString("Tuning: +1 STEP", 700, 525);
-
-        if(!story.active() && battleReadyTime>0 && player.isAlive() && boss.isAlive()) {
-            g.setFont(DialogueBox.font(28));g.setColor(new Color(220,212,185));
-            String ready="เตรียมตัว  "+(int)Math.ceil(battleReadyTime);
-            g.drawString(ready,battleArea.x+(battleArea.width-g.getFontMetrics().stringWidth(ready))/2,battleArea.y+130);
-        }
 
         if (!player.isAlive()) {
             g.setColor(Color.RED);

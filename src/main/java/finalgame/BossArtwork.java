@@ -19,6 +19,7 @@ public final class BossArtwork {
         g.dispose();
     }
     private static final BufferedImage SCIENTIST_MAP=SpriteAnimator.Lighting.MINE.tint(load("scientist-map.png"));
+    private static final BufferedImage SCIENTIST_WORKING=SpriteAnimator.Lighting.MINE.tint(load("scientist-working.png"));
     private static final BufferedImage SCIENTIST_BATTLE=load("scientist-battle.png");
     private static final BufferedImage MOTH_MAP=SpriteAnimator.Lighting.BUTTERFLY.tint(load("moth-map.png"));
     private static final BufferedImage MOTH_BATTLE=load("moth-battle.png");
@@ -69,6 +70,10 @@ public final class BossArtwork {
         int height=90;
         int width=(int)Math.round(SCIENTIST_MAP.getWidth()*height/(double)SCIENTIST_MAP.getHeight());
         draw(g,SCIENTIST_MAP,footX-width/2,footY-height,width,height);
+    }
+    public static void drawScientistWorking(Graphics g,int footX,int footY){
+        int height=90,width=(int)Math.round(SCIENTIST_WORKING.getWidth()*height/(double)SCIENTIST_WORKING.getHeight());
+        draw(g,SCIENTIST_WORKING,footX-width/2,footY-height,width,height);
     }
     public static void drawScientistBattle(Graphics g,Rectangle bounds) {
         draw(g,SCIENTIST_BATTLE,bounds.x,bounds.y,bounds.width,bounds.height);

@@ -18,6 +18,27 @@ public final class MineRoom {
     private final SpriteAnimator animation=new SpriteAnimator(SpriteAnimator.Lighting.MINE);
     private double x,y,cameraX,cameraY;
     private boolean cleared,battleRequested,backRequested,exitReached,showCollision;
+    private boolean storyCamera,scientistFacingFront;
+    private double drawZoom=ZOOM,workBob,workClock;
+    private static final double SCIENTIST_X=910,SCIENTIST_Y=175;
+
+    public double storyX(){return x;}
+    public double storyY(){return y;}
+    public boolean isCleared(){return cleared;}
+    public void faceStoryHero(int facing){animation.reset(facing);}
+    public void faceScientistFront(){scientistFacingFront=true;workBob=0;}
+    public void setWorkBob(double bob){workBob=bob;}
+    public void focusStory(double centreX,double centreY,double zoom){
+        storyCamera=true;drawZoom=zoom;
+        cameraX=Math.max(0,Math.min(centreX-960/(2*zoom),Math.max(0,background.getWidth()-960/zoom)));
+        cameraY=Math.max(0,Math.min(centreY-520/(2*zoom),Math.max(0,background.getHeight()-520/zoom)));
+    }
+    public void moveStoryHero(double px,double py,double seconds){
+        double ox=x,oy=y;
+        if(canStand(px,py)){x=px;y=py;}
+        animation.update(x-ox,y-oy,seconds,false);
+    }
+    public void finishStory(){storyCamera=false;drawZoom=ZOOM;workBob=0;animation.stop();updateCamera();}
 
     public MineRoom() {
         try {
@@ -62,10 +83,11 @@ public final class MineRoom {
         } catch(Exception ex) {throw new IllegalStateException("Cannot index mine collision masks",ex);}
     }
     public void reset() {
-        cleared=false;exitReached=false;enter();
+        cleared=false;exitReached=false;scientistFacingFront=false;workClock=0;enter();
     }
     public void enter() {
         x=40;y=847;battleRequested=false;backRequested=false;
+        storyCamera=false;drawZoom=ZOOM;workBob=0;
         animation.reset(SpriteAnimator.RIGHT);updateCamera();
     }
     public void stopMovement(){animation.stop();}
@@ -77,6 +99,9 @@ public final class MineRoom {
         int left=(int)Math.floor(feet.getMinX()),top=(int)Math.floor(feet.getMinY());
         int right=(int)Math.ceil(feet.getMaxX()),bottom=(int)Math.ceil(feet.getMaxY());
         if(left<0||top<0||right>1536||bottom>1024)return false;
+        // This is the visible tunnel opening beneath the wooden lintel.
+        // The original floor mask left a narrow vertical seam across it.
+        if(new Rectangle2D.Double(0,835,40,48).contains(feet))return true;
         int stride=1537;
         if(blockedPrefix[bottom*stride+right]-blockedPrefix[top*stride+right]
                 -blockedPrefix[bottom*stride+left]+blockedPrefix[top*stride+left]>0)return false;
@@ -84,6 +109,7 @@ public final class MineRoom {
         return true;
     }
     public void update(int dx,int dy,double seconds,boolean running) {
+        workClock+=Math.max(0,Math.min(seconds,.1));
         double ox=x,oy=y,length=Math.hypot(dx,dy);
         if(length>0) {
             double distance=SPEED*(running?1.65:1)*Math.max(0,Math.min(seconds,.1));
@@ -96,12 +122,13 @@ public final class MineRoom {
             }
         }
         animation.update(x-ox,y-oy,seconds,running);
-        if(!cleared && bossZone.intersects(x,y,16,16))battleRequested=true;
+        if(!cleared && (bossZone.intersects(x,y,16,16) || (x>=680&&x<=1000&&y<335)))battleRequested=true;
         if(x<12)backRequested=true;
         if(cleared && exitDoor.contains(x+4,y+10,8,6))exitReached=true;
         updateCamera();
     }
     private void updateCamera() {
+        if(storyCamera)return;
         cameraX=Math.max(0,Math.min(x+8-960/(2*ZOOM),background.getWidth()-960/ZOOM));
         cameraY=Math.max(0,Math.min(y+8-520/(2*ZOOM),background.getHeight()-520/ZOOM));
     }
@@ -122,7 +149,7 @@ public final class MineRoom {
         Graphics2D g=(Graphics2D)graphics.create();
         g.setClip(0,60,960,520);
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-        g.translate(0,60);g.scale(ZOOM,ZOOM);g.translate(-Math.round(cameraX),-Math.round(cameraY));
+        g.translate(0,60);g.scale(drawZoom,drawZoom);g.translate(-Math.round(cameraX),-Math.round(cameraY));
         g.drawImage(background,0,0,null);
         if(!cleared) {
             g.setColor(new Color(44,29,23));g.fillRect(1005,351,8,34);g.fillRect(1116,351,8,34);
@@ -139,22 +166,27 @@ public final class MineRoom {
         int feetX=(int)Math.round(x+8),feetY=(int)Math.round(y+16);
         // The north-facing exit lintel hides the actor as they enter the tunnel.
         if(feetX>=1494 && feetX<1526 && feetY<521)g.clipRect(1491,476,37,100);
-        if(!cleared && feetY<265) {
+        if(!cleared && feetY<SCIENTIST_Y) {
             animation.draw(g,feetX,feetY,36,54);
-            BossArtwork.drawScientistMap(g,910,265);
+            drawScientist(g);
         } else {
-            if(!cleared)BossArtwork.drawScientistMap(g,910,265);
+            if(!cleared)drawScientist(g);
             animation.draw(g,feetX,feetY,36,54);
         }
         g.dispose();
         graphics.setColor(new Color(15,20,19));graphics.fillRect(0,0,960,60);graphics.fillRect(0,580,960,60);
         graphics.setColor(Color.WHITE);graphics.setFont(new Font(Font.MONOSPACED,Font.BOLD,18));
-        graphics.drawString("MINE v3.43  |  "+(cleared?"Laboratory cleared":"Follow the rails"),20,25);
+        graphics.drawString("THE MINE  |  "+(cleared?"Laboratory cleared":"Follow the rails"),20,25);
         graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
         graphics.drawString("WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip map",20,47);
         graphics.setColor(Color.LIGHT_GRAY);
         graphics.drawString(exitReached?"Entering the butterfly forest...":
             cleared?"Follow the eastern passage, then walk UP into the dark doorway.":
             "A hidden laboratory lies ahead. Explore the room to meet its keeper.",20,612);
+    }
+    private void drawScientist(Graphics2D g){
+        int footY=(int)Math.round(SCIENTIST_Y+(scientistFacingFront?0:workBob+(!storyCamera?Math.sin(workClock*4):0)));
+        if(scientistFacingFront)BossArtwork.drawScientistMap(g,(int)SCIENTIST_X,footY);
+        else BossArtwork.drawScientistWorking(g,(int)SCIENTIST_X,footY);
     }
 }
