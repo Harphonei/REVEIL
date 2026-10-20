@@ -281,7 +281,7 @@ public class ExplorationRoom {
         graphics.setColor(Color.WHITE);
         graphics.drawString("THE FOREST  |  "+(cleared?"Route to mine: OPEN":"Follow the trail"),20,25);
         graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
-        graphics.drawString(cleared ? "WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip map" : "WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip map",20,47);
+graphics.drawString(cleared ? "WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip | F7: Replay" : "WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip | F7: Replay",20,47);
         graphics.setColor(mineReached?new Color(175,210,175):Color.LIGHT_GRAY);
         graphics.drawString(message,20,612);
     }

@@ -82,6 +82,7 @@ public class GamePanel extends JPanel {
             if (state == GameState.EXPLORATION) { if(inThrone) throne.toggleCollisionView(); else if(inTemple) temple.toggleCollisionView(); else if(inButterfly) butterfly.toggleCollisionView(); else if(inMine) mine.toggleCollisionView(); else exploration.toggleCollisionView(); repaint(); }
         });
         bindScreenAction("released F6", "skip-map", () -> skipMap());
+        bindScreenAction("released F7", "replay-map", () -> replayCurrentMap());
         bindScreenAction("released ESCAPE", "pause", () -> togglePause());
         bindScreenAction("released ENTER", "confirm", () -> confirmScreen());
         bindScreenAction("released SPACE", "dialogue-next", () -> {
@@ -271,6 +272,29 @@ public class GamePanel extends JPanel {
         clearInput();repaint();
     }
 
+    /** Developer replay resets only the current room and its story flags. */
+    private void replayCurrentMap(){
+        if(state==GameState.MENU)return;
+        story.cancel();storyFade=0;storySkippable=false;
+        exploration.finishStory();mine.finishStory();
+        forestStoryBattle=false;mineStoryBattle=false;
+        clearInput();
+        if(inThrone){throne.reset();selectedBoss=5;boss=new MaskedBoss(430,210);}
+        else if(inTemple){temple.reset();selectedBoss=4;boss=new KnightBoss(430,210);}
+        else if(inButterfly){butterfly.reset();selectedBoss=3;boss=new MothBoss(430,210);}
+        else if(inMine){
+            mine.reset();mineEntrySeen=false;mineEncounterSeen=false;mineVictorySeen=false;
+            skillEUnlocked=false;selectedBoss=2;boss=new ScientistBoss(430,210);
+        }else{
+            exploration.reset();forestCorpseSeen=false;forestEncounterSeen=false;forestVictorySeen=false;
+            selectedBoss=1;boss=new ForestBoss(430,210);
+        }
+        restartBattle();
+        if(inMine)enterMine();
+        else if(!inThrone&&!inTemple&&!inButterfly)playForestOpening();
+        changeState(GameState.EXPLORATION);
+    }
+
     private void startThroneBattle() {
         forestStoryBattle=false;mineStoryBattle=false;
         selectedBoss=5;boss=new MaskedBoss(430,210);
@@ -323,7 +347,7 @@ public class GamePanel extends JPanel {
         final double hx=mine.storyX(),hy=mine.storyY();
         final double[] walkProgress={0};
         mine.faceStoryHero(SpriteAnimator.UP);
-        story.play(()->{mineEncounterSeen=true;mine.finishStory();storyFade=0;battleReadyTime=2;clearInput();},
+        story.play(()->{mineEncounterSeen=true;mine.finishStory();storyFade=0;battleReadyTime=1;clearInput();},
             StoryDirector.waitFor("mine-notice-work",.3),
             StoryDirector.motion("mine-pan-to-work",1.3,p->{
                 double ease=p*p*(3-2*p);
@@ -346,7 +370,7 @@ public class GamePanel extends JPanel {
             StoryDirector.waitFor("scientist-recognises",.7),
             StoryDirector.say(DialogueBox.Face.NONE,"…"),
             StoryDirector.say(DialogueBox.Face.NONE,"อ่า…นี่คุณ\nช่างเป็นหนูทดลองที่คุ้นเคยเสียจริง"),
-            StoryDirector.say(DialogueBox.Face.SHOCKED,"หมายความว่าไง—"),
+            StoryDirector.say(DialogueBox.Face.SHOCKED,"หมายความว่ายัง-"),
             StoryDirector.motion("mine-battle-fade-out",.5,p->storyFade=p),
             StoryDirector.action("mine-enter-battle",()->{
                 selectedBoss=2;boss=new ScientistBoss(430,210);restartBattle();changeState(GameState.BATTLE);storyFade=1;
@@ -364,7 +388,7 @@ public class GamePanel extends JPanel {
         if(boss instanceof ScientistBoss)((ScientistBoss)boss).clearStoryHazards();
         final double[] chargeProgress={0},flightProgress={0};
         story.play(()->{
-                battleReadyTime=0;clearInput();
+                battleReadyTime=0;player.resetSkillEAfterTutorial();clearInput();
                 if(boss instanceof ScientistBoss)((ScientistBoss)boss).resumeAfterSkillReveal();
             },
             StoryDirector.action("skill-e-hit-reaction",player::showHitReaction),
@@ -450,7 +474,7 @@ public class GamePanel extends JPanel {
         final double hx=exploration.storyX()+8,hy=exploration.storyY()+16;
         exploration.faceStoryHero(SpriteAnimator.RIGHT);
         exploration.setStoryBoss(1,1465,425,0);
-        story.play(()->{forestEncounterSeen=true;storySkippable=false;battleReadyTime=2;clearInput();},
+        story.play(()->{forestEncounterSeen=true;storySkippable=false;battleReadyTime=1;clearInput();},
             StoryDirector.waitFor("notice-feeding",.3),
             StoryDirector.motion("pan-to-feeding",1.4,p->{
                 double ease=p*p*(3-2*p);
@@ -728,7 +752,7 @@ public class GamePanel extends JPanel {
         enemyProjectiles.clear();
         player.reset(468, 500);
         boss.reset();
-        battleReadyTime=2;
+        battleReadyTime=1;
         shotCooldown = 0.0;
         repaint();
     }
@@ -810,7 +834,7 @@ public class GamePanel extends JPanel {
         g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 18));
         g.setColor(Color.LIGHT_GRAY);
         g.drawString("Click PLAY or press Enter", 340, 395);
-        g.drawString("Forest + Mine story  |  v3.69", 310, 500);
+        g.drawString("Forest + Mine story  |  v3.70", 310, 500);
         g.drawString("No saved progress yet", 365, 535);
     }
 

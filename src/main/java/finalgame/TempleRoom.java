@@ -134,7 +134,7 @@ public final class TempleRoom {
         graphics.setColor(Color.WHITE);graphics.setFont(new Font(Font.MONOSPACED,Font.BOLD,18));
         graphics.drawString("RUINED TEMPLE v3.43  |  The silent forecourt",20,25);
         graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
-        graphics.drawString("WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip",20,47);
+graphics.drawString("WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip | F7: Replay",20,47);
         graphics.setColor(Color.LIGHT_GRAY);
         graphics.drawString(exitReached?"The inner sanctuary lies beyond.":
             "Follow the stone path to the temple entrance.",20,612);

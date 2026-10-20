@@ -105,7 +105,7 @@ public final class ThroneRoom {
         graphics.setColor(new Color(190,194,205));graphics.setFont(new Font(Font.MONOSPACED,Font.BOLD,18));
         graphics.drawString("INNER SANCTUARY v3.58  |  The masked one",20,25);
         graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
-        graphics.drawString("WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip",20,47);
+graphics.drawString("WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip | F7: Replay",20,47);
         graphics.setColor(new Color(150,156,172));
         graphics.drawString(x<1170?"Only your footsteps answer.":"Silence fills the throne hall.",20,612);
     }

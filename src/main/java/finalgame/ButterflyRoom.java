@@ -155,7 +155,7 @@ public final class ButterflyRoom {
         graphics.setColor(Color.WHITE);graphics.setFont(new Font(Font.MONOSPACED,Font.BOLD,18));
         graphics.drawString("BUTTERFLY FOREST v3.48  |  "+(cleared?"Roots released":"Follow the lower trail"),20,25);
         graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
-        graphics.drawString("WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip map",20,47);
+graphics.drawString("WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip | F7: Replay",20,47);
         graphics.setColor(Color.LIGHT_GRAY);
         graphics.drawString(exitReached?"Entering the ruined temple...":
             cleared?"The roots have withdrawn. Return to the upper path and head east.":

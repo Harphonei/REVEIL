@@ -178,7 +178,7 @@ public final class MineRoom {
         graphics.setColor(Color.WHITE);graphics.setFont(new Font(Font.MONOSPACED,Font.BOLD,18));
         graphics.drawString("THE MINE  |  "+(cleared?"Laboratory cleared":"Follow the rails"),20,25);
         graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
-        graphics.drawString("WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip map",20,47);
+graphics.drawString("WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip | F7: Replay",20,47);
         graphics.setColor(Color.LIGHT_GRAY);
         graphics.drawString(exitReached?"Entering the butterfly forest...":
             cleared?"Follow the eastern passage, then walk UP into the dark doorway.":

@@ -114,6 +114,11 @@ public class Player {
         return isAlive() ? new SkillProjectile(x + size / 2.0, y) : null;
     }
 
+    /** The demonstration cast must not consume the player's first manual cast. */
+    public void resetSkillEAfterTutorial(){
+        skillECooldown=0;skillEChargeTime=0;skillRecoveryTime=0;skillEReadyToFire=false;
+    }
+
     public double getSkillECooldown() {
         return skillECooldown;
     }
