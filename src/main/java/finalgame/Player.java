@@ -129,6 +129,15 @@ public class Player {
         return skillEChargeTime;
     }
 
+    /** The discovery scene already performed the charge; begin the full effect now. */
+    public void activateStoryUltimate(){
+        storyQAura=-1;
+        if(!isAlive())return;
+        skillEChargeTime=0;skillEReadyToFire=false;skillRecoveryTime=0;
+        skillQChargeTime=0;ultimateTime=SKILL_Q_DURATION;skillQCooldown=SKILL_Q_COOLDOWN;
+        invincibleTime=Math.max(invincibleTime,1.5);
+    }
+
     public boolean useSkillQ() {
         if (!isAlive() || isUsingSkill() || skillQCooldown > 0.0) {
             return false;

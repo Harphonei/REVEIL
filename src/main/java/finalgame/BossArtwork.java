@@ -22,13 +22,13 @@ public final class BossArtwork {
     private static final BufferedImage SCIENTIST_WORKING=SpriteAnimator.Lighting.MINE.tint(load("scientist-working.png"));
     private static final BufferedImage SCIENTIST_BATTLE=load("scientist-battle.png");
     private static final BufferedImage MOTH_MAP=SpriteAnimator.Lighting.BUTTERFLY.tint(load("moth-map.png"));
-    private static final BufferedImage MOTH_FLIGHT=SpriteAnimator.Lighting.BUTTERFLY.tint(load("moth-flight.png"));
-    public static void drawMothFlight(Graphics graphics,int footX,int footY,int frame,double opacity){
+    private static final BufferedImage MOTH_FLIGHT=SpriteAnimator.Lighting.BUTTERFLY.tint(load("moth-flight-side.png"));
+    public static void drawMothFlight(Graphics graphics,int footX,int footY,int frame,double opacity,boolean facingLeft){
         Graphics2D g=(Graphics2D)graphics.create();
         g.setComposite(AlphaComposite.SrcOver.derive((float)Math.max(0,Math.min(1,opacity))));
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
         int sx=Math.max(0,Math.min(2,frame))*96;
-        g.drawImage(MOTH_FLIGHT,footX-72,footY-141,footX+72,footY+3,sx,0,sx+96,96,null);g.dispose();
+        g.drawImage(MOTH_FLIGHT,facingLeft?footX-72:footX+72,footY-141,facingLeft?footX+72:footX-72,footY+3,sx,0,sx+96,96,null);g.dispose();
     }
     private static final BufferedImage MOTH_BATTLE=load("moth-battle.png");
     private static final BufferedImage KNIGHT_MAP=SpriteAnimator.Lighting.TEMPLE_STATUE.tint(load("knight-map.png"));

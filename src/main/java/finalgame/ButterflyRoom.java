@@ -20,7 +20,7 @@ public final class ButterflyRoom {
     private boolean cleared,battleRequested,backRequested,exitReached,showCollision;
     private boolean storyCamera,bossVisible;
     private double mothX=1200,mothY=800;
-    private boolean mothFlying;
+    private boolean mothFlying,mothFacingLeft=true;
     private double mothOpacity=1;
     private int mothFrame;
     public void setStoryFlight(double px,double py,double clock,double opacity){
@@ -28,14 +28,14 @@ public final class ButterflyRoom {
         int[] cycle={0,1,2,1};mothFrame=cycle[(int)(clock/.16)%4];
     }
     private void drawStoryMoth(Graphics g){
-        if(mothFlying)BossArtwork.drawMothFlight(g,(int)mothX,(int)mothY,mothFrame,mothOpacity);
+        if(mothFlying)BossArtwork.drawMothFlight(g,(int)mothX,(int)mothY,mothFrame,mothOpacity,mothFacingLeft);
         else BossArtwork.drawMothMap(g,(int)mothX,(int)mothY);
     }
     public double storyX(){return x;}
     public double storyY(){return y;}
     public boolean isCleared(){return cleared;}
     public boolean nearRoots(){return !cleared&&x>995&&x<1100&&y>165&&y<320;}
-    public void faceStoryHero(){animation.reset(x<1200?SpriteAnimator.RIGHT:SpriteAnimator.LEFT);}
+    public void faceStoryHero(){mothFacingLeft=x<1200;animation.reset(mothFacingLeft?SpriteAnimator.RIGHT:SpriteAnimator.LEFT);}
     public void setStoryMoth(double px,double py){bossVisible=true;mothX=px;mothY=py;}
     public void focusStory(double cx,double cy){
         storyCamera=true;

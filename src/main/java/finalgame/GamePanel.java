@@ -399,7 +399,7 @@ public class GamePanel extends JPanel {
                 ||(boss.getHp()*100>boss.getMaxHp()*65&&player.getHp()*100>player.getMaxHp()*60))return false;
         clearInput();projectiles.clear();enemyProjectiles.clear();laser.reset();
         ((MothBoss)boss).clearStoryHazards();
-        story.play(()->{player.setStoryQAura(-1);battleReadyTime=0;clearInput();((MothBoss)boss).resumeAfterSkillReveal();},
+        story.play(()->{player.activateStoryUltimate();battleReadyTime=0;clearInput();((MothBoss)boss).resumeAfterSkillReveal();},
             StoryDirector.say(DialogueBox.Face.SHOCKED,"แฮ่ก…แฮ่ก"),
             StoryDirector.say(DialogueBox.Face.CONFUSED,"เจ้านี่รับมือยากชะมัด"),
             StoryDirector.say(DialogueBox.Face.NEUTRAL,"ถ้าอย่างนั้น"),
@@ -930,7 +930,7 @@ public class GamePanel extends JPanel {
         g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 18));
         g.setColor(Color.LIGHT_GRAY);
         g.drawString("Click PLAY or press Enter", 340, 395);
-        g.drawString("Forest + Mine + Moth  |  v3.73", 310, 500);
+        g.drawString("Forest + Mine + Moth  |  v3.74", 310, 500);
         g.drawString("No saved progress yet", 365, 535);
     }
 
