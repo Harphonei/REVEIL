@@ -32,6 +32,16 @@ public final class BossArtwork {
     }
     private static final BufferedImage MOTH_BATTLE=load("moth-battle.png");
     private static final BufferedImage KNIGHT_MAP=SpriteAnimator.Lighting.TEMPLE_STATUE.tint(load("knight-map.png"));
+    private static final BufferedImage KNIGHT_TURN=SpriteAnimator.Lighting.TEMPLE_STATUE.tint(load("knight-turn.png"));
+    public static void drawKnightTurn(Graphics graphics,int x,int y,double scale,double progress){
+        if(progress<=0){drawKnightMap(graphics,x,y,scale);return;}
+        Graphics2D g=(Graphics2D)graphics.create();
+        float blend=(float)Math.max(0,Math.min(1,progress));
+        if(blend<1){g.setComposite(AlphaComposite.SrcOver.derive(1-blend));drawKnightMap(g,x,y,scale);}
+        g.setComposite(AlphaComposite.SrcOver.derive(blend));
+        int h=(int)Math.round(116*scale),w=(int)Math.round(KNIGHT_TURN.getWidth()*h/(double)KNIGHT_TURN.getHeight());
+        draw(g,KNIGHT_TURN,x-w/2,y-h+3,w,h);g.dispose();
+    }
     private static final BufferedImage KNIGHT_BATTLE=load("knight-battle.png");
     private static final BufferedImage MASKED_MAP=SpriteAnimator.Lighting.THRONE_HALL.tint(load("masked-map.png"));
     private static final BufferedImage MASKED_ONE=load("masked-battle-1.png");

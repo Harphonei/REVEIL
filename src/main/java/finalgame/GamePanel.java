@@ -57,6 +57,7 @@ public class GamePanel extends JPanel {
     private boolean forestCorpseSeen,forestEncounterSeen,forestVictorySeen,forestStoryBattle;
     private boolean mineEntrySeen,mineEncounterSeen,mineVictorySeen,mineStoryBattle,skillEUnlocked;
     private boolean mothEntrySeen,mothRootsSeen,mothEncounterSeen,mothVictorySeen,mothStoryBattle,skillQUnlocked;
+    private boolean templeEntrySeen,templeEncounterSeen,templeVictorySeen,templeStoryBattle;
     private boolean storySkippable;
     private double storyFade,battleReadyTime;
 
@@ -197,7 +198,8 @@ public class GamePanel extends JPanel {
         story.cancel();storyFade=0;storySkippable=false;
         forestCorpseSeen=false;forestEncounterSeen=false;forestVictorySeen=false;forestStoryBattle=false;
         mineEntrySeen=false;mineEncounterSeen=false;mineVictorySeen=false;mineStoryBattle=false;skillEUnlocked=false;
-        mothEntrySeen=false;mothRootsSeen=false;mothEncounterSeen=false;mothVictorySeen=false;mothStoryBattle=false;skillQUnlocked=false;
+        mothEntrySeen=false;mothRootsSeen=false;mothEncounterSeen=false;mothVictorySeen=false;mothStoryBattle=false;templeStoryBattle=false;skillQUnlocked=false;
+        templeEntrySeen=false;templeEncounterSeen=false;templeVictorySeen=false;templeStoryBattle=false;
         exploration.reset();
         mine.reset();
         butterfly.reset();
@@ -231,6 +233,7 @@ public class GamePanel extends JPanel {
             if(forestStoryBattle&&!forestVictorySeen){playForestVictory();return;}
             if(mineStoryBattle&&!mineVictorySeen){playMineVictory();return;}
             if(mothStoryBattle&&!mothVictorySeen){playMothVictory();return;}
+            if(templeStoryBattle&&!templeVictorySeen){playTempleVictory();return;}
             if (!inMine && !inButterfly && !inTemple && !inThrone && selectedBoss == 1) exploration.returnFromBattle();
             if (inMine && selectedBoss == 2) mine.returnFromBattle();
             if (inButterfly && selectedBoss == 3) butterfly.returnFromBattle();
@@ -258,13 +261,13 @@ public class GamePanel extends JPanel {
 
     private void skipMap() {
         if(state!=GameState.EXPLORATION || story.active())return;
-        exploration.finishStory();mine.finishStory();butterfly.finishStory();forestStoryBattle=false;mineStoryBattle=false;mothStoryBattle=false;
+        exploration.finishStory();mine.finishStory();butterfly.finishStory();temple.finishStory();forestStoryBattle=false;mineStoryBattle=false;mothStoryBattle=false;templeStoryBattle=false;
         if(inThrone) throne.skipToHall();
         else if(inTemple) {
             temple.skipToExit();temple.consumeExitRequest();inTemple=false;inThrone=true;throne.enter();
         }
         else if(inButterfly) {
-            skillQUnlocked=true;butterfly.returnFromBattle();inButterfly=false;inTemple=true;temple.enter();
+            skillQUnlocked=true;butterfly.returnFromBattle();inButterfly=false;enterTemple();
         }
         else if(inMine) {
             skillEUnlocked=true;
@@ -279,11 +282,11 @@ public class GamePanel extends JPanel {
     private void replayCurrentMap(){
         if(state==GameState.MENU)return;
         story.cancel();storyFade=0;storySkippable=false;
-        exploration.finishStory();mine.finishStory();butterfly.finishStory();
-        forestStoryBattle=false;mineStoryBattle=false;mothStoryBattle=false;
+        exploration.finishStory();mine.finishStory();butterfly.finishStory();temple.finishStory();
+        forestStoryBattle=false;mineStoryBattle=false;mothStoryBattle=false;templeStoryBattle=false;
         clearInput();
         if(inThrone){throne.reset();selectedBoss=5;boss=new MaskedBoss(430,210);}
-        else if(inTemple){temple.reset();selectedBoss=4;boss=new KnightBoss(430,210);}
+        else if(inTemple){temple.reset();templeEntrySeen=false;templeEncounterSeen=false;templeVictorySeen=false;selectedBoss=4;boss=new KnightBoss(430,210);}
         else if(inButterfly){butterfly.reset();mothEntrySeen=false;mothRootsSeen=false;mothEncounterSeen=false;mothVictorySeen=false;skillQUnlocked=false;selectedBoss=3;boss=new MothBoss(430,210);}
         else if(inMine){
             mine.reset();mineEntrySeen=false;mineEncounterSeen=false;mineVictorySeen=false;
@@ -295,25 +298,28 @@ public class GamePanel extends JPanel {
         restartBattle();
         if(inMine)enterMine();
         else if(inButterfly)enterButterfly();
+        else if(inTemple)enterTemple();
         else if(!inThrone&&!inTemple&&!inButterfly)playForestOpening();
         changeState(GameState.EXPLORATION);
     }
 
     private void startThroneBattle() {
-        forestStoryBattle=false;mineStoryBattle=false;mothStoryBattle=false;
+        forestStoryBattle=false;mineStoryBattle=false;mothStoryBattle=false;templeStoryBattle=false;
         selectedBoss=5;boss=new MaskedBoss(430,210);
         restartBattle();changeState(GameState.BATTLE);
     }
 
     private void startTempleBattle() {
-        forestStoryBattle=false;mineStoryBattle=false;mothStoryBattle=false;
+        if(story.active())return;
+        forestStoryBattle=false;mineStoryBattle=false;mothStoryBattle=false;templeStoryBattle=true;
+        if(!templeEncounterSeen){playTempleEntrance();return;}
         selectedBoss=4;boss=new KnightBoss(430,210);
         restartBattle();changeState(GameState.BATTLE);
     }
 
     private void startButterflyBattle() {
         if(story.active())return;
-        forestStoryBattle=false;mineStoryBattle=false;mothStoryBattle=true;
+        forestStoryBattle=false;mineStoryBattle=false;mothStoryBattle=true;templeStoryBattle=false;
         if(!mothEncounterSeen){playMothEntrance();return;}
         selectedBoss=3; boss=new MothBoss(430,210);
         restartBattle(); changeState(GameState.BATTLE);
@@ -321,7 +327,7 @@ public class GamePanel extends JPanel {
 
     private void startMineBattle() {
         if(story.active())return;
-        forestStoryBattle=false;mineStoryBattle=true;mothStoryBattle=false;
+        forestStoryBattle=false;mineStoryBattle=true;mothStoryBattle=false;templeStoryBattle=false;
         if(!mineEncounterSeen){playMineEntrance();return;}
         selectedBoss=2;boss=new ScientistBoss(430,210);
         restartBattle();changeState(GameState.BATTLE);
@@ -329,12 +335,61 @@ public class GamePanel extends JPanel {
 
     private void startForestBattle() {
         if(story.active())return;
-        mineStoryBattle=false;mothStoryBattle=false;
+        mineStoryBattle=false;mothStoryBattle=false;templeStoryBattle=false;
         playForestEntrance();
     }
 
     private boolean canUseSkillE(){return !forestStoryBattle&&(!mineStoryBattle||skillEUnlocked);}
     private boolean canUseSkillQ(){return !forestStoryBattle&&!mineStoryBattle&&(!mothStoryBattle||skillQUnlocked);}
+
+    private void enterTemple(){
+        inTemple=true;temple.enter();clearInput();
+        if(!templeEntrySeen){
+            templeEntrySeen=true;storyFade=1;
+            story.play(this::endTempleScene,
+                StoryDirector.motion("temple-arrival-fade",.6,p->storyFade=1-p),
+                StoryDirector.say(DialogueBox.Face.CONFUSED,"ต่อจากป่าก็วิหารร้างงั้นหรอ"),
+                StoryDirector.say(DialogueBox.Face.NEUTRAL,"คงต้องเข้าไปดูซักหน่อย"));
+        }
+    }
+
+    private void endTempleScene(){storyFade=0;temple.finishStory();clearInput();}
+
+    private void playTempleEntrance(){
+        clearInput();final double hx=temple.storyX(),hy=temple.storyY();
+        story.play(()->{templeEncounterSeen=true;endTempleScene();battleReadyTime=1;},
+            StoryDirector.waitFor("temple-hears-voice",.3),
+            StoryDirector.say(DialogueBox.Face.NONE,"ท่าน…."),
+            StoryDirector.action("temple-hero-turns",()->temple.faceStoryKnight()),
+            StoryDirector.say(DialogueBox.Face.SHOCKED,"!!! รูปปั้นงั้นหรอ?"),
+            StoryDirector.motion("temple-pan-statue",1.1,p->{
+                double e=p*p*(3-2*p);temple.focusStory(hx+8+(1280-hx-8)*e,hy+8+(245-hy-8)*e);
+            }),
+            StoryDirector.say(DialogueBox.Face.KNIGHT,"ทำไมท่านถึงยังกลับมา…"),
+            StoryDirector.say(DialogueBox.Face.CONFUSED,"แกรู้จักฉันงั้นหรอ"),
+            StoryDirector.say(DialogueBox.Face.SHOCKED,"งั้นก็ช่วยบอกฉันหน่อยสิ! ที่นี่ที่ไหนแล้วฉันเป็นใคร!"),
+            StoryDirector.motion("temple-knight-turns",1.25,p->temple.setKnightTurn(p*p*(3-2*p))),
+            StoryDirector.say(DialogueBox.Face.KNIGHT,"….."),
+            StoryDirector.say(DialogueBox.Face.KNIGHT,"อา…ท่านผู้เป็นนิรันดรเอ๋ย ถ้าท่านจะผ่านไปข้างหน้าแล้วล่ะก็ ข้าคงให้ไม่ได้"),
+            StoryDirector.motion("temple-battle-fade-out",.5,p->storyFade=p),
+            StoryDirector.action("temple-enter-battle",()->{
+                selectedBoss=4;boss=new KnightBoss(430,210);restartBattle();changeState(GameState.BATTLE);storyFade=1;
+            }),
+            StoryDirector.waitFor("temple-battle-black",.18),
+            StoryDirector.motion("temple-battle-fade-in",.65,p->storyFade=1-p),
+            StoryDirector.say(DialogueBox.Face.CONFUSED,"นี่…ไม่คิดจะพูดอะไรหน่อยหรอ"),
+            StoryDirector.say(DialogueBox.Face.KNIGHT,"……"));
+    }
+
+    private void playTempleVictory(){
+        templeVictorySeen=true;clearInput();projectiles.clear();enemyProjectiles.clear();laser.reset();
+        story.play(this::endTempleScene,
+            StoryDirector.waitFor("temple-victory-breath",.6),
+            StoryDirector.motion("temple-victory-fade-out",.6,p->storyFade=p),
+            StoryDirector.action("temple-return",()->{temple.returnFromBattle();changeState(GameState.EXPLORATION);storyFade=1;}),
+            StoryDirector.motion("temple-victory-fade-in",.7,p->storyFade=1-p),
+            StoryDirector.say(DialogueBox.Face.NEUTRAL,"….อ่า…เรื่องมันชักจะน่าโมโหขึ้นมาแล้วสิ"));
+    }
 
     private void enterButterfly(){
         inButterfly=true;butterfly.enter();clearInput();
@@ -347,7 +402,7 @@ public class GamePanel extends JPanel {
         }
     }
 
-    private void endMothScene(){storyFade=0;butterfly.finishStory();clearInput();}
+    private void endMothScene(){storyFade=0;butterfly.finishStory();temple.finishStory();clearInput();}
 
     private void playMothRoots(){
         mothRootsSeen=true;clearInput();
@@ -663,7 +718,7 @@ public class GamePanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent event) {
                 if (state != GameState.BATTLE || story.active()) return;
-                forestStoryBattle=false;mineStoryBattle=false;mothStoryBattle=false;
+                forestStoryBattle=false;mineStoryBattle=false;mothStoryBattle=false;templeStoryBattle=false;
                 selectedBoss = number;
                 switch (number) {
                     case 1: boss = new ForestBoss(430, 210); break;
@@ -712,7 +767,7 @@ public class GamePanel extends JPanel {
                 if(butterfly.consumeBackRequest()) {
                     inButterfly=false; inMine=true; mine.returnFromButterfly(); clearInput();
                 } else if(butterfly.consumeExitRequest()) {
-                    inButterfly=false;inTemple=true;temple.enter();clearInput();
+                    inButterfly=false;enterTemple();clearInput();
                 } else if(butterfly.consumeBattleRequest()) startButterflyBattle();
                 else if(!mothRootsSeen&&butterfly.nearRoots())playMothRoots();
             } else if(inMine) {
@@ -742,6 +797,7 @@ public class GamePanel extends JPanel {
             }
             if(!boss.isAlive()&&player.isAlive()&&mineStoryBattle&&!mineVictorySeen){playMineVictory();repaint();return;}
             if(!boss.isAlive()&&player.isAlive()&&mothStoryBattle&&!mothVictorySeen){playMothVictory();repaint();return;}
+            if(!boss.isAlive()&&player.isAlive()&&templeStoryBattle&&!templeVictorySeen){playTempleVictory();repaint();return;}
             projectiles.clear();
             enemyProjectiles.clear();
             laser.reset();
@@ -805,6 +861,7 @@ public class GamePanel extends JPanel {
             if(forestStoryBattle&&!forestVictorySeen)playForestVictory();
             else if(mineStoryBattle&&!mineVictorySeen)playMineVictory();
             else if(mothStoryBattle&&!mothVictorySeen)playMothVictory();
+            else if(templeStoryBattle&&!templeVictorySeen)playTempleVictory();
             repaint();
             return;
         }
@@ -930,7 +987,7 @@ public class GamePanel extends JPanel {
         g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 18));
         g.setColor(Color.LIGHT_GRAY);
         g.drawString("Click PLAY or press Enter", 340, 395);
-        g.drawString("Forest + Mine + Moth  |  v3.74", 310, 500);
+        g.drawString("Forest + Mine + Moth  |  v3.75", 310, 500);
         g.drawString("No saved progress yet", 365, 535);
     }
 

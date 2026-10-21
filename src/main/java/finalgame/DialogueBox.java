@@ -12,11 +12,16 @@ import javax.imageio.ImageIO;
 
 /** Name-free portrait dialogue with Thai shaping and grapheme-safe typewriter text. */
 public final class DialogueBox {
-    public enum Face { NEUTRAL, CONFUSED, SHOCKED, RELIEVED, NONE, SCIENTIST, MOTH }
+    public enum Face { NEUTRAL, CONFUSED, SHOCKED, RELIEVED, NONE, SCIENTIST, MOTH, KNIGHT }
     private static final Font FONT=loadFont();
     private static final BufferedImage PORTRAITS=loadPortraits();
     private static final BufferedImage SCIENTIST=loadScientist();
     private static final BufferedImage MOTH=loadMoth();
+    private static final BufferedImage KNIGHT=loadKnight();
+    private static BufferedImage loadKnight(){
+        try{return ImageIO.read(DialogueBox.class.getResource("/finalgame/knight-portrait.png"));}
+        catch(Exception e){throw new IllegalStateException("Cannot load knight portrait",e);}
+    }
     private static BufferedImage loadMoth(){
         try{return ImageIO.read(DialogueBox.class.getResource("/finalgame/moth-portrait.png"));}
         catch(Exception e){throw new IllegalStateException("Cannot load moth portrait",e);}
@@ -77,9 +82,9 @@ public final class DialogueBox {
         g.setColor(new Color(107,111,120));g.setStroke(new BasicStroke(3));g.drawRect(21,437,918,184);
         g.setColor(new Color(53,58,68));g.drawRect(27,443,906,172);
         int textX=face==Face.NONE?52:202;
-        if(face==Face.SCIENTIST||face==Face.MOTH){
+        if(face==Face.SCIENTIST||face==Face.MOTH||face==Face.KNIGHT){
             g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-            g.drawImage(face==Face.MOTH?MOTH:SCIENTIST,40,460,144,144,null);
+            g.drawImage(face==Face.KNIGHT?KNIGHT:face==Face.MOTH?MOTH:SCIENTIST,40,460,144,144,null);
         }else if(face!=Face.NONE) {
             int cell=PORTRAITS.getWidth()/2;
             int col=face.ordinal()%2,row=face.ordinal()/2;

@@ -21,6 +21,19 @@ public final class TempleRoom {
     private final SpriteAnimator animation=new SpriteAnimator(SpriteAnimator.Lighting.TEMPLE);
     private double x,y,cameraX,cameraY;
     private boolean backRequested,exitReached,showCollision,cleared,battleRequested;
+    private boolean storyCamera;
+    private double knightTurn;
+    public double storyX(){return x;}
+    public double storyY(){return y;}
+    public boolean isCleared(){return cleared;}
+    public void faceStoryKnight(){animation.reset(SpriteAnimator.RIGHT);}
+    public void setKnightTurn(double p){knightTurn=p;}
+    public void focusStory(double cx,double cy){
+        storyCamera=true;
+        cameraX=Math.max(0,Math.min(cx-960/(2*ZOOM),1536-960/ZOOM));
+        cameraY=Math.max(0,Math.min(cy-520/(2*ZOOM),1024-520/ZOOM));
+    }
+    public void finishStory(){storyCamera=false;animation.stop();updateCamera();}
     private final Rectangle encounterStep=new Rectangle(1110,272,152,12);
     private final Rectangle upperStairs=new Rectangle(1106,150,164,122);
 
@@ -62,7 +75,7 @@ public final class TempleRoom {
         } catch(Exception ex) {throw new IllegalStateException("Cannot index temple collision masks",ex);}
     }
     public void reset() {
-        cleared=false;battleRequested=false;exitReached=false;enter();
+        cleared=false;battleRequested=false;exitReached=false;storyCamera=false;knightTurn=0;enter();
     }
     public void enter() {
         x=40;y=508;exitReached=false;backRequested=false;battleRequested=false;
@@ -102,6 +115,7 @@ public final class TempleRoom {
         updateCamera();
     }
     private void updateCamera() {
+        if(storyCamera)return;
         cameraX=Math.max(0,Math.min(x+8-960/(2*ZOOM),background.getWidth()-960/ZOOM));
         cameraY=Math.max(0,Math.min(y+8-520/(2*ZOOM),background.getHeight()-520/ZOOM));
     }
@@ -117,7 +131,7 @@ public final class TempleRoom {
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
         g.translate(0,60);g.scale(ZOOM,ZOOM);g.translate(-Math.round(cameraX),-Math.round(cameraY));
         g.drawImage(background,0,0,null);
-        if(!cleared)BossArtwork.drawKnightMap(g,1377,273,ACTOR_SCALE);
+        if(!cleared)BossArtwork.drawKnightTurn(g,1377,273,ACTOR_SCALE,knightTurn);
         Graphics2D actor=(Graphics2D)g.create();
         if(x+8>=1140 && x+8<1240 && y+16<200)actor.clipRect(1136,154,108,100);
         animation.draw(actor,(int)Math.round(x+8),(int)Math.round(y+16),HERO_WIDTH,HERO_HEIGHT);actor.dispose();
