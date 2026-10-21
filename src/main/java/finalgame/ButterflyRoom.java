@@ -20,6 +20,17 @@ public final class ButterflyRoom {
     private boolean cleared,battleRequested,backRequested,exitReached,showCollision;
     private boolean storyCamera,bossVisible;
     private double mothX=1200,mothY=800;
+    private boolean mothFlying;
+    private double mothOpacity=1;
+    private int mothFrame;
+    public void setStoryFlight(double px,double py,double clock,double opacity){
+        setStoryMoth(px,py);mothFlying=true;mothOpacity=opacity;
+        int[] cycle={0,1,2,1};mothFrame=cycle[(int)(clock/.16)%4];
+    }
+    private void drawStoryMoth(Graphics g){
+        if(mothFlying)BossArtwork.drawMothFlight(g,(int)mothX,(int)mothY,mothFrame,mothOpacity);
+        else BossArtwork.drawMothMap(g,(int)mothX,(int)mothY);
+    }
     public double storyX(){return x;}
     public double storyY(){return y;}
     public boolean isCleared(){return cleared;}
@@ -31,7 +42,7 @@ public final class ButterflyRoom {
         cameraX=Math.max(0,Math.min(cx-960/(2*ZOOM),1536-960/ZOOM));
         cameraY=Math.max(0,Math.min(cy-520/(2*ZOOM),1024-520/ZOOM));
     }
-    public void finishStory(){storyCamera=false;animation.stop();updateCamera();}
+    public void finishStory(){storyCamera=false;mothFlying=false;mothOpacity=1;animation.stop();updateCamera();}
 
     public ButterflyRoom() {
         try {
@@ -78,7 +89,7 @@ public final class ButterflyRoom {
         } catch(Exception ex) {throw new IllegalStateException("Cannot index butterfly collision masks",ex);}
     }
     public void reset() {
-        cleared=false;exitReached=false;bossVisible=false;storyCamera=false;mothX=1200;mothY=800;enter();
+        cleared=false;exitReached=false;bossVisible=false;storyCamera=false;mothFlying=false;mothOpacity=1;mothX=1200;mothY=800;enter();
     }
     public void enter() {
         x=40;y=148;battleRequested=false;backRequested=false;
@@ -160,9 +171,9 @@ public final class ButterflyRoom {
         int feetX=(int)Math.round(x+8),feetY=(int)Math.round(y+16);
         if(!cleared && bossVisible && feetY<mothY) {
             animation.draw(g,feetX,feetY,36,54);
-            BossArtwork.drawMothMap(g,(int)mothX,(int)mothY);
+            drawStoryMoth(g);
         } else {
-            if(!cleared&&bossVisible)BossArtwork.drawMothMap(g,(int)mothX,(int)mothY);
+            if(!cleared&&bossVisible)drawStoryMoth(g);
             animation.draw(g,feetX,feetY,36,54);
         }
         g.dispose();

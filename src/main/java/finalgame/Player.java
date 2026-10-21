@@ -27,6 +27,8 @@ public class Player {
     private static final double SKILL_Q_CHARGE = 0.65;
     private static final double ULTIMATE_SPEED_MULTIPLIER = 1.2;
     private double ultimateTime = 0.0;
+    private double storyQAura=-1;
+    public void setStoryQAura(double progress){storyQAura=progress;}
     private double skillQCooldown = 0.0;
     private double skillQChargeTime = 0.0;
 
@@ -133,6 +135,7 @@ public class Player {
         }
         skillQChargeTime = SKILL_Q_CHARGE;
         skillQCooldown = SKILL_Q_COOLDOWN;
+        invincibleTime=Math.max(invincibleTime,1.5);
         return true;
     }
 
@@ -193,6 +196,7 @@ public class Player {
     }
 
     public void reset(double startX, double startY) {
+        storyQAura=-1;
         animation.reset(SpriteAnimator.UP);
         x = startX;
         y = startY;
@@ -215,9 +219,9 @@ public class Player {
     };
 
     public void draw(Graphics g) {
-        if (isAlive() && skillQChargeTime > 0.0) {
+        if (isAlive() && (skillQChargeTime > 0.0||storyQAura>=0)) {
             // Placeholder activation aura; replace with sprite animation later.
-            double progress = 1.0 - skillQChargeTime / SKILL_Q_CHARGE;
+            double progress = storyQAura>=0?storyQAura:1.0 - skillQChargeTime / SKILL_Q_CHARGE;
             int padding = 7 + (int) (progress * 12);
             g.setColor(new Color(255, 190, 30));
             g.drawOval((int) x - padding, (int) y - padding,

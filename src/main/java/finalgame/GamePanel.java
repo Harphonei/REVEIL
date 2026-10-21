@@ -342,7 +342,8 @@ public class GamePanel extends JPanel {
             mothEntrySeen=true;storyFade=1;
             story.play(this::endMothScene,
                 StoryDirector.motion("moth-arrival-fade",.6,p->storyFade=1-p),
-                StoryDirector.say(DialogueBox.Face.CONFUSED,"ที่นี่ที่ไหนกัน…ป่าอีกแล้วงั้นเหรอ?"));
+                StoryDirector.say(DialogueBox.Face.CONFUSED,"ที่นี่ที่ไหน"),
+                StoryDirector.say(DialogueBox.Face.CONFUSED,"ป่าอีกแล้วงั้นหรอ?"));
         }
     }
 
@@ -351,7 +352,7 @@ public class GamePanel extends JPanel {
     private void playMothRoots(){
         mothRootsSeen=true;clearInput();
         story.play(this::endMothScene,
-            StoryDirector.say(DialogueBox.Face.CONFUSED,"นี่มันอะไรกัน…"),
+            StoryDirector.say(DialogueBox.Face.CONFUSED,"นี่มันอะไรกัน"),
             StoryDirector.say(DialogueBox.Face.NEUTRAL,"คงต้องหาทางเอามันออก"));
     }
 
@@ -359,45 +360,55 @@ public class GamePanel extends JPanel {
         clearInput();
         final double hx=butterfly.storyX(),hy=butterfly.storyY();
         story.play(()->{mothEncounterSeen=true;endMothScene();battleReadyTime=1;},
-            StoryDirector.say(DialogueBox.Face.CONFUSED,"ที่นี่มันอะไรเนี่ย…น่าขนลุกชะมัด"),
+            StoryDirector.say(DialogueBox.Face.CONFUSED,"ที่นี่มันอะไรเนี่ย น่าขนลุดชะมัด"),
             StoryDirector.say(DialogueBox.Face.NONE,"เจ้าเป็นใคร"),
-            StoryDirector.say(DialogueBox.Face.CONFUSED,"? ฉันงั้นเหรอ"),
+            StoryDirector.say(DialogueBox.Face.SHOCKED,"นะ..นั่นใคร!?"),
             StoryDirector.motion("moth-camera-pan",1.1,p->{
                 double e=p*p*(3-2*p);
                 butterfly.focusStory(hx+8+(1200-hx-8)*e,hy+8+(780-hy-8)*e);
             }),
             StoryDirector.action("moth-look",()->butterfly.faceStoryHero()),
-            StoryDirector.motion("moth-emerges",2.0,p->{
-                double e=p*p*(3-2*p);
-                butterfly.setStoryMoth(1390-190*e,650+150*e-Math.sin(p*Math.PI*8)*5);
+            StoryDirector.motion("moth-materializes",1.4,p->{
+                butterfly.setStoryFlight(1390,740-Math.sin(p*Math.PI*4)*3,p*1.4,p*p*(3-2*p));
             }),
-            StoryDirector.say(DialogueBox.Face.CONFUSED,"คุณคือ…"),
-            StoryDirector.say(DialogueBox.Face.MOTH,"อ่า…เจ้า ช่างมีกลิ่นอายที่คุ้นเคยเสียจริง"),
-            StoryDirector.say(DialogueBox.Face.CONFUSED,"คุณรู้จักผม…"),
-            StoryDirector.say(DialogueBox.Face.MOTH,"หือ…เจ้า…เจ้าคือหายนะ\nเจ้าจะนำหายนะมาสู่เรา!"),
+            StoryDirector.motion("moth-emerges",3.0,p->{
+                double e=p*p*(3-2*p);
+                butterfly.setStoryFlight(1390-190*e,740+60*e-Math.sin(p*Math.PI*8)*5,1.4+p*3,1);
+            }),
+            StoryDirector.action("moth-hover",()->butterfly.setStoryFlight(1200,800,.32,1)),
+            StoryDirector.say(DialogueBox.Face.CONFUSED,"คุณคือ…."),
+            StoryDirector.say(DialogueBox.Face.MOTH,"อืม….."),
+            StoryDirector.say(DialogueBox.Face.MOTH,"เจ้า….ช่างมีกลิ่นอายที่คุ้นเคยเสียจริง"),
+            StoryDirector.say(DialogueBox.Face.CONFUSED,"คุณรู้จักผม…."),
+            StoryDirector.say(DialogueBox.Face.MOTH,"ข้าจำได้แล้ว…"),
+            StoryDirector.say(DialogueBox.Face.MOTH,"เจ้า..เจ้าคือหายนะ เจ้าจะนำหายนะมาสู่เรา!"),
             StoryDirector.say(DialogueBox.Face.MOTH,"ข้าต้องกำจัด!"),
+            StoryDirector.say(DialogueBox.Face.CONFUSED,"หมายความว่ายังไง-"),
             StoryDirector.say(DialogueBox.Face.SHOCKED,"เดี๋ยวสิ!"),
             StoryDirector.motion("moth-battle-fade-out",.5,p->storyFade=p),
             StoryDirector.action("moth-enter-battle",()->{
                 selectedBoss=3;boss=new MothBoss(430,210);restartBattle();changeState(GameState.BATTLE);storyFade=1;
             }),
             StoryDirector.motion("moth-battle-fade-in",.65,p->storyFade=1-p),
-            StoryDirector.say(DialogueBox.Face.MOTH,"หายนะ…หายนะ…ต้องกำจัด"),
-            StoryDirector.say(DialogueBox.Face.SHOCKED,"อึก…บ้าไปแล้วหรือเปล่าเนี่ย"));
+            StoryDirector.say(DialogueBox.Face.MOTH,"หายนะ หายนะ ต้องกำจัด"),
+            StoryDirector.say(DialogueBox.Face.SHOCKED,"บ้าไปแล้วหรือเปล่าเนี่ย!"));
     }
 
     private boolean tryUnlockMothQ(){
         if(!mothStoryBattle||skillQUnlocked||!player.isAlive()||!boss.isAlive()
-                ||(boss.getHp()*5>boss.getMaxHp()*4&&player.getHp()*10>player.getMaxHp()*7))return false;
+                ||(boss.getHp()*100>boss.getMaxHp()*65&&player.getHp()*100>player.getMaxHp()*60))return false;
         clearInput();projectiles.clear();enemyProjectiles.clear();laser.reset();
         ((MothBoss)boss).clearStoryHazards();
-        story.play(()->{battleReadyTime=0;clearInput();((MothBoss)boss).resumeAfterSkillReveal();},
-            StoryDirector.say(DialogueBox.Face.SHOCKED,"อึก…หลบอย่างเดียวคงไม่ไหวแล้ว…"),
-            StoryDirector.say(DialogueBox.Face.CONFUSED,"พลังนี่…ถ้ารวบรวมไว้รอบตัว…"),
-            StoryDirector.say(DialogueBox.Face.MOTH,"กลิ่นอายนั่น…หายนะ!"),
-            StoryDirector.say(DialogueBox.Face.NEUTRAL,"ไม่รู้ว่าทำไม…แต่ร่างกายฉันจำได้"),
+        story.play(()->{player.setStoryQAura(-1);battleReadyTime=0;clearInput();((MothBoss)boss).resumeAfterSkillReveal();},
+            StoryDirector.say(DialogueBox.Face.SHOCKED,"แฮ่ก…แฮ่ก"),
+            StoryDirector.say(DialogueBox.Face.CONFUSED,"เจ้านี่รับมือยากชะมัด"),
+            StoryDirector.say(DialogueBox.Face.NEUTRAL,"ถ้าอย่างนั้น"),
+            StoryDirector.motion("q-story-aura",.65,p->player.setStoryQAura(p)),
+            StoryDirector.waitFor("q-story-aura-hold",.6),
+            StoryDirector.say(DialogueBox.Face.MOTH,"เป็นเจ้าจริงด้วย"),
+            StoryDirector.say(DialogueBox.Face.MOTH,"ตายซะเถอะ!"),
             StoryDirector.action("unlock-skill-q",()->skillQUnlocked=true),
-            StoryDirector.say(DialogueBox.Face.NONE,"ปลดล็อคสกิล Q\nกด Q เพื่อเพิ่มพลัง แล้วกดเมาส์ขวาค้างเพื่อยิงลำแสง"));
+            StoryDirector.say(DialogueBox.Face.NONE,"ปลดล็อคสกิล Ultimate\nกด Q เพื่อรับพลังที่แข็งแกร่งขึ้น"));
         return true;
     }
 
@@ -408,8 +419,8 @@ public class GamePanel extends JPanel {
             StoryDirector.motion("moth-victory-fade-out",.6,p->storyFade=p),
             StoryDirector.action("moth-return",()->{butterfly.returnFromBattle();changeState(GameState.EXPLORATION);storyFade=1;}),
             StoryDirector.motion("moth-victory-fade-in",.7,p->storyFade=1-p),
-            StoryDirector.say(DialogueBox.Face.RELIEVED,"ฮู่ว…อะไรกันเนี่ย อยู่ ๆ ก็มาใส่ร้ายกัน"),
-            StoryDirector.say(DialogueBox.Face.NEUTRAL,"…ช่างเถอะ ออกไปจากที่นี่ดีกว่า\nน่าขนลุกชะมัด"));
+            StoryDirector.say(DialogueBox.Face.RELIEVED,"ฮู่ว..เรื่องอะไรกันเนี่ย อยู่ๆก็มาใส่ร้ายกัน"),
+            StoryDirector.say(DialogueBox.Face.NEUTRAL,"…ช่างเถอะ ออกไปจากที่นี่ดีกว่า น่าขนลุกชะมัด"));
     }
 
     private void enterMine(){
@@ -919,7 +930,7 @@ public class GamePanel extends JPanel {
         g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 18));
         g.setColor(Color.LIGHT_GRAY);
         g.drawString("Click PLAY or press Enter", 340, 395);
-        g.drawString("Forest + Mine + Moth  |  v3.72", 310, 500);
+        g.drawString("Forest + Mine + Moth  |  v3.73", 310, 500);
         g.drawString("No saved progress yet", 365, 535);
     }
 
