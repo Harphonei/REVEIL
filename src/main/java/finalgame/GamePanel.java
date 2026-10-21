@@ -56,6 +56,7 @@ public class GamePanel extends JPanel {
     private final StoryDirector story=new StoryDirector(dialogue);
     private boolean forestCorpseSeen,forestEncounterSeen,forestVictorySeen,forestStoryBattle;
     private boolean mineEntrySeen,mineEncounterSeen,mineVictorySeen,mineStoryBattle,skillEUnlocked;
+    private boolean mothEntrySeen,mothRootsSeen,mothEncounterSeen,mothVictorySeen,mothStoryBattle,skillQUnlocked;
     private boolean storySkippable;
     private double storyFade,battleReadyTime;
 
@@ -196,6 +197,7 @@ public class GamePanel extends JPanel {
         story.cancel();storyFade=0;storySkippable=false;
         forestCorpseSeen=false;forestEncounterSeen=false;forestVictorySeen=false;forestStoryBattle=false;
         mineEntrySeen=false;mineEncounterSeen=false;mineVictorySeen=false;mineStoryBattle=false;skillEUnlocked=false;
+        mothEntrySeen=false;mothRootsSeen=false;mothEncounterSeen=false;mothVictorySeen=false;mothStoryBattle=false;skillQUnlocked=false;
         exploration.reset();
         mine.reset();
         butterfly.reset();
@@ -228,6 +230,7 @@ public class GamePanel extends JPanel {
         else if (state == GameState.BATTLE && !boss.isAlive() && player.isAlive()) {
             if(forestStoryBattle&&!forestVictorySeen){playForestVictory();return;}
             if(mineStoryBattle&&!mineVictorySeen){playMineVictory();return;}
+            if(mothStoryBattle&&!mothVictorySeen){playMothVictory();return;}
             if (!inMine && !inButterfly && !inTemple && !inThrone && selectedBoss == 1) exploration.returnFromBattle();
             if (inMine && selectedBoss == 2) mine.returnFromBattle();
             if (inButterfly && selectedBoss == 3) butterfly.returnFromBattle();
@@ -255,17 +258,17 @@ public class GamePanel extends JPanel {
 
     private void skipMap() {
         if(state!=GameState.EXPLORATION || story.active())return;
-        exploration.finishStory();mine.finishStory();forestStoryBattle=false;mineStoryBattle=false;
+        exploration.finishStory();mine.finishStory();butterfly.finishStory();forestStoryBattle=false;mineStoryBattle=false;mothStoryBattle=false;
         if(inThrone) throne.skipToHall();
         else if(inTemple) {
             temple.skipToExit();temple.consumeExitRequest();inTemple=false;inThrone=true;throne.enter();
         }
         else if(inButterfly) {
-            butterfly.returnFromBattle();inButterfly=false;inTemple=true;temple.enter();
+            skillQUnlocked=true;butterfly.returnFromBattle();inButterfly=false;inTemple=true;temple.enter();
         }
         else if(inMine) {
             skillEUnlocked=true;
-            mine.returnFromBattle(); inMine=false; inButterfly=true; butterfly.enter();
+            mine.returnFromBattle(); inMine=false; enterButterfly();
         } else {
             exploration.returnFromBattle(); enterMine();
         }
@@ -276,12 +279,12 @@ public class GamePanel extends JPanel {
     private void replayCurrentMap(){
         if(state==GameState.MENU)return;
         story.cancel();storyFade=0;storySkippable=false;
-        exploration.finishStory();mine.finishStory();
-        forestStoryBattle=false;mineStoryBattle=false;
+        exploration.finishStory();mine.finishStory();butterfly.finishStory();
+        forestStoryBattle=false;mineStoryBattle=false;mothStoryBattle=false;
         clearInput();
         if(inThrone){throne.reset();selectedBoss=5;boss=new MaskedBoss(430,210);}
         else if(inTemple){temple.reset();selectedBoss=4;boss=new KnightBoss(430,210);}
-        else if(inButterfly){butterfly.reset();selectedBoss=3;boss=new MothBoss(430,210);}
+        else if(inButterfly){butterfly.reset();mothEntrySeen=false;mothRootsSeen=false;mothEncounterSeen=false;mothVictorySeen=false;skillQUnlocked=false;selectedBoss=3;boss=new MothBoss(430,210);}
         else if(inMine){
             mine.reset();mineEntrySeen=false;mineEncounterSeen=false;mineVictorySeen=false;
             skillEUnlocked=false;selectedBoss=2;boss=new ScientistBoss(430,210);
@@ -291,31 +294,34 @@ public class GamePanel extends JPanel {
         }
         restartBattle();
         if(inMine)enterMine();
+        else if(inButterfly)enterButterfly();
         else if(!inThrone&&!inTemple&&!inButterfly)playForestOpening();
         changeState(GameState.EXPLORATION);
     }
 
     private void startThroneBattle() {
-        forestStoryBattle=false;mineStoryBattle=false;
+        forestStoryBattle=false;mineStoryBattle=false;mothStoryBattle=false;
         selectedBoss=5;boss=new MaskedBoss(430,210);
         restartBattle();changeState(GameState.BATTLE);
     }
 
     private void startTempleBattle() {
-        forestStoryBattle=false;mineStoryBattle=false;
+        forestStoryBattle=false;mineStoryBattle=false;mothStoryBattle=false;
         selectedBoss=4;boss=new KnightBoss(430,210);
         restartBattle();changeState(GameState.BATTLE);
     }
 
     private void startButterflyBattle() {
-        forestStoryBattle=false;mineStoryBattle=false;
+        if(story.active())return;
+        forestStoryBattle=false;mineStoryBattle=false;mothStoryBattle=true;
+        if(!mothEncounterSeen){playMothEntrance();return;}
         selectedBoss=3; boss=new MothBoss(430,210);
         restartBattle(); changeState(GameState.BATTLE);
     }
 
     private void startMineBattle() {
         if(story.active())return;
-        forestStoryBattle=false;mineStoryBattle=true;
+        forestStoryBattle=false;mineStoryBattle=true;mothStoryBattle=false;
         if(!mineEncounterSeen){playMineEntrance();return;}
         selectedBoss=2;boss=new ScientistBoss(430,210);
         restartBattle();changeState(GameState.BATTLE);
@@ -323,12 +329,88 @@ public class GamePanel extends JPanel {
 
     private void startForestBattle() {
         if(story.active())return;
-        mineStoryBattle=false;
+        mineStoryBattle=false;mothStoryBattle=false;
         playForestEntrance();
     }
 
     private boolean canUseSkillE(){return !forestStoryBattle&&(!mineStoryBattle||skillEUnlocked);}
-    private boolean canUseSkillQ(){return !forestStoryBattle&&!mineStoryBattle;}
+    private boolean canUseSkillQ(){return !forestStoryBattle&&!mineStoryBattle&&(!mothStoryBattle||skillQUnlocked);}
+
+    private void enterButterfly(){
+        inButterfly=true;butterfly.enter();clearInput();
+        if(!mothEntrySeen){
+            mothEntrySeen=true;storyFade=1;
+            story.play(this::endMothScene,
+                StoryDirector.motion("moth-arrival-fade",.6,p->storyFade=1-p),
+                StoryDirector.say(DialogueBox.Face.CONFUSED,"ที่นี่ที่ไหนกัน…ป่าอีกแล้วงั้นเหรอ?"));
+        }
+    }
+
+    private void endMothScene(){storyFade=0;butterfly.finishStory();clearInput();}
+
+    private void playMothRoots(){
+        mothRootsSeen=true;clearInput();
+        story.play(this::endMothScene,
+            StoryDirector.say(DialogueBox.Face.CONFUSED,"นี่มันอะไรกัน…"),
+            StoryDirector.say(DialogueBox.Face.NEUTRAL,"คงต้องหาทางเอามันออก"));
+    }
+
+    private void playMothEntrance(){
+        clearInput();
+        final double hx=butterfly.storyX(),hy=butterfly.storyY();
+        story.play(()->{mothEncounterSeen=true;endMothScene();battleReadyTime=1;},
+            StoryDirector.say(DialogueBox.Face.CONFUSED,"ที่นี่มันอะไรเนี่ย…น่าขนลุกชะมัด"),
+            StoryDirector.say(DialogueBox.Face.NONE,"เจ้าเป็นใคร"),
+            StoryDirector.say(DialogueBox.Face.CONFUSED,"? ฉันงั้นเหรอ"),
+            StoryDirector.motion("moth-camera-pan",1.1,p->{
+                double e=p*p*(3-2*p);
+                butterfly.focusStory(hx+8+(1200-hx-8)*e,hy+8+(780-hy-8)*e);
+            }),
+            StoryDirector.action("moth-look",()->butterfly.faceStoryHero()),
+            StoryDirector.motion("moth-emerges",2.0,p->{
+                double e=p*p*(3-2*p);
+                butterfly.setStoryMoth(1390-190*e,650+150*e-Math.sin(p*Math.PI*8)*5);
+            }),
+            StoryDirector.say(DialogueBox.Face.CONFUSED,"คุณคือ…"),
+            StoryDirector.say(DialogueBox.Face.MOTH,"อ่า…เจ้า ช่างมีกลิ่นอายที่คุ้นเคยเสียจริง"),
+            StoryDirector.say(DialogueBox.Face.CONFUSED,"คุณรู้จักผม…"),
+            StoryDirector.say(DialogueBox.Face.MOTH,"หือ…เจ้า…เจ้าคือหายนะ\nเจ้าจะนำหายนะมาสู่เรา!"),
+            StoryDirector.say(DialogueBox.Face.MOTH,"ข้าต้องกำจัด!"),
+            StoryDirector.say(DialogueBox.Face.SHOCKED,"เดี๋ยวสิ!"),
+            StoryDirector.motion("moth-battle-fade-out",.5,p->storyFade=p),
+            StoryDirector.action("moth-enter-battle",()->{
+                selectedBoss=3;boss=new MothBoss(430,210);restartBattle();changeState(GameState.BATTLE);storyFade=1;
+            }),
+            StoryDirector.motion("moth-battle-fade-in",.65,p->storyFade=1-p),
+            StoryDirector.say(DialogueBox.Face.MOTH,"หายนะ…หายนะ…ต้องกำจัด"),
+            StoryDirector.say(DialogueBox.Face.SHOCKED,"อึก…บ้าไปแล้วหรือเปล่าเนี่ย"));
+    }
+
+    private boolean tryUnlockMothQ(){
+        if(!mothStoryBattle||skillQUnlocked||!player.isAlive()||!boss.isAlive()
+                ||(boss.getHp()*5>boss.getMaxHp()*4&&player.getHp()*10>player.getMaxHp()*7))return false;
+        clearInput();projectiles.clear();enemyProjectiles.clear();laser.reset();
+        ((MothBoss)boss).clearStoryHazards();
+        story.play(()->{battleReadyTime=0;clearInput();((MothBoss)boss).resumeAfterSkillReveal();},
+            StoryDirector.say(DialogueBox.Face.SHOCKED,"อึก…หลบอย่างเดียวคงไม่ไหวแล้ว…"),
+            StoryDirector.say(DialogueBox.Face.CONFUSED,"พลังนี่…ถ้ารวบรวมไว้รอบตัว…"),
+            StoryDirector.say(DialogueBox.Face.MOTH,"กลิ่นอายนั่น…หายนะ!"),
+            StoryDirector.say(DialogueBox.Face.NEUTRAL,"ไม่รู้ว่าทำไม…แต่ร่างกายฉันจำได้"),
+            StoryDirector.action("unlock-skill-q",()->skillQUnlocked=true),
+            StoryDirector.say(DialogueBox.Face.NONE,"ปลดล็อคสกิล Q\nกด Q เพื่อเพิ่มพลัง แล้วกดเมาส์ขวาค้างเพื่อยิงลำแสง"));
+        return true;
+    }
+
+    private void playMothVictory(){
+        mothVictorySeen=true;clearInput();projectiles.clear();enemyProjectiles.clear();laser.reset();
+        story.play(this::endMothScene,
+            StoryDirector.waitFor("moth-victory-breath",.6),
+            StoryDirector.motion("moth-victory-fade-out",.6,p->storyFade=p),
+            StoryDirector.action("moth-return",()->{butterfly.returnFromBattle();changeState(GameState.EXPLORATION);storyFade=1;}),
+            StoryDirector.motion("moth-victory-fade-in",.7,p->storyFade=1-p),
+            StoryDirector.say(DialogueBox.Face.RELIEVED,"ฮู่ว…อะไรกันเนี่ย อยู่ ๆ ก็มาใส่ร้ายกัน"),
+            StoryDirector.say(DialogueBox.Face.NEUTRAL,"…ช่างเถอะ ออกไปจากที่นี่ดีกว่า\nน่าขนลุกชะมัด"));
+    }
 
     private void enterMine(){
         inMine=true;mine.enter();clearInput();
@@ -570,7 +652,7 @@ public class GamePanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent event) {
                 if (state != GameState.BATTLE || story.active()) return;
-                forestStoryBattle=false;mineStoryBattle=false;
+                forestStoryBattle=false;mineStoryBattle=false;mothStoryBattle=false;
                 selectedBoss = number;
                 switch (number) {
                     case 1: boss = new ForestBoss(430, 210); break;
@@ -621,12 +703,13 @@ public class GamePanel extends JPanel {
                 } else if(butterfly.consumeExitRequest()) {
                     inButterfly=false;inTemple=true;temple.enter();clearInput();
                 } else if(butterfly.consumeBattleRequest()) startButterflyBattle();
+                else if(!mothRootsSeen&&butterfly.nearRoots())playMothRoots();
             } else if(inMine) {
                 mine.update(dx,dy,seconds,running);
                 if(mine.consumeBackRequest()) {
                     inMine=false; exploration.returnFromMine(); clearInput();
                 } else if(mine.consumeExitRequest()) {
-                    inMine=false; inButterfly=true; butterfly.enter(); clearInput();
+                    inMine=false; enterButterfly(); clearInput();
                 } else if(mine.consumeBattleRequest()) startMineBattle();
             } else {
                 exploration.update(dx,dy,seconds,running);
@@ -647,6 +730,7 @@ public class GamePanel extends JPanel {
                 playForestVictory();repaint();return;
             }
             if(!boss.isAlive()&&player.isAlive()&&mineStoryBattle&&!mineVictorySeen){playMineVictory();repaint();return;}
+            if(!boss.isAlive()&&player.isAlive()&&mothStoryBattle&&!mothVictorySeen){playMothVictory();repaint();return;}
             projectiles.clear();
             enemyProjectiles.clear();
             laser.reset();
@@ -654,7 +738,7 @@ public class GamePanel extends JPanel {
             return;
         }
 
-        if(tryUnlockMineE()){repaint();return;}
+        if(tryUnlockMineE()||tryUnlockMothQ()){repaint();return;}
 
         if(battleReadyTime>0) {
             battleReadyTime=Math.max(0,battleReadyTime-seconds);
@@ -709,11 +793,12 @@ public class GamePanel extends JPanel {
             laser.reset();
             if(forestStoryBattle&&!forestVictorySeen)playForestVictory();
             else if(mineStoryBattle&&!mineVictorySeen)playMineVictory();
+            else if(mothStoryBattle&&!mothVictorySeen)playMothVictory();
             repaint();
             return;
         }
 
-        if(tryUnlockMineE()){repaint();return;}
+        if(tryUnlockMineE()||tryUnlockMothQ()){repaint();return;}
         boss.update(seconds, battleArea, player.getBounds(), enemyProjectiles);
 
         for (int i = enemyProjectiles.size() - 1; i >= 0; i--) {
@@ -834,7 +919,7 @@ public class GamePanel extends JPanel {
         g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 18));
         g.setColor(Color.LIGHT_GRAY);
         g.drawString("Click PLAY or press Enter", 340, 395);
-        g.drawString("Forest + Mine story  |  v3.71", 310, 500);
+        g.drawString("Forest + Mine + Moth  |  v3.72", 310, 500);
         g.drawString("No saved progress yet", 365, 535);
     }
 

@@ -18,6 +18,20 @@ public final class ButterflyRoom {
     private final SpriteAnimator animation=new SpriteAnimator(SpriteAnimator.Lighting.BUTTERFLY);
     private double x,y,cameraX,cameraY;
     private boolean cleared,battleRequested,backRequested,exitReached,showCollision;
+    private boolean storyCamera,bossVisible;
+    private double mothX=1200,mothY=800;
+    public double storyX(){return x;}
+    public double storyY(){return y;}
+    public boolean isCleared(){return cleared;}
+    public boolean nearRoots(){return !cleared&&x>995&&x<1100&&y>165&&y<320;}
+    public void faceStoryHero(){animation.reset(x<1200?SpriteAnimator.RIGHT:SpriteAnimator.LEFT);}
+    public void setStoryMoth(double px,double py){bossVisible=true;mothX=px;mothY=py;}
+    public void focusStory(double cx,double cy){
+        storyCamera=true;
+        cameraX=Math.max(0,Math.min(cx-960/(2*ZOOM),1536-960/ZOOM));
+        cameraY=Math.max(0,Math.min(cy-520/(2*ZOOM),1024-520/ZOOM));
+    }
+    public void finishStory(){storyCamera=false;animation.stop();updateCamera();}
 
     public ButterflyRoom() {
         try {
@@ -64,7 +78,7 @@ public final class ButterflyRoom {
         } catch(Exception ex) {throw new IllegalStateException("Cannot index butterfly collision masks",ex);}
     }
     public void reset() {
-        cleared=false;exitReached=false;enter();
+        cleared=false;exitReached=false;bossVisible=false;storyCamera=false;mothX=1200;mothY=800;enter();
     }
     public void enter() {
         x=40;y=148;battleRequested=false;backRequested=false;
@@ -112,6 +126,7 @@ public final class ButterflyRoom {
         updateCamera();
     }
     private void updateCamera() {
+        if(storyCamera)return;
         cameraX=Math.max(0,Math.min(x+8-960/(2*ZOOM),background.getWidth()-960/ZOOM));
         cameraY=Math.max(0,Math.min(y+8-520/(2*ZOOM),background.getHeight()-520/ZOOM));
     }
@@ -143,11 +158,11 @@ public final class ButterflyRoom {
             g.setColor(Color.ORANGE);if(!cleared)g.draw(bossZone);
         }
         int feetX=(int)Math.round(x+8),feetY=(int)Math.round(y+16);
-        if(!cleared && feetY<800) {
+        if(!cleared && bossVisible && feetY<mothY) {
             animation.draw(g,feetX,feetY,36,54);
-            BossArtwork.drawMothMap(g,1200,800);
+            BossArtwork.drawMothMap(g,(int)mothX,(int)mothY);
         } else {
-            if(!cleared)BossArtwork.drawMothMap(g,1200,800);
+            if(!cleared&&bossVisible)BossArtwork.drawMothMap(g,(int)mothX,(int)mothY);
             animation.draw(g,feetX,feetY,36,54);
         }
         g.dispose();

@@ -124,6 +124,11 @@ public class MothBoss extends Boss {
         }
     }
 
+    public void clearStoryHazards(){echoes.clear();}
+    public void resumeAfterSkillReveal(){
+        echoes.clear();attackIndex=0;phaseTime=5.9;attackCooldown=0;recovering=false;
+    }
+
     @Override
     public void drawHazards(Graphics g) {
         if (isAlive()) {
