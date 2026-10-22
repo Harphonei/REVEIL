@@ -29,7 +29,7 @@ public final class FinalArtwork {
         cell(g,HERO_DARK,pose,(int)Math.round(x-height/2.0),(int)Math.round(y-height),height,height);
     }
     public static void masked(Graphics g,int pose,double x,double y,int height){
-        int canvas=(int)Math.round(height*1.5);
+        int canvas=(int)Math.round(height*1.5*1.25);
         cell(g,MASKED_MOTION,pose,(int)Math.round(x-canvas/2.0),(int)Math.round(y-canvas+1),canvas,canvas,96);
     }
     public static void wounded(Graphics g,int frame,double x,double y,int height){

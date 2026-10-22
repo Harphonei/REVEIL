@@ -398,6 +398,10 @@ public class GamePanel extends JPanel {
             StoryDirector.waitFor("final-wounded-breath",1.1),
             StoryDirector.motion("final-approach-mask",2.8,p->throne.woundedWalk(1480+66*ease(p),404,p*2.8)),
             StoryDirector.action("final-stop-walking",()->throne.woundedFrame(0)),
+            StoryDirector.say(DialogueBox.Face.HURT_ANGRY,"โถ่เอ้ย"),
+            StoryDirector.say(DialogueBox.Face.HURT,"สุดท้ายก็ไม่ได้อะไรเลย"),
+            StoryDirector.say(DialogueBox.Face.HURT,"ช่างเถอะ..."),
+            StoryDirector.say(DialogueBox.Face.HURT,"งั้นขอนี่ก็แล้วกัน"),
             StoryDirector.waitFor("final-look-at-mask",.45),
             StoryDirector.motion("final-kneel",.8,p->throne.woundedFrame(p<.45?3:4)),
             StoryDirector.waitFor("final-reach-mask",.45),
@@ -410,14 +414,14 @@ public class GamePanel extends JPanel {
             StoryDirector.action("final-wear-cloak",()->{throne.wearCloak();throne.focus(1560,397,1.48);}),
             StoryDirector.waitFor("final-dressing-black",.8),
             StoryDirector.motion("final-cloaked-reveal",1.3,p->storyFade=1-p),
-            StoryDirector.motion("final-recognise-body",1.3,p->throne.revealBody(ease(p))),
-            StoryDirector.waitFor("final-frozen",.8),
+            StoryDirector.motion("final-recognise-body",1.3,p->{double e=ease(p);throne.revealBody(e);throne.focus(1560+15*e,397,1.48+.42*e);}),
+            StoryDirector.waitFor("final-frozen",1.3),
             StoryDirector.action("final-movement-behind",()->throne.showNewcomer()),
-            StoryDirector.motion("final-reverse-pan",2.8,p->{double e=ease(p);throne.approachNewcomer(Math.min(1,p*3));throne.focus(1560+(throne.entryFootX()-1560)*e,397+(throne.entryFootY()-8-397)*e,1.48-.30*e);}),
             StoryDirector.say(DialogueBox.Face.NONE,"แกคือเจ้าของที่นี่สินะ"),
             StoryDirector.say(DialogueBox.Face.NONE,"นี่! ช่วยตอบคำถามฉันซักข้อสิ"),
             StoryDirector.waitFor("final-hears-himself",.8),
             StoryDirector.motion("final-turns-back",.95,p->throne.turnBoss(p)),
+            StoryDirector.motion("final-reverse-pan",2.8,p->{double e=ease(p);throne.approachNewcomer(Math.min(1,p*3));throne.focus(1575+(throne.entryFootX()-1575)*e,397+(throne.entryFootY()-8-397)*e,1.90-.72*e);}),
             StoryDirector.waitFor("final-realisation",.65),
             StoryDirector.waitFor("final-identical-face",2.4),
             StoryDirector.motion("final-loop-black",1.4,p->storyFade=p),
@@ -1116,7 +1120,7 @@ public class GamePanel extends JPanel {
         g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 18));
         g.setColor(Color.LIGHT_GRAY);
         g.drawString("Click PLAY or press Enter", 340, 395);
-        g.drawString("The complete loop  |  v3.79", 325, 500);
+        g.drawString("The complete loop  |  v3.80", 325, 500);
         g.drawString("No saved progress yet", 365, 535);
     }
 
