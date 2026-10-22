@@ -342,9 +342,9 @@ public class GamePanel extends JPanel {
             StoryDirector.motion("throne-stage-hero",.7,p->{double e=ease(p);throne.moveHero(startX+(hx-startX)*e,startY+(hy-startY)*e,(p-last[0])*.7);last[0]=p;throne.focus(throne.storyX()+8,throne.storyY()+8,1.18);}),
             StoryDirector.action("throne-lock-entry",()->{throne.faceHero(SpriteAnimator.RIGHT);throne.rememberEntry();last[0]=0;}),
             StoryDirector.waitFor("throne-notice",.7),
-            StoryDirector.motion("throne-pan-to-mask",2.0,p->{double e=ease(p);throne.focus(hx+8+(1560-hx-8)*e,hy+8+(397-hy-8)*e,1.18+.30*e);}),
+            StoryDirector.motion("throne-pan-to-mask",2.0,p->{double e=ease(p);throne.focus(hx+8+(1560-hx-8)*e,hy+8+(397-hy-8)*e,1.18);}),
             StoryDirector.waitFor("throne-back-silence",1.3),
-            StoryDirector.motion("throne-two-shot",1.4,p->{double e=ease(p);throne.focus(1560-110*e,397+7*e,1.48-.20*e);}),
+            StoryDirector.motion("throne-two-shot",1.4,p->{double e=ease(p);throne.focus(1560-110*e,397+7*e,1.18);}),
             StoryDirector.say(DialogueBox.Face.NEUTRAL,"แกคือเจ้าของที่นี่สินะ"),
             StoryDirector.say(DialogueBox.Face.CONFUSED,"ช่วยตอบคำถามฉันซักข้อสิ"),
             StoryDirector.waitFor("throne-turn-hesitate",.45),
@@ -391,7 +391,7 @@ public class GamePanel extends JPanel {
             StoryDirector.waitFor("final-last-breath",.7),
             StoryDirector.motion("final-victory-dark",1.0,p->storyFade=p),
             StoryDirector.action("final-return-hall",()->{
-                throne.prepareEnding();throne.focus(1555,402,1.65);changeState(GameState.EXPLORATION);storyFade=1;
+                throne.prepareEnding();throne.focus(1555,402,1.48);changeState(GameState.EXPLORATION);storyFade=1;
             }),
             StoryDirector.waitFor("final-after-battle-silence",.6),
             StoryDirector.motion("final-wounded-reveal",1.4,p->storyFade=1-p),
@@ -1120,7 +1120,7 @@ public class GamePanel extends JPanel {
         g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 18));
         g.setColor(Color.LIGHT_GRAY);
         g.drawString("Click PLAY or press Enter", 340, 395);
-        g.drawString("The complete loop  |  v3.80", 325, 500);
+        g.drawString("The complete loop  |  v3.83", 325, 500);
         g.drawString("No saved progress yet", 365, 535);
     }
 

@@ -7,8 +7,9 @@ import javax.imageio.ImageIO;
 /** The unlit inner sanctuary and the masked guardian of the throne. */
 public final class ThroneRoom {
     private static final double ZOOM=1.18,ACTOR_SCALE=1.35/1.10,SPEED=90*ACTOR_SCALE;
-    private static final int HERO_WIDTH=(int)Math.round(36*ACTOR_SCALE);
-    private static final int HERO_HEIGHT=(int)Math.round(54*ACTOR_SCALE);
+    private static final double ACTOR_ART_SCALE=1.0;
+    private static final int HERO_WIDTH=(int)Math.round(36*ACTOR_SCALE*ACTOR_ART_SCALE);
+    private static final int HERO_HEIGHT=(int)Math.round(54*ACTOR_SCALE*ACTOR_ART_SCALE);
     private final BufferedImage background=load("throne-map.png");
     private final BufferedImage floor=load("throne-floor.png"),objects=load("throne-objects.png");
     private final int width=background.getWidth(),height=background.getHeight();
@@ -149,7 +150,8 @@ public final class ThroneRoom {
         actor.dispose();
         if(newcomer)echo.drawInThrone(g,(int)Math.round(echoX+8),(int)Math.round(echoY+16),HERO_WIDTH,HERO_HEIGHT,32);
         if(bolt>=0){
-            double px=bossX-20+(x+8-bossX+20)*bolt,py=bossY-35+(y+16-HERO_HEIGHT*.68-bossY+35)*bolt;
+            double handX=bossX-20*ACTOR_ART_SCALE,handY=bossY-35*ACTOR_ART_SCALE;
+            double px=handX+(x+8-handX)*bolt,py=handY+(y+16-HERO_HEIGHT*.68-handY)*bolt;
             g.setColor(new Color(92,37,52));g.fillRect((int)px-7,(int)py-3,14,6);
             g.setColor(new Color(194,129,139));g.fillRect((int)px-3,(int)py-1,6,2);
         }
