@@ -1120,7 +1120,7 @@ public class GamePanel extends JPanel {
         g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 18));
         g.setColor(Color.LIGHT_GRAY);
         g.drawString("Click PLAY or press Enter", 340, 395);
-        g.drawString("The complete loop  |  v3.83", 325, 500);
+        g.drawString("The complete loop  |  v3.84", 325, 500);
         g.drawString("No saved progress yet", 365, 535);
     }
 

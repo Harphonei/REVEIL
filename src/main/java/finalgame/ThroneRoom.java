@@ -140,7 +140,10 @@ public final class ThroneRoom {
         g.drawImage(background,0,0,null);
         Graphics2D remains=(Graphics2D)g.create();
         remains.setComposite(AlphaComposite.SrcOver.derive((float)bodyOpacity));
-        FinalArtwork.hero(remains,5,1610,431,HERO_HEIGHT);remains.dispose();
+        // Enlarge the lying body around its centre, keeping its place by the throne.
+        // The occupied pixels of this pose are much smaller than the standing poses.
+        remains.translate(1610,414);remains.scale(1.5,1.5);
+        FinalArtwork.hero(remains,5,0,17,HERO_HEIGHT);remains.dispose();
         if(maskOnFloor)FinalArtwork.mask(g,1573,426);
         if(!cleared)FinalArtwork.masked(g,bossPose,bossX,bossY,HERO_HEIGHT);
         Graphics2D actor=(Graphics2D)g.create();
