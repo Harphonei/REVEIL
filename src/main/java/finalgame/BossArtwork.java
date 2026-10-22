@@ -37,10 +37,12 @@ public final class BossArtwork {
         if(progress<=0){drawKnightMap(graphics,x,y,scale);return;}
         Graphics2D g=(Graphics2D)graphics.create();
         float blend=(float)Math.max(0,Math.min(1,progress));
-        if(blend<1){g.setComposite(AlphaComposite.SrcOver.derive(1-blend));drawKnightMap(g,x,y,scale);}
+        // Keep the original silhouette opaque while the turned pose replaces it.
+        if(blend<1)drawKnightMap(g,x,y,scale);
         g.setComposite(AlphaComposite.SrcOver.derive(blend));
-        int h=(int)Math.round(116*scale),w=(int)Math.round(KNIGHT_TURN.getWidth()*h/(double)KNIGHT_TURN.getHeight());
-        draw(g,KNIGHT_TURN,x-w/2,y-h+3,w,h);g.dispose();
+        int h=(int)Math.round(116*scale),w=(int)Math.round(KNIGHT_MAP.getWidth()*h/(double)KNIGHT_MAP.getHeight());
+        int swordTip=(int)Math.round(2*h/(double)KNIGHT_MAP.getHeight());
+        draw(g,KNIGHT_TURN,x-w/2,y-h+swordTip,w,h);g.dispose();
     }
     private static final BufferedImage KNIGHT_BATTLE=load("knight-battle.png");
     private static final BufferedImage MASKED_MAP=SpriteAnimator.Lighting.THRONE_HALL.tint(load("masked-map.png"));
@@ -54,7 +56,6 @@ public final class BossArtwork {
         Graphics2D g=(Graphics2D)graphics.create();
         if(phaseTwo && transition>0) {
             float blend=(float)Math.max(0,Math.min(1,1-transition/1.1));
-            g.setComposite(AlphaComposite.SrcOver.derive(1-blend));
             draw(g,MASKED_ONE,bounds.x,bounds.y,bounds.width,bounds.height);
             g.setComposite(AlphaComposite.SrcOver.derive(blend));
         }

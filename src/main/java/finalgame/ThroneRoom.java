@@ -18,6 +18,37 @@ public final class ThroneRoom {
     private double x,y,cameraX,cameraY;
     private boolean backRequested,showCollision,battleRequested,cleared;
     private static final int BOSS_X=1560,BOSS_Y=420;
+    private boolean cinematic,injured,cloaked,newcomer,maskOnFloor;
+    private int heroPose=-1,bossPose;
+    private double bossX=BOSS_X,bossY=BOSS_Y,zoom=ZOOM,bodyOpacity=.28,impact,bolt=-1;
+    private final SpriteAnimator echo=new SpriteAnimator();
+    public double storyX(){return x;}
+    public double storyY(){return y;}
+    public void beginStory(){cinematic=true;stopMovement();}
+    public void finishStory(){cinematic=false;impact=0;zoom=ZOOM;stopMovement();updateCamera();}
+    public void resetStory(){cinematic=false;injured=false;cloaked=false;newcomer=false;maskOnFloor=false;heroPose=-1;bossPose=0;bossX=BOSS_X;bossY=BOSS_Y;zoom=ZOOM;bodyOpacity=.28;impact=0;bolt=-1;}
+    public void focus(double cx,double cy,double z){
+        cinematic=true;zoom=z;
+        cameraX=Math.max(0,Math.min(cx-480/z,width-960/z));
+        cameraY=Math.max(0,Math.min(cy-260/z,height-520/z));
+    }
+    public void moveHero(double nx,double ny,double dt){animation.update(nx-x,ny-y,dt,false);x=nx;y=ny;}
+    public void faceHero(int direction){animation.reset(direction);}
+    public void heroPose(int pose){heroPose=pose;stopMovement();}
+    public void bossPose(int pose){bossPose=pose;}
+    public void moveBoss(double nx,double ny){bossX=nx;bossY=ny;}
+    public void impact(double value){impact=value;}
+    public void bolt(double value){bolt=value;}
+    public void injure(){injured=true;heroPose=0;}
+    public void prepareEnding(){
+        cleared=true;cinematic=true;x=1480;y=404;bossX=BOSS_X;bossY=BOSS_Y;
+        injured=true;heroPose=0;maskOnFloor=true;bodyOpacity=.55;
+    }
+    public void takeMask(){maskOnFloor=false;}
+    public void wearCloak(){cloaked=true;heroPose=-1;x=1552;y=404;bossPose=0;}
+    public void revealBody(double p){bodyOpacity=.55+.45*p;}
+    public void showNewcomer(){newcomer=true;echo.reset(SpriteAnimator.DOWN);}
+    public void turnToNewcomer(int pose){bossPose=pose;}
 
     public ThroneRoom(){reset();}
     private static BufferedImage load(String name) {
@@ -48,7 +79,7 @@ public final class ThroneRoom {
         }
         return im;
     }
-    public void reset(){cleared=false;battleRequested=false;enter();}
+    public void reset(){cleared=false;battleRequested=false;resetStory();enter();}
     public void enter(){x=100;y=392;backRequested=false;battleRequested=false;animation.reset(SpriteAnimator.RIGHT);updateCamera();}
     public void stopMovement(){animation.stop();}
     public void toggleCollisionView(){showCollision=!showCollision;}
@@ -70,20 +101,21 @@ public final class ThroneRoom {
                 double ny=y+dy/length*distance/steps;if(canStand(x,ny))y=ny;
             }
         }
-        if(!cleared && Math.hypot(x+8-BOSS_X,y+16-BOSS_Y)<=70)battleRequested=true;
+        if(!cleared && x+8>=1320 && y+16>=300 && y+16<=520)battleRequested=true;
         animation.update(x-ox,y-oy,seconds,running);
         // Return only when the left edge of the feet reaches the end of the corridor.
         if(x+4<=54)backRequested=true;
         updateCamera();
     }
     private void updateCamera() {
+        if(cinematic)return;
         cameraX=Math.max(0,Math.min(x+8-960/(2*ZOOM),Math.max(0,width-960/ZOOM)));
         cameraY=Math.max(0,Math.min(y+8-520/(2*ZOOM),Math.max(0,height-520/ZOOM)));
     }
     public boolean consumeBackRequest(){boolean b=backRequested;backRequested=false;return b;}
     public boolean consumeBattleRequest(){boolean b=battleRequested;battleRequested=false;return b;}
     public void returnFromBattle(){cleared=true;battleRequested=false;stopMovement();}
-    public void skipToHall(){x=1445;y=404;backRequested=false;battleRequested=false;animation.reset(SpriteAnimator.RIGHT);updateCamera();}
+    public void skipToHall(){x=1312;y=404;backRequested=false;battleRequested=false;animation.reset(SpriteAnimator.RIGHT);updateCamera();}
     private int ambientShade() {
         if(x<=590)return 0;
         if(x<1090)return (int)Math.round((x-590)/500*16);
@@ -92,18 +124,31 @@ public final class ThroneRoom {
     public void draw(Graphics graphics) {
         Graphics2D g=(Graphics2D)graphics.create();g.setClip(0,60,960,520);
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-        g.translate(0,60);g.scale(ZOOM,ZOOM);g.translate(-Math.round(cameraX),-Math.round(cameraY));
+        g.translate(0,60);g.scale(zoom,zoom);g.translate(-Math.round(cameraX),-Math.round(cameraY));
+        if(impact>0)g.translate(Math.sin(impact*67)*impact*5,Math.cos(impact*53)*impact*3);
         g.drawImage(background,0,0,null);
-        if(!cleared && y+16<BOSS_Y)BossArtwork.drawMaskedMap(g,BOSS_X,BOSS_Y,(int)Math.round(HERO_HEIGHT*1.30));
+        Graphics2D remains=(Graphics2D)g.create();
+        remains.setComposite(AlphaComposite.SrcOver.derive((float)bodyOpacity));
+        FinalArtwork.hero(remains,5,1610,431,HERO_HEIGHT);remains.dispose();
+        if(maskOnFloor)FinalArtwork.mask(g,1573,426);
+        if(!cleared)FinalArtwork.masked(g,bossPose,bossX,bossY,HERO_HEIGHT);
         Graphics2D actor=(Graphics2D)g.create();
-        animation.drawInThrone(actor,(int)Math.round(x+8),(int)Math.round(y+16),HERO_WIDTH,HERO_HEIGHT,ambientShade());
+        if(cloaked)FinalArtwork.masked(actor,bossPose,x+8,y+16,HERO_HEIGHT);
+        else if(heroPose>=0)FinalArtwork.hero(actor,heroPose,x+8,y+16,HERO_HEIGHT);
+        else animation.drawInThrone(actor,(int)Math.round(x+8),(int)Math.round(y+16),HERO_WIDTH,HERO_HEIGHT,ambientShade());
         actor.dispose();
-        if(!cleared && y+16>=BOSS_Y)BossArtwork.drawMaskedMap(g,BOSS_X,BOSS_Y,(int)Math.round(HERO_HEIGHT*1.30));
+        if(newcomer)echo.drawInThrone(g,1320,420,HERO_WIDTH,HERO_HEIGHT,32);
+        if(bolt>=0){
+            double px=bossX-20+(x+8-bossX+20)*bolt,py=bossY-35+(y+16-HERO_HEIGHT*.68-bossY+35)*bolt;
+            g.setColor(new Color(92,37,52));g.fillRect((int)px-7,(int)py-3,14,6);
+            g.setColor(new Color(194,129,139));g.fillRect((int)px-3,(int)py-1,6,2);
+        }
         if(showCollision){g.drawImage(collision,0,0,null);g.setColor(Color.CYAN);g.drawRect((int)x+4,(int)y+10,8,6);}
         g.dispose();
         graphics.setColor(new Color(10,13,18));graphics.fillRect(0,0,960,60);graphics.fillRect(0,580,960,60);
+        if(cinematic)return;
         graphics.setColor(new Color(190,194,205));graphics.setFont(new Font(Font.MONOSPACED,Font.BOLD,18));
-        graphics.drawString("INNER SANCTUARY v3.58  |  The masked one",20,25);
+        graphics.drawString("INNER SANCTUARY  |  The masked one",20,25);
         graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
 graphics.drawString("WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip | F7: Replay",20,47);
         graphics.setColor(new Color(150,156,172));

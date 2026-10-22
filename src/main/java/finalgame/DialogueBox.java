@@ -12,7 +12,7 @@ import javax.imageio.ImageIO;
 
 /** Name-free portrait dialogue with Thai shaping and grapheme-safe typewriter text. */
 public final class DialogueBox {
-    public enum Face { NEUTRAL, CONFUSED, SHOCKED, RELIEVED, NONE, SCIENTIST, MOTH, KNIGHT }
+    public enum Face { NEUTRAL, CONFUSED, SHOCKED, RELIEVED, NONE, SCIENTIST, MOTH, KNIGHT, HURT, HURT_ANGRY, MASKED, MASKED_ANGRY }
     private static final Font FONT=loadFont();
     private static final BufferedImage PORTRAITS=loadPortraits();
     private static final BufferedImage SCIENTIST=loadScientist();
@@ -82,7 +82,11 @@ public final class DialogueBox {
         g.setColor(new Color(107,111,120));g.setStroke(new BasicStroke(3));g.drawRect(21,437,918,184);
         g.setColor(new Color(53,58,68));g.drawRect(27,443,906,172);
         int textX=face==Face.NONE?52:202;
-        if(face==Face.SCIENTIST||face==Face.MOTH||face==Face.KNIGHT){
+        if(face==Face.HURT||face==Face.HURT_ANGRY||face==Face.MASKED||face==Face.MASKED_ANGRY){
+            boolean masked=face==Face.MASKED||face==Face.MASKED_ANGRY;
+            int pose=face==Face.HURT?3:face==Face.HURT_ANGRY?4:face==Face.MASKED?4:5;
+            FinalArtwork.portrait(g,masked,pose,40,460,144);
+        }else if(face==Face.SCIENTIST||face==Face.MOTH||face==Face.KNIGHT){
             g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
             g.drawImage(face==Face.KNIGHT?KNIGHT:face==Face.MOTH?MOTH:SCIENTIST,40,460,144,144,null);
         }else if(face!=Face.NONE) {

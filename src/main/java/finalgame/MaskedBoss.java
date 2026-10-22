@@ -32,6 +32,12 @@ public class MaskedBoss extends Boss {
     private final ArrayList<SwordStrike> beams = new ArrayList<>();
     private Rectangle arena = new Rectangle(300, 300, 360, 260);
     private boolean phaseTwo = false;
+    private boolean storyControlled;
+    public void setStoryControlled(boolean value){storyControlled=value;}
+    public boolean awaitingStoryPhase(){return !phaseTwo&&getHp()<=getMaxHp()/2;}
+    public void clearStoryHazards(){beams.clear();crown.reset();}
+    public void showStoryPhase(double progress){phaseTwo=true;transitionTime=1.1*(1-Math.min(1,progress));}
+    public void finishStoryPhase(){phaseTwo=true;transitionTime=0;clearStoryHazards();phaseTwoOrder.reset(4);beginAttack(4);}
     private double transitionTime = 0.0;
     private int attackIndex;
     private boolean recovering = false;
@@ -90,6 +96,7 @@ public class MaskedBoss extends Boss {
         arena = new Rectangle(battleArea);
         target = new Rectangle(playerBounds);
         if (!phaseTwo && getHp() <= getMaxHp() / 2) {
+            if(storyControlled)return;
             phaseTwo = true;
             transitionTime = 1.1;
             beams.clear();
