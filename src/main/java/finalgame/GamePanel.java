@@ -328,8 +328,7 @@ public class GamePanel extends JPanel {
             story.play(this::endThroneScene,
                 StoryDirector.motion("throne-arrival",.9,p->storyFade=1-p),
                 StoryDirector.waitFor("throne-silence",.6),
-                StoryDirector.say(DialogueBox.Face.NEUTRAL,"ข้างในนี้…"),
-                StoryDirector.say(DialogueBox.Face.CONFUSED,"สิ่งที่เจ้านั่นปกป้องไว้ อาจทำให้ฉันได้รู้อะไรมากขึ้น"));
+                StoryDirector.say(DialogueBox.Face.CONFUSED,"ข้างในนี้ ที่เจ้านั่นปกป้องไว้ อาจจะทำให้ฉันได้รู้อะไรมากขึ้น"));
         }
     }
 
@@ -337,20 +336,23 @@ public class GamePanel extends JPanel {
 
     private void playThroneEntrance(){
         clearInput();throne.beginStory();throne.faceHero(SpriteAnimator.RIGHT);
-        final double hx=throne.storyX(),hy=throne.storyY();
+        final double startX=throne.storyX(),startY=throne.storyY(),hx=1312,hy=404;
         final double[] last={0};
         story.play(()->{throneEncounterSeen=true;endThroneScene();battleReadyTime=1;},
+            StoryDirector.motion("throne-stage-hero",.7,p->{double e=ease(p);throne.moveHero(startX+(hx-startX)*e,startY+(hy-startY)*e,(p-last[0])*.7);last[0]=p;throne.focus(throne.storyX()+8,throne.storyY()+8,1.18);}),
+            StoryDirector.action("throne-lock-entry",()->{throne.faceHero(SpriteAnimator.RIGHT);throne.rememberEntry();last[0]=0;}),
             StoryDirector.waitFor("throne-notice",.7),
             StoryDirector.motion("throne-pan-to-mask",2.0,p->{double e=ease(p);throne.focus(hx+8+(1560-hx-8)*e,hy+8+(397-hy-8)*e,1.18+.30*e);}),
             StoryDirector.waitFor("throne-back-silence",1.3),
             StoryDirector.motion("throne-two-shot",1.4,p->{double e=ease(p);throne.focus(1560-110*e,397+7*e,1.48-.20*e);}),
-            StoryDirector.say(DialogueBox.Face.NEUTRAL,"….แกคือเจ้าของที่นี่สินะ"),
-            StoryDirector.say(DialogueBox.Face.CONFUSED,"นี่! ช่วยตอบคำถามฉันซักข้อสิ"),
+            StoryDirector.say(DialogueBox.Face.NEUTRAL,"แกคือเจ้าของที่นี่สินะ"),
+            StoryDirector.say(DialogueBox.Face.CONFUSED,"ช่วยตอบคำถามฉันซักข้อสิ"),
             StoryDirector.waitFor("throne-turn-hesitate",.45),
-            StoryDirector.action("throne-turn-to-hero",()->throne.bossPose(1)),
+            StoryDirector.motion("throne-turn-to-hero",.95,p->throne.turnBoss(p)),
             StoryDirector.waitFor("throne-recognition",1.15),
-            StoryDirector.action("throne-commit-lunge",()->throne.bossPose(2)),
+            StoryDirector.action("throne-commit-lunge",()->throne.bossPose(3)),
             StoryDirector.motion("throne-lunge",.38,p->{double e=p*p;throne.moveBoss(1560+(hx+60-1560)*e,420+(hy+16-420)*e);}),
+            StoryDirector.action("throne-land-cast",()->throne.bossPose(4)),
             StoryDirector.motion("throne-close-range-bolt",.18,p->throne.bolt(p)),
             StoryDirector.action("throne-bolt-hits",()->throne.bolt(-1)),
             StoryDirector.motion("throne-eye-impact",.32,p->{cinematicFlash=.60*(1-p);throne.impact(1-p);throne.injure();}),
@@ -363,7 +365,7 @@ public class GamePanel extends JPanel {
             }),
             StoryDirector.waitFor("throne-battle-black",.3),
             StoryDirector.motion("throne-battle-fade-in",.85,p->storyFade=1-p),
-            StoryDirector.say(DialogueBox.Face.HURT_ANGRY,"นี่แก ฉันถามดีๆนะ!"));
+            StoryDirector.say(DialogueBox.Face.HURT_ANGRY,"ไม่คิดจะคุยกันดีๆซักคนเลยหรือไง!"));
     }
 
     private boolean tryThronePhase(){
@@ -374,6 +376,8 @@ public class GamePanel extends JPanel {
         story.play(()->{masked.finishStoryPhase();phaseSlash=0;cinematicFlash=0;clearInput();battleReadyTime=1;},
             StoryDirector.say(DialogueBox.Face.HURT_ANGRY,"ย๊าก!!"),
             StoryDirector.motion("final-mask-strike",.28,p->{phaseSlash=Math.sin(p*Math.PI);cinematicFlash=.24*Math.sin(p*Math.PI);}),
+            StoryDirector.say(DialogueBox.Face.MASKED_PAIN,"อึก!"),
+            StoryDirector.say(DialogueBox.Face.MASKED_ANGRY,"แก..."),
             StoryDirector.motion("final-hood-falls",1.1,p->masked.showStoryPhase(ease(p))),
             StoryDirector.waitFor("final-red-eye",1.1));
         return true;
@@ -382,7 +386,7 @@ public class GamePanel extends JPanel {
     private void playThroneEnding(){
         if(throneVictorySeen)return;
         throneVictorySeen=true;clearInput();projectiles.clear();enemyProjectiles.clear();laser.reset();
-        ((MaskedBoss)boss).clearStoryHazards();final double[] last={0};
+        ((MaskedBoss)boss).clearStoryHazards();
         story.play(()->{endThroneScene();throneStoryBattle=false;menuFade=1;changeState(GameState.MENU);},
             StoryDirector.waitFor("final-last-breath",.7),
             StoryDirector.motion("final-victory-dark",1.0,p->storyFade=p),
@@ -392,35 +396,33 @@ public class GamePanel extends JPanel {
             StoryDirector.waitFor("final-after-battle-silence",.6),
             StoryDirector.motion("final-wounded-reveal",1.4,p->storyFade=1-p),
             StoryDirector.waitFor("final-wounded-breath",1.1),
-            StoryDirector.say(DialogueBox.Face.HURT,"ตาฉัน…"),
-            StoryDirector.motion("final-approach-mask",2.4,p->{
-                double e=ease(p);throne.moveHero(1480+66*e,404,(p-last[0])*2.4);last[0]=p;throne.heroPose(0);
-            }),
-            StoryDirector.action("final-kneel",()->throne.heroPose(1)),
-            StoryDirector.waitFor("final-reach-mask",.85),
+            StoryDirector.motion("final-approach-mask",2.8,p->throne.woundedWalk(1480+66*ease(p),404,p*2.8)),
+            StoryDirector.action("final-stop-walking",()->throne.woundedFrame(0)),
+            StoryDirector.waitFor("final-look-at-mask",.45),
+            StoryDirector.motion("final-kneel",.8,p->throne.woundedFrame(p<.45?3:4)),
+            StoryDirector.waitFor("final-reach-mask",.45),
             StoryDirector.action("final-take-mask",()->throne.takeMask()),
-            StoryDirector.waitFor("final-hold-mask",.65),
-            StoryDirector.say(DialogueBox.Face.HURT,"อย่างน้อย…ก็ใช้ปิดมันไว้ได้"),
-            StoryDirector.action("final-raise-mask",()->throne.heroPose(2)),
-            StoryDirector.waitFor("final-mask-to-face",1.0),
+            StoryDirector.action("final-hold-mask",()->throne.woundedFrame(5)),
+            StoryDirector.waitFor("final-examine-mask",.65),
+            StoryDirector.motion("final-raise-mask",1.3,p->throne.woundedFrame(p<.45?6:7)),
+            StoryDirector.waitFor("final-mask-to-face",.7),
             StoryDirector.motion("final-change-cloak",.95,p->storyFade=p),
             StoryDirector.action("final-wear-cloak",()->{throne.wearCloak();throne.focus(1560,397,1.48);}),
             StoryDirector.waitFor("final-dressing-black",.8),
             StoryDirector.motion("final-cloaked-reveal",1.3,p->storyFade=1-p),
-            StoryDirector.motion("final-recognise-body",1.7,p->{double e=ease(p);throne.revealBody(e);throne.focus(1560+40*e,397+3*e,1.48+.55*e);}),
-            StoryDirector.waitFor("final-frozen",1.4),
+            StoryDirector.motion("final-recognise-body",1.3,p->throne.revealBody(ease(p))),
+            StoryDirector.waitFor("final-frozen",.8),
+            StoryDirector.action("final-movement-behind",()->throne.showNewcomer()),
+            StoryDirector.motion("final-reverse-pan",2.8,p->{double e=ease(p);throne.approachNewcomer(Math.min(1,p*3));throne.focus(1560+(throne.entryFootX()-1560)*e,397+(throne.entryFootY()-8-397)*e,1.48-.30*e);}),
             StoryDirector.say(DialogueBox.Face.NONE,"แกคือเจ้าของที่นี่สินะ"),
             StoryDirector.say(DialogueBox.Face.NONE,"นี่! ช่วยตอบคำถามฉันซักข้อสิ"),
             StoryDirector.waitFor("final-hears-himself",.8),
-            StoryDirector.action("final-turns-back",()->throne.turnToNewcomer(1)),
+            StoryDirector.motion("final-turns-back",.95,p->throne.turnBoss(p)),
             StoryDirector.waitFor("final-realisation",.65),
-            StoryDirector.motion("final-reverse-shot-dark",.32,p->storyFade=p),
-            StoryDirector.action("final-newcomer-centre",()->{throne.showNewcomer();throne.focus(1320,397,2.30);}),
-            StoryDirector.motion("final-newcomer-reveal",.65,p->storyFade=1-p),
             StoryDirector.waitFor("final-identical-face",2.4),
             StoryDirector.motion("final-loop-black",1.4,p->storyFade=p),
             StoryDirector.waitFor("final-loop-silence",1.0),
-            StoryDirector.say(DialogueBox.Face.NONE,"….."),
+            StoryDirector.say(DialogueBox.Face.MASKED,"......"),
             StoryDirector.waitFor("final-end-black",1.1));
     }
 
@@ -1078,8 +1080,8 @@ public class GamePanel extends JPanel {
         else if (visibleState == GameState.EXPLORATION) { if(inThrone) throne.draw(g); else if(inTemple) temple.draw(g); else if(inButterfly) butterfly.draw(g); else if(inMine) mine.draw(g); else exploration.draw(g); }
         else drawBattle(g);
         if(story.active()) {
-            if(cinematicFlash>0){g.setColor(new Color(165,106,112,(int)(Math.min(1,cinematicFlash)*255)));g.fillRect(0,0,960,640);}
-            if(phaseSlash>0){Graphics2D s=(Graphics2D)g.create();s.setColor(new Color(230,218,215,(int)(phaseSlash*220)));s.setStroke(new BasicStroke(3));s.drawLine(425,158,540,78);s.dispose();}
+            if(cinematicFlash>.004){Graphics2D f=(Graphics2D)g.create();f.setComposite(java.awt.AlphaComposite.SrcOver);f.setColor(new Color(165,106,112,(int)(Math.min(1,cinematicFlash)*255)));f.fillRect(0,0,960,640);f.dispose();}
+            if(phaseSlash>.004){Graphics2D s=(Graphics2D)g.create();s.setComposite(java.awt.AlphaComposite.SrcOver);s.setColor(new Color(230,218,215,(int)(phaseSlash*220)));s.setStroke(new BasicStroke(3));s.drawLine(425,158,540,78);s.dispose();}
             if(storyFade>0) {
                 Graphics2D fade=(Graphics2D)g.create();fade.setColor(new Color(0,0,0,(int)(Math.min(1,storyFade)*255)));
                 fade.fillRect(0,0,VIEW_WIDTH,VIEW_HEIGHT);fade.dispose();
@@ -1114,7 +1116,7 @@ public class GamePanel extends JPanel {
         g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 18));
         g.setColor(Color.LIGHT_GRAY);
         g.drawString("Click PLAY or press Enter", 340, 395);
-        g.drawString("The complete loop  |  v3.78", 325, 500);
+        g.drawString("The complete loop  |  v3.79", 325, 500);
         g.drawString("No saved progress yet", 365, 535);
     }
 

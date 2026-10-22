@@ -22,11 +22,20 @@ public final class ThroneRoom {
     private int heroPose=-1,bossPose;
     private double bossX=BOSS_X,bossY=BOSS_Y,zoom=ZOOM,bodyOpacity=.28,impact,bolt=-1;
     private final SpriteAnimator echo=new SpriteAnimator();
+    private double entryX=1312,entryY=404,echoX=1312,echoY=404;
+    private int woundedFrame;
+    public double entryFootX(){return entryX+8;}
+    public double entryFootY(){return entryY+16;}
+    public double focusX(){return cameraX+480/zoom;}
+    public void rememberEntry(){entryX=x;entryY=y;}
+    public void woundedFrame(int frame){heroPose=0;woundedFrame=frame;}
+    public void woundedWalk(double nx,double ny,double time){moveHero(nx,ny,.05);woundedFrame(new int[]{1,0,2,0}[(int)(time/.22)%4]);}
+    public void turnBoss(double p){bossPose=p<.23?0:p<.48?5:p<.73?1:2;}
     public double storyX(){return x;}
     public double storyY(){return y;}
     public void beginStory(){cinematic=true;stopMovement();}
     public void finishStory(){cinematic=false;impact=0;zoom=ZOOM;stopMovement();updateCamera();}
-    public void resetStory(){cinematic=false;injured=false;cloaked=false;newcomer=false;maskOnFloor=false;heroPose=-1;bossPose=0;bossX=BOSS_X;bossY=BOSS_Y;zoom=ZOOM;bodyOpacity=.28;impact=0;bolt=-1;}
+    public void resetStory(){cinematic=false;injured=false;cloaked=false;newcomer=false;maskOnFloor=false;heroPose=-1;bossPose=0;bossX=BOSS_X;bossY=BOSS_Y;zoom=ZOOM;bodyOpacity=.28;impact=0;bolt=-1;woundedFrame=0;entryX=1312;entryY=404;}
     public void focus(double cx,double cy,double z){
         cinematic=true;zoom=z;
         cameraX=Math.max(0,Math.min(cx-480/z,width-960/z));
@@ -39,15 +48,16 @@ public final class ThroneRoom {
     public void moveBoss(double nx,double ny){bossX=nx;bossY=ny;}
     public void impact(double value){impact=value;}
     public void bolt(double value){bolt=value;}
-    public void injure(){injured=true;heroPose=0;}
+    public void injure(){injured=true;heroPose=0;woundedFrame=0;}
     public void prepareEnding(){
         cleared=true;cinematic=true;x=1480;y=404;bossX=BOSS_X;bossY=BOSS_Y;
-        injured=true;heroPose=0;maskOnFloor=true;bodyOpacity=.55;
+        injured=true;heroPose=0;woundedFrame=0;maskOnFloor=true;bodyOpacity=.55;
     }
     public void takeMask(){maskOnFloor=false;}
     public void wearCloak(){cloaked=true;heroPose=-1;x=1552;y=404;bossPose=0;}
     public void revealBody(double p){bodyOpacity=.55+.45*p;}
-    public void showNewcomer(){newcomer=true;echo.reset(SpriteAnimator.DOWN);}
+    public void showNewcomer(){newcomer=true;echoX=entryX-16;echoY=entryY;echo.reset(SpriteAnimator.RIGHT);}
+    public void approachNewcomer(double p){double nx=entryX-16+16*p;echo.update(nx-echoX,0,.05,false);echoX=nx;if(p>=1)echo.reset(SpriteAnimator.RIGHT);}
     public void turnToNewcomer(int pose){bossPose=pose;}
 
     public ThroneRoom(){reset();}
@@ -134,10 +144,10 @@ public final class ThroneRoom {
         if(!cleared)FinalArtwork.masked(g,bossPose,bossX,bossY,HERO_HEIGHT);
         Graphics2D actor=(Graphics2D)g.create();
         if(cloaked)FinalArtwork.masked(actor,bossPose,x+8,y+16,HERO_HEIGHT);
-        else if(heroPose>=0)FinalArtwork.hero(actor,heroPose,x+8,y+16,HERO_HEIGHT);
+        else if(heroPose>=0)FinalArtwork.wounded(actor,woundedFrame,x+8,y+16,HERO_HEIGHT);
         else animation.drawInThrone(actor,(int)Math.round(x+8),(int)Math.round(y+16),HERO_WIDTH,HERO_HEIGHT,ambientShade());
         actor.dispose();
-        if(newcomer)echo.drawInThrone(g,1320,420,HERO_WIDTH,HERO_HEIGHT,32);
+        if(newcomer)echo.drawInThrone(g,(int)Math.round(echoX+8),(int)Math.round(echoY+16),HERO_WIDTH,HERO_HEIGHT,32);
         if(bolt>=0){
             double px=bossX-20+(x+8-bossX+20)*bolt,py=bossY-35+(y+16-HERO_HEIGHT*.68-bossY+35)*bolt;
             g.setColor(new Color(92,37,52));g.fillRect((int)px-7,(int)py-3,14,6);
