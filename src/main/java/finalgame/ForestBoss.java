@@ -37,7 +37,7 @@ public class ForestBoss extends Boss {
     @Override
     public Rectangle getHitBounds() {
         Rectangle art=getBounds();
-        return new Rectangle(art.x+36,art.y+40,40,108);
+        return new Rectangle(art.x+28,art.y+40,56,108);
     }
 
     @Override

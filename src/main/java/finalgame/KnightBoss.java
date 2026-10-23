@@ -18,7 +18,7 @@ public class KnightBoss extends Boss {
     public Rectangle getHitBounds() {
         Rectangle art=getBounds();
         // Target the body, excluding weapons, limbs and cloak; stable in both phases.
-        return new Rectangle(art.x+71,art.y+40,40,124);
+        return new Rectangle(art.x+62,art.y+40,58,124);
     }
     @Override
     public void draw(Graphics graphics) {
