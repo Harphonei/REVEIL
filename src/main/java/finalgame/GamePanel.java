@@ -104,7 +104,7 @@ public class GamePanel extends JPanel {
         bindBossSelection("3", 3);
         bindBossSelection("4", 4);
         bindBossSelection("5", 5);
-        bindScreenAction("released F", "inspect-forest", this::inspectForest);
+        bindScreenAction("released F", "inspect-nearby", this::inspectNearby);
         bindScreenAction("released F3", "collision-view", () -> {
             if (state == GameState.EXPLORATION) { if(inThrone) throne.toggleCollisionView(); else if(inTemple) temple.toggleCollisionView(); else if(inButterfly) butterfly.toggleCollisionView(); else if(inMine) mine.toggleCollisionView(); else exploration.toggleCollisionView(); repaint(); }
         });
@@ -934,6 +934,20 @@ public class GamePanel extends JPanel {
             }));
     }
 
+    private void inspectNearby(){if(inMine)inspectMine();else inspectForest();}
+
+    private void inspectMine(){
+        if(state!=GameState.EXPLORATION||story.active()||!inMine||inButterfly||inTemple||inThrone||rematchActive)return;
+        MineRoom.InspectPoint point=mine.nearestInspection();if(point==null)return;
+        clearInput();mine.faceStoryPoint(point.x,point.y);
+        String[] lines=point.lines();StoryDirector.Beat[] beats=new StoryDirector.Beat[lines.length];
+        for(int i=0;i<lines.length;i++){
+            DialogueBox.Face face=point==MineRoom.InspectPoint.DOCUMENT&&i==0?DialogueBox.Face.NONE:DialogueBox.Face.CONFUSED;
+            beats[i]=StoryDirector.say(face,lines[i]);
+        }
+        story.play(this::endMineScene,beats);repaint();
+    }
+
     private void inspectForest(){
         if(state!=GameState.EXPLORATION||story.active()||inMine||inButterfly||inTemple||inThrone||rematchActive)return;
         ExplorationRoom.InspectPoint point=exploration.nearestInspection();if(point==null)return;
@@ -1321,7 +1335,9 @@ public class GamePanel extends JPanel {
         if(story.currentId().equals("fade-from-menu"))drawMenu(g);
         else if (visibleState == GameState.EXPLORATION) { if(inThrone) throne.draw(g); else if(inTemple) temple.draw(g); else if(inButterfly) butterfly.draw(g); else if(inMine) mine.draw(g); else exploration.draw(g); }
         else drawBattle(g);
-        if(state==GameState.EXPLORATION&&!story.active()&&!inMine&&!inButterfly&&!inTemple&&!inThrone)exploration.drawInspectionPrompt(g);
+        if(state==GameState.EXPLORATION&&!story.active()&&!inButterfly&&!inTemple&&!inThrone){
+            if(inMine)mine.drawInspectionPrompt(g);else exploration.drawInspectionPrompt(g);
+        }
         if(story.active()) {
             if(cinematicFlash>.004){Graphics2D f=(Graphics2D)g.create();f.setComposite(java.awt.AlphaComposite.SrcOver);f.setColor(new Color(165,106,112,(int)(Math.min(1,cinematicFlash)*255)));f.fillRect(0,0,960,640);f.dispose();}
             if(phaseSlash>.004){Graphics2D s=(Graphics2D)g.create();s.setComposite(java.awt.AlphaComposite.SrcOver);s.setColor(new Color(230,218,215,(int)(phaseSlash*220)));s.setStroke(new BasicStroke(3));s.drawLine(425,158,540,78);s.dispose();}

@@ -7,6 +7,22 @@ import javax.imageio.ImageIO;
 
 /** Mine world uses native artwork pixels; collision is always at the feet. */
 public final class MineRoom {
+    public enum InspectPoint {
+        CART(449,694,449,642,80,false,
+            "รถรางเก่า…ข้างในมีแต่เศษหิน", "เหมือนถูกทิ้งไว้นานแล้ว"),
+        ORE(580,530,580,480,80,false,
+            "แร่นี่…เรืองแสงได้ด้วย", "พอเข้าใกล้แล้วรู้สึกแปลก ๆ แฮะ"),
+        DOCUMENT(618,212,618,158,86,true,
+            "“ตัวอย่างยังตอบสนองต่อการกระตุ้นด้วยความเจ็บปวด”", "ตัวอย่าง…หมายถึงพวกมอนสเตอร์งั้นเหรอ?");
+        final double x,y,promptX,promptY,radius;
+        final boolean afterBoss;
+        private final String[] lines;
+        InspectPoint(double x,double y,double promptX,double promptY,double radius,boolean afterBoss,String... lines){
+            this.x=x;this.y=y;this.promptX=promptX;this.promptY=promptY;this.radius=radius;this.afterBoss=afterBoss;this.lines=lines;
+        }
+        public String[] lines(){return lines.clone();}
+    }
+
     private static final double ZOOM=1.45, SPEED=90;
     private final BufferedImage background;
     private final Area floor=loadMask("mine-floor.png");
@@ -90,6 +106,40 @@ public final class MineRoom {
         storyCamera=false;drawZoom=ZOOM;workBob=0;
         animation.reset(SpriteAnimator.RIGHT);updateCamera();
     }
+    public InspectPoint nearestInspection(){
+        InspectPoint nearest=null;double best=Double.POSITIVE_INFINITY;
+        for(InspectPoint point:InspectPoint.values()){
+            if(point.afterBoss&&!cleared)continue;
+            double distance=Point2D.distance(x+8,y+16,point.x,point.y);
+            if(distance<=point.radius&&distance<best){best=distance;nearest=point;}
+        }
+        return nearest;
+    }
+    public void faceStoryPoint(double targetX,double targetY){
+        double dx=targetX-(x+8),dy=targetY-(y+16),ax=Math.abs(dx),ay=Math.abs(dy);
+        int direction;
+        if(Math.min(ax,ay)>Math.max(ax,ay)*0.41421356237)
+            direction=dy>0?(dx>0?SpriteAnimator.DOWN_RIGHT:SpriteAnimator.DOWN_LEFT)
+                          :(dx>0?SpriteAnimator.UP_RIGHT:SpriteAnimator.UP_LEFT);
+        else direction=ax>=ay?(dx>=0?SpriteAnimator.RIGHT:SpriteAnimator.LEFT)
+                            :(dy>=0?SpriteAnimator.DOWN:SpriteAnimator.UP);
+        animation.reset(direction);
+    }
+    public void drawInspectionPrompt(Graphics graphics){
+        InspectPoint point=nearestInspection();if(point==null)return;
+        Graphics2D g=(Graphics2D)graphics.create();g.setFont(DialogueBox.font(17));
+        String label="สำรวจ";int width=48+g.getFontMetrics().stringWidth(label),height=32;
+        int sx=(int)Math.round((point.promptX-Math.round(cameraX))*drawZoom)-width/2;
+        int sy=60+(int)Math.round((point.promptY-Math.round(cameraY))*drawZoom)-height/2;
+        sx=Math.max(8,Math.min(960-width-8,sx));sy=Math.max(68,Math.min(580-height-8,sy));
+        g.setColor(new Color(10,16,20,230));g.fillRoundRect(sx,sy,width,height,6,6);
+        g.setColor(new Color(118,126,118));g.drawRoundRect(sx,sy,width,height,6,6);
+        g.setColor(new Color(45,52,53));g.fillRect(sx+7,sy+5,22,22);
+        g.setColor(new Color(158,159,143));g.drawRect(sx+7,sy+5,22,22);
+        g.setFont(new Font(Font.MONOSPACED,Font.BOLD,15));g.setColor(new Color(219,214,192));g.drawString("F",sx+14,sy+22);
+        g.setFont(DialogueBox.font(17));g.drawString(label,sx+37,sy+23);g.dispose();
+    }
+
     public void stopMovement(){animation.stop();}
     public void toggleCollisionView(){showCollision=!showCollision;}
     private boolean canStand(double px,double py) {

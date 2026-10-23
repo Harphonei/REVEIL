@@ -43,7 +43,7 @@ public final class MenuScreen {
         g.setColor(new Color(83,37,45));g.fillOval(823,593,8,8);
         g.setColor(new Color(175,78,83));g.fillRect(825,595,3,3);
         g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,10));g.setColor(new Color(130,121,111));g.drawString("POWER",841,601);
-        g.setColor(new Color(112,104,97));g.drawString("FINAL / 3.100",72,603);
+        g.setColor(new Color(112,104,97));g.drawString("FINAL / 3.101",72,603);
     }
     private static void knob(Graphics2D g,int cx,int cy,int radius,double angle){
         g.setColor(new Color(10,11,15));g.fillOval(cx-radius-3,cy-radius-1,radius*2+6,radius*2+6);
@@ -164,7 +164,7 @@ public final class MenuScreen {
         Graphics2D g=(Graphics2D)graphics.create();shell(g);Graphics2D screen=glass(g,time);
         PixelLetters.centered(screen,"HOW TO PLAY",426,85,3,IVORY);
         String[][] items={
-            {"WASD","MOVE / DODGE","World and red heart"},{"EXPLORE","RUN / INSPECT","Near forest objects"},
+            {"WASD","MOVE / DODGE","World and red heart"},{"EXPLORE","RUN / INSPECT","Near marked objects"},
             {"MOUSE","HOLD TO FIRE","Right mouse button"},{"TALK","READ / CONFIRM","Advance dialogue"},
             {"E","HEAVY ATTACK","Charge, then fire"},{"Q","ULTIMATE","Boost fire for 5s"},
             {"TAB","SKIP SCENE","Or click Skip >"},{"ESC","PAUSE / HELP","Time stops in menus"}
