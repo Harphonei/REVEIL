@@ -1001,6 +1001,7 @@ public class GamePanel extends JPanel {
 
         if(tryThronePhase()||tryUnlockMineE()||tryUnlockMothQ()){repaint();return;}
         boss.update(seconds, battleArea, player.getBounds(), enemyProjectiles);
+        boss.updateEffects(seconds);
 
         for (int i = enemyProjectiles.size() - 1; i >= 0; i--) {
             EnemyProjectile projectile = enemyProjectiles.get(i);
@@ -1125,7 +1126,7 @@ public class GamePanel extends JPanel {
         g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 18));
         g.setColor(Color.LIGHT_GRAY);
         g.drawString("Click PLAY or press Enter", 340, 395);
-        g.drawString("The complete loop  |  v3.85", 325, 500);
+        g.drawString("The complete loop  |  v3.86", 325, 500);
         g.drawString("No saved progress yet", 365, 535);
     }
 
@@ -1171,6 +1172,7 @@ public class GamePanel extends JPanel {
             laser.draw(g);
         }
         Graphics2D bossGraphics=(Graphics2D)g.create();
+        if(player.isAlive()&&boss.isAlive())boss.drawEffects(bossGraphics,selectedBoss);
         boss.draw(bossGraphics);bossGraphics.dispose();
         player.draw(g);
         for (Projectile projectile : projectiles) {
@@ -1181,7 +1183,7 @@ public class GamePanel extends JPanel {
         enemyGraphics.clipRect(battleArea.x, battleArea.y,
                 battleArea.width, battleArea.height);
         for (EnemyProjectile projectile : enemyProjectiles) {
-            projectile.draw(enemyGraphics);
+            projectile.draw(enemyGraphics,selectedBoss,selectedBoss==5&&boss.getPhaseLabel().equals("PHASE 2"));
         }
         enemyGraphics.dispose();
 

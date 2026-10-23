@@ -275,14 +275,12 @@ public class MaskedBoss extends Boss {
             return;
         }
         if (!recovering && transitionTime <= 0 && attackIndex == 1) {
-            g.setColor(new Color(180, 100, 180));
             for (int i = 0; i < 5; i++) {
-                g.drawOval((int) CrownPattern.emitterX(arena, i) - 9,
-                        (int) CrownPattern.emitterY(arena, i) - 9, 18, 18);
+                BossEffects.seal(g,(int)CrownPattern.emitterX(arena,i),(int)CrownPattern.emitterY(arena,i),10,5);
             }
         }
         for (SwordStrike beam : beams) {
-            beam.draw(g);
+            beam.draw(g,5);
         }
     }
 

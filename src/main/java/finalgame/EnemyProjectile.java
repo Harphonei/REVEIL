@@ -47,9 +47,14 @@ public class EnemyProjectile {
     }
 
     public void draw(Graphics g) {
-        g.setColor(color);
-        g.fillOval((int) x, (int) y, diameter, diameter);
+        draw(g,1,false);
     }
+
+    public void draw(Graphics g,int theme,boolean phaseTwo){
+        if(isDangerous())BossEffects.projectile(g,getBounds(),theme,phaseTwo,visualKind(),reacting());
+    }
+    protected int visualKind(){return 0;}
+    protected boolean reacting(){return false;}
 
     public boolean shouldSplit() {
         return false;

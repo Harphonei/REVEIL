@@ -59,27 +59,12 @@ public class SwordStrike {
     }
 
     public void draw(Graphics g) {
+        draw(g,4);
+    }
+    public void draw(Graphics g,int theme) {
         if (isExpired()) {
             return;
         }
-        Graphics2D sword = (Graphics2D) g.create();
-        sword.clip(arena);
-        if (isActive()) {
-            sword.setColor(new Color(255, 225, 130));
-            sword.fill(hitArea);
-            sword.setColor(Color.WHITE);
-            sword.setStroke(new BasicStroke(2.0f));
-            sword.draw(line);
-        } else {
-            // A dim full-width outline warns about the actual width, not just its centre.
-            sword.setColor(new Color(85, 70, 35));
-            sword.fill(hitArea);
-            sword.setColor(new Color(255, 190, 60));
-            sword.draw(hitArea);
-            sword.setStroke(new BasicStroke(2.0f, BasicStroke.CAP_BUTT,
-                    BasicStroke.JOIN_MITER, 10.0f, new float[]{8, 6}, 0));
-            sword.draw(line);
-        }
-        sword.dispose();
+        BossEffects.strike(g,hitArea,line,arena,theme,isActive(),Math.min(1,age/warningTime));
     }
 }

@@ -14,6 +14,18 @@ public abstract class Boss {
     private final String name;
     private int hp;
     private double shotCooldown = 1.0;
+    private String visualAttack="";
+    private double castTime;
+
+    public void updateEffects(double seconds){
+        castTime=Math.max(0,castTime-seconds);
+        String attack=getAttackName();
+        if(!attack.equals(visualAttack)){
+            visualAttack=attack;
+            if(!attack.equals("RECOVERY")&&!attack.equals("AWAKENING"))castTime=.35;
+        }
+    }
+    public void drawEffects(Graphics g,int theme){BossEffects.cast(g,getBounds(),theme,castTime);}
 
     public Boss(int startX, int startY) {
         this(startX, startY, 100, "TRAINING BOSS");
@@ -96,6 +108,7 @@ public abstract class Boss {
     }
 
     public void reset() {
+        visualAttack="";castTime=0;
         hp = maxHp;
         shotCooldown = 1.0;
     }

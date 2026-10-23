@@ -48,15 +48,8 @@ public class DoomOrb extends EnemyProjectile {
 
     @Override
     public void draw(Graphics g) {
-        super.draw(g);
-        Rectangle b = getBounds();
-        g.setColor(Color.WHITE);
-        g.drawOval(b.x, b.y, b.width, b.height);
-        g.drawString("!", b.x + 18, b.y + 29);
-        if (burstY - b.y < 50) {
-            g.setColor(Color.YELLOW);
-            g.drawOval(b.x - 8, b.y - 8, b.width + 16, b.height + 16);
-            g.drawOval(b.x - 14, b.y - 14, b.width + 28, b.height + 28);
-        }
+        draw(g,5,false);
     }
+    @Override protected int visualKind(){return 2;}
+    @Override protected boolean reacting(){return burstY-getBounds().y<50;}
 }

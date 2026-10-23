@@ -44,23 +44,6 @@ public class RootHazard {
     }
 
     public void draw(Graphics g) {
-        if (isExpired()) {
-            return;
-        }
-        if (isActive()) {
-            g.setColor(new Color(80, 200, 100));
-            g.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
-            g.setColor(Color.BLACK);
-            for (int i = 8; i < bounds.width; i += 16) {
-                g.drawLine(bounds.x + i, bounds.y + bounds.height,
-                        bounds.x + i, bounds.y);
-            }
-        } else {
-            g.setColor(new Color(255, 180, 60));
-            g.drawRect(bounds.x, bounds.y, bounds.width, bounds.height);
-            g.drawRect(bounds.x + 2, bounds.y + 2,
-                    bounds.width - 4, bounds.height - 4);
-            g.drawString("!", bounds.x + 28, bounds.y + 38);
-        }
+        if(!isExpired())BossEffects.zone(g,bounds,1,isActive(),age/WARNING_TIME);
     }
 }

@@ -40,16 +40,8 @@ public class ChemicalOrb extends EnemyProjectile {
 
     @Override
     public void draw(Graphics g) {
-        super.draw(g);
-        Rectangle bounds = getBounds();
-        g.setColor(Color.WHITE);
-        g.drawOval(bounds.x, bounds.y, bounds.width, bounds.height);
-        g.drawString("!", bounds.x + 9, bounds.y + 20);
-        // An outer ring signals the approaching reaction before the split.
-        if (splitY - bounds.y <= 45) {
-            g.setColor(Color.YELLOW);
-            g.drawOval(bounds.x - 7, bounds.y - 7,
-                    bounds.width + 14, bounds.height + 14);
-        }
+        draw(g,2,false);
     }
+    @Override protected int visualKind(){return 1;}
+    @Override protected boolean reacting(){return splitY-getBounds().y<=45;}
 }

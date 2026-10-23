@@ -42,9 +42,6 @@ public class MemoryEcho {
     }
 
     public void draw(Graphics g) {
-        g.setColor(new Color(210, 140, 255));
-        g.drawRect(bounds.x, bounds.y, bounds.width, bounds.height);
-        g.drawRect(bounds.x + 3, bounds.y + 3, bounds.width - 6, bounds.height - 6);
-        g.drawString("!", bounds.x + 14, bounds.y + 24);
+        BossEffects.zone(g,bounds,3,false,age/(1.05*CombatTuning.WARNING_TIME_MULTIPLIER));
     }
 }
