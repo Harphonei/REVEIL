@@ -9,3 +9,24 @@
 .DS_Store
 Thumbs.db
 Open-Dev.bat
+
+# Private developer access
+Open-Dev.bat
+REVEIL-Dev-Access*.zip
+DEV-CONTROLS.txt
+
+# Saves
+.final-game/
+dev-save/
+save.properties
+save.properties.bak
+final-save-*.tmp
+
+# Build and IDE files
+target/
+*.class
+nbproject/private/
+
+# Packaged backups
+REVEIL-v*.zip
+FINAL-v*.zip
