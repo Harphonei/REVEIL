@@ -36,19 +36,8 @@ public class ForestBoss extends Boss {
 
     @Override
     public void draw(Graphics graphics) {
-        if(!isAlive()) return;
-        Graphics g=graphics.create();
-        Rectangle art=getBounds();
-        g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,16));
-        g.setColor(Color.WHITE);
-        String title="FRENZIED FOREST BEAST";
-        g.drawString(title,art.x+art.width/2-g.getFontMetrics().stringWidth(title)/2,50);
-        String hp="HP: "+getHp()+"/"+getMaxHp();
-        g.drawString(hp,art.x+art.width/2-g.getFontMetrics().stringWidth(hp)/2,75);
-        g.setColor(Color.DARK_GRAY);g.fillRect(art.x,85,art.width,7);
-        g.setColor(Color.GREEN);g.fillRect(art.x,85,art.width*getHp()/getMaxHp(),7);
-        BossArtwork.drawBattle(g,art);
-        g.dispose();
+        if(!isAlive())return;
+        Graphics g=graphics.create();BossArtwork.drawBattle(g,getBounds());g.dispose();
     }
 
     @Override

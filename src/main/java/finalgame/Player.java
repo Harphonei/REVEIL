@@ -70,7 +70,10 @@ public class Player {
         skillECooldown = Math.max(0.0, skillECooldown - seconds);
         skillQCooldown = Math.max(0.0, skillQCooldown - seconds);
         skillRecoveryTime = Math.max(0.0, skillRecoveryTime - seconds);
+        double ultimateBefore=ultimateTime;
         ultimateTime = Math.max(0.0, ultimateTime - seconds);
+        if(ultimateBefore>0&&ultimateTime<=0)
+            skillQCooldown=Math.max(0,SKILL_Q_COOLDOWN-Math.max(0,seconds-ultimateBefore));
 
         if (skillEChargeTime > 0.0) {
             double before = skillEChargeTime;
@@ -87,6 +90,7 @@ public class Player {
             if (skillQChargeTime <= 0.0 && isAlive()) {
                 double overshoot = Math.max(0.0, seconds - before);
                 ultimateTime = Math.max(0.0, SKILL_Q_DURATION - overshoot);
+                if(ultimateTime<=0)skillQCooldown=Math.max(0,SKILL_Q_COOLDOWN-(overshoot-SKILL_Q_DURATION));
                 qBurstTime=Math.max(0,.42-overshoot);
             }
         }
@@ -143,7 +147,7 @@ public class Player {
         storyQAura=-1;
         if(!isAlive())return;
         skillEChargeTime=0;skillEReadyToFire=false;skillRecoveryTime=0;
-        skillQChargeTime=0;ultimateTime=SKILL_Q_DURATION;skillQCooldown=SKILL_Q_COOLDOWN;
+        skillQChargeTime=0;ultimateTime=SKILL_Q_DURATION;skillQCooldown=0;
         invincibleTime=Math.max(invincibleTime,1.5);
         qGuardTime=1.5;qBurstTime=.42;
     }
@@ -153,7 +157,7 @@ public class Player {
             return false;
         }
         skillQChargeTime = SKILL_Q_CHARGE;
-        skillQCooldown = SKILL_Q_COOLDOWN;
+        skillQCooldown = 0;
         invincibleTime=Math.max(invincibleTime,1.5);
         qGuardTime=1.5;
         return true;
@@ -174,6 +178,10 @@ public class Player {
     public double getSkillQCooldown() {
         return skillQCooldown;
     }
+
+    public double getUltimateProgress(){return ultimateTime/SKILL_Q_DURATION;}
+    public double getSkillEChargeProgress(){return skillEChargeTime>0?1-skillEChargeTime/SKILL_E_CHARGE:0;}
+    public double getSkillQChargeProgress(){return skillQChargeTime>0?1-skillQChargeTime/SKILL_Q_CHARGE:0;}
 
     public Rectangle getBounds() {
         return new Rectangle((int) x, (int) y, size, size);

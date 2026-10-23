@@ -17,15 +17,7 @@ public class KnightBoss extends Boss {
     @Override
     public void draw(Graphics graphics) {
         if(!isAlive())return;
-        Graphics g=graphics.create();Rectangle art=getBounds();int centre=art.x+91;
-        g.setFont(new java.awt.Font(java.awt.Font.MONOSPACED,java.awt.Font.PLAIN,16));g.setColor(Color.WHITE);
-        String title="THE LAST GUARDIAN";
-        g.drawString(title,centre-g.getFontMetrics().stringWidth(title)/2,50);
-        String hp="HP: "+getHp()+"/"+getMaxHp();
-        g.drawString(hp,centre-g.getFontMetrics().stringWidth(hp)/2,75);
-        g.setColor(Color.DARK_GRAY);g.fillRect(centre-art.width/2,85,art.width,7);
-        g.setColor(Color.GREEN);g.fillRect(centre-art.width/2,85,art.width*getHp()/getMaxHp(),7);
-        BossArtwork.drawKnightBattle(g,art);g.dispose();
+        Graphics g=graphics.create();BossArtwork.drawKnightBattle(g,getBounds());g.dispose();
     }
 
     private boolean openingRain=true;

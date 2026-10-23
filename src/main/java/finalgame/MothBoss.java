@@ -25,15 +25,7 @@ public class MothBoss extends Boss {
     @Override
     public void draw(Graphics graphics) {
         if(!isAlive())return;
-        Graphics g=graphics.create();Rectangle art=getBounds();
-        g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,16));g.setColor(Color.WHITE);
-        String title="MOTHER MOTH";
-        g.drawString(title,art.x+art.width/2-g.getFontMetrics().stringWidth(title)/2,50);
-        String hp="HP: "+getHp()+"/"+getMaxHp();
-        g.drawString(hp,art.x+art.width/2-g.getFontMetrics().stringWidth(hp)/2,75);
-        g.setColor(Color.DARK_GRAY);g.fillRect(art.x,85,art.width,7);
-        g.setColor(Color.GREEN);g.fillRect(art.x,85,art.width*getHp()/getMaxHp(),7);
-        BossArtwork.drawMothBattle(g,art);g.dispose();
+        Graphics g=graphics.create();BossArtwork.drawMothBattle(g,getBounds());g.dispose();
     }
     private boolean openingRain=true;
     private final RandomAttackOrder order = new RandomAttackOrder(4);
@@ -49,7 +41,7 @@ public class MothBoss extends Boss {
     private int echoesCreated = 0;
 
     public MothBoss(int startX, int startY) {
-        super(startX, startY, 1600, "MEMORY DEVOURER");
+        super(startX, startY, 1600, "MOTHER MOTH");
         beginAttack();
     }
 

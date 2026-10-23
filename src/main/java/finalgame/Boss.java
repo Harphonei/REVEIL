@@ -40,6 +40,7 @@ public abstract class Boss {
     }
 
     public int getMaxHp() { return maxHp; }
+    public String getName(){return name;}
 
     public Rectangle getBounds() {
         return new Rectangle(x, y, width, height);

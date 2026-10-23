@@ -15,15 +15,7 @@ public class MaskedBoss extends Boss {
     @Override
     public void draw(Graphics graphics) {
         if(!isAlive())return;
-        Graphics g=graphics.create();Rectangle art=getBounds();int centre=art.x+140;
-        g.setFont(new java.awt.Font(java.awt.Font.MONOSPACED,java.awt.Font.PLAIN,16));g.setColor(Color.WHITE);
-        String title="THE MASKED ONE";
-        g.drawString(title,centre-g.getFontMetrics().stringWidth(title)/2,26);
-        String hp="HP: "+getHp()+"/"+getMaxHp();
-        g.drawString(hp,centre-g.getFontMetrics().stringWidth(hp)/2,47);
-        g.setColor(Color.DARK_GRAY);g.fillRect(centre-70,57,140,7);
-        g.setColor(Color.GREEN);g.fillRect(centre-70,57,140*getHp()/getMaxHp(),7);
-        BossArtwork.drawMaskedBattle(g,art,phaseTwo,transitionTime);g.dispose();
+        Graphics g=graphics.create();BossArtwork.drawMaskedBattle(g,getBounds(),phaseTwo,transitionTime);g.dispose();
     }
     private static final int MAX_HP = 2200;
     private final RandomAttackOrder phaseOneOrder = new RandomAttackOrder(4);
