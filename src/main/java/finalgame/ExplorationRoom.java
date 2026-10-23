@@ -8,6 +8,21 @@ import javax.imageio.ImageIO;
 
 /** Forest coordinates use a 2048 x 683 design grid, independent of image pixels. */
 public class ExplorationRoom {
+    public enum InspectPoint {
+        WAGON(516,334,516,282,76,
+            "เกวียนพัง…ของข้างในกระจัดกระจายไปหมด"),
+        CORPSE(390,365,390,312,76,
+            "รอยแผลลึกมาก…", "อะไรทำให้มันเป็นแบบนี้กัน"),
+        BRIDGE(913,406,913,356,76,
+            "ไม้ตรงนี้เป็นรอยข่วน…", "เหมือนมีอะไรหนัก ๆ ถูกลากผ่านไป");
+        final double x,y,promptX,promptY,radius;
+        private final String[] lines;
+        InspectPoint(double x,double y,double promptX,double promptY,double radius,String... lines){
+            this.x=x;this.y=y;this.promptX=promptX;this.promptY=promptY;this.radius=radius;this.lines=lines;
+        }
+        public String[] lines(){return lines.clone();}
+    }
+
     private final double scaleX, scaleY;
     private static final int VIEW_W = 960, VIEW_H = 520, TOP = 60;
     private static final double SPEED = 90, SIZE = 16;
@@ -122,6 +137,31 @@ public class ExplorationRoom {
         Path2D p=new Path2D.Double(); p.moveTo(points[0][0],points[0][1]);
         for(int i=1;i<points.length;i++) p.lineTo(points[i][0],points[i][1]);
         p.closePath(); return new Area(p);
+    }
+
+    /** One nearest point only, so overlapping ranges never show two prompts. */
+    public InspectPoint nearestInspection(){
+        InspectPoint nearest=null;double best=Double.POSITIVE_INFINITY;
+        for(InspectPoint point:InspectPoint.values()){
+            double distance=Point2D.distance(x+SIZE/2,y+SIZE,point.x,point.y);
+            if(distance<=point.radius&&distance<best){best=distance;nearest=point;}
+        }
+        return nearest;
+    }
+
+    public void drawInspectionPrompt(Graphics graphics){
+        InspectPoint point=nearestInspection();if(point==null)return;
+        Graphics2D g=(Graphics2D)graphics.create();g.setFont(DialogueBox.font(17));
+        String label="สำรวจ";int width=48+g.getFontMetrics().stringWidth(label),height=32;
+        int sx=(int)Math.round((point.promptX*scaleX-Math.round(cameraX))*storyZoom)-width/2;
+        int sy=TOP+(int)Math.round((point.promptY*scaleY-Math.round(cameraY))*storyZoom)-height/2;
+        sx=Math.max(8,Math.min(VIEW_W-width-8,sx));sy=Math.max(TOP+8,Math.min(TOP+VIEW_H-height-8,sy));
+        g.setColor(new Color(10,16,20,230));g.fillRoundRect(sx,sy,width,height,6,6);
+        g.setColor(new Color(118,126,118));g.drawRoundRect(sx,sy,width,height,6,6);
+        g.setColor(new Color(45,52,53));g.fillRect(sx+7,sy+5,22,22);
+        g.setColor(new Color(158,159,143));g.drawRect(sx+7,sy+5,22,22);
+        g.setFont(new Font(Font.MONOSPACED,Font.BOLD,15));g.setColor(new Color(219,214,192));g.drawString("F",sx+14,sy+22);
+        g.setFont(DialogueBox.font(17));g.drawString(label,sx+37,sy+23);g.dispose();
     }
 
     public void toggleCollisionView() { showCollision=!showCollision; }
