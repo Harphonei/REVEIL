@@ -12,6 +12,7 @@ public class Projectile {
     private final double speed;
     private final int damage;
     private final Color color;
+    protected double effectAge;
 
     public Projectile(double startX, double startY) {
         this(startX, startY, 6, 12, 190.0, 10, Color.CYAN);
@@ -29,6 +30,7 @@ public class Projectile {
     }
 
     public void update(double seconds) {
+        effectAge += seconds;
         y -= speed * seconds;
     }
 
@@ -45,7 +47,6 @@ public class Projectile {
     }
 
     public void draw(Graphics g) {
-        g.setColor(color);
-        g.fillRect((int) x, (int) y, width, height);
+        HeroEffects.shard(g,getBounds(),effectAge);
     }
 }

@@ -2,6 +2,7 @@ package finalgame;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Rectangle;
 
 public class SkillProjectile extends Projectile {
@@ -21,7 +22,7 @@ public class SkillProjectile extends Projectile {
     }
 
     @Override public void update(double seconds){
-        if(aimed){aimedX+=velocityX*seconds;aimedY+=velocityY*seconds;}
+        if(aimed){effectAge+=seconds;aimedX+=velocityX*seconds;aimedY+=velocityY*seconds;}
         else super.update(seconds);
     }
 
@@ -32,7 +33,8 @@ public class SkillProjectile extends Projectile {
     @Override
     public void draw(Graphics g) {
         Rectangle bounds = getBounds();
-        g.setColor(Color.MAGENTA);
-        g.fillOval(bounds.x, bounds.y, bounds.width, bounds.height);
+        Graphics2D pixels=(Graphics2D)g.create();
+        if(aimed)pixels.rotate(Math.atan2(velocityX,-velocityY),bounds.getCenterX(),bounds.getCenterY());
+        HeroEffects.heavy(pixels,bounds,effectAge);pixels.dispose();
     }
 }

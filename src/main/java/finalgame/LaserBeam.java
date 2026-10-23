@@ -14,10 +14,15 @@ public class LaserBeam {
     private boolean hitThisBurst = false;
     private double burstTime = 0.0;
     private double gapTime = 0.0;
+    private double effectTime;
+    private int visibleTop;
 
     public int update(boolean enabled, Rectangle beamBounds,
             Rectangle targetBounds, double seconds) {
         bounds = beamBounds;
+        effectTime += seconds;
+        // Stop the picture at the target surface; the damaging column is unchanged.
+        visibleTop=Math.max(bounds.y,bounds.intersects(targetBounds)?targetBounds.y+targetBounds.height:60);
 
         if (!enabled) {
             // Cancelling a burst still starts its gap: rapid clicking cannot bypass it.
@@ -60,10 +65,8 @@ public class LaserBeam {
         if (!active) {
             return;
         }
-        g.setColor(Color.CYAN);
-        g.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
-        g.setColor(Color.WHITE);
-        g.fillRect(bounds.x + 4, bounds.y, 4, bounds.height);
+        HeroEffects.beam(g,new Rectangle(bounds.x,visibleTop,bounds.width,
+                Math.max(0,bounds.y+bounds.height-visibleTop)),effectTime);
     }
 
     public void reset() {
@@ -71,5 +74,7 @@ public class LaserBeam {
         hitThisBurst = false;
         burstTime = 0.0;
         gapTime = 0.0;
+        effectTime = 0.0;
+        visibleTop = 0;
     }
 }

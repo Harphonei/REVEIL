@@ -40,6 +40,7 @@ public class GamePanel extends JPanel {
     private Boss boss;
     private int selectedBoss = 5;
     private final LaserBeam laser = new LaserBeam();
+    private final BattleEffects battleEffects=new BattleEffects();
     private final boolean[] pressed = new boolean[4];
     private final Timer timer;
     private long previousTime;
@@ -682,11 +683,11 @@ public class GamePanel extends JPanel {
                 }
             }),
             StoryDirector.motion("skill-e-flight",1.2,p->{
-                double dt=(p-flightProgress[0])*1.2;flightProgress[0]=p;player.update(dt);
+                double dt=(p-flightProgress[0])*1.2;flightProgress[0]=p;player.update(dt);battleEffects.update(dt);
                 java.util.Iterator<Projectile> shots=projectiles.iterator();
                 while(shots.hasNext()){
                     Projectile shot=shots.next();shot.update(dt);
-                    if(shot.getBounds().intersects(boss.getBounds())){boss.takeDamage(shot.getDamage());shots.remove();}
+                    if(shot.getBounds().intersects(boss.getBounds())){showShotImpact(shot);boss.takeDamage(shot.getDamage());shots.remove();}
                 }
             }),
             StoryDirector.action("skill-e-clear-arena",()->projectiles.clear()),
@@ -873,6 +874,7 @@ public class GamePanel extends JPanel {
         if(state==GameState.MENU){if(menuFade>0){menuFade=Math.max(0,menuFade-seconds/1.2);repaint();}return;}
         if (state == GameState.PAUSED) return;
         if(story.active()){story.update(seconds);repaint();return;}
+        if(state==GameState.BATTLE)battleEffects.update(seconds);
         if (state == GameState.EXPLORATION) {
             int dx = (pressed[3] ? 1 : 0) - (pressed[1] ? 1 : 0);
             int dy = (pressed[2] ? 1 : 0) - (pressed[0] ? 1 : 0);
@@ -970,6 +972,7 @@ public class GamePanel extends JPanel {
             if (boss.isAlive()
                     && projectile.getBounds().intersects(boss.getHitBounds())) {
                 boss.takeDamage(projectile.getDamage());
+                showShotImpact(projectile);
                 projectiles.remove(i);
             } else if (projectile.isOutsideScreen()) {
                 projectiles.remove(i);
@@ -981,6 +984,7 @@ public class GamePanel extends JPanel {
         int laserDamage = laser.update(
                 laserEnabled, player.getLaserBounds(), boss.getHitBounds(), seconds);
         boss.takeDamage(laserDamage);
+        if(laserDamage>0){Rectangle target=boss.getHitBounds();battleEffects.hit((int)player.getLaserBounds().getCenterX(),target.y+target.height,false);}
 
         if (!boss.isAlive()) {
             projectiles.clear();
@@ -1029,6 +1033,7 @@ public class GamePanel extends JPanel {
 
     private void restartBattle() {
         clearInput();
+        battleEffects.reset();
         laser.reset();
         projectiles.clear();
         enemyProjectiles.clear();
@@ -1120,7 +1125,7 @@ public class GamePanel extends JPanel {
         g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 18));
         g.setColor(Color.LIGHT_GRAY);
         g.drawString("Click PLAY or press Enter", 340, 395);
-        g.drawString("The complete loop  |  v3.84", 325, 500);
+        g.drawString("The complete loop  |  v3.85", 325, 500);
         g.drawString("No saved progress yet", 365, 535);
     }
 
@@ -1136,6 +1141,11 @@ public class GamePanel extends JPanel {
         g.drawString("Esc / Enter: Resume | M: Main menu", 320, 455);
         g.setColor(Color.LIGHT_GRAY);
         g.drawString("Returning to menu discards this test run.", 290, 490);
+    }
+
+    private void showShotImpact(Projectile shot){
+        Rectangle impact=shot.getBounds().intersection(boss.getHitBounds());
+        if(!impact.isEmpty())battleEffects.hit((int)impact.getCenterX(),(int)impact.getCenterY(),shot instanceof SkillProjectile);
     }
 
     private void drawBattle(Graphics g) {
@@ -1166,6 +1176,7 @@ public class GamePanel extends JPanel {
         for (Projectile projectile : projectiles) {
             projectile.draw(g);
         }
+        battleEffects.draw(g);
         Graphics2D enemyGraphics = (Graphics2D) g.create();
         enemyGraphics.clipRect(battleArea.x, battleArea.y,
                 battleArea.width, battleArea.height);
@@ -1189,7 +1200,7 @@ public class GamePanel extends JPanel {
             int remaining = (int) Math.ceil(player.getSkillECooldown());
             skillEText = "E: " + remaining + "s";
         }
-        g.setColor(Color.MAGENTA);
+        g.setColor(HeroEffects.RED);
         g.drawString(skillEText, 700, 335);
 
         String skillQText;
@@ -1206,7 +1217,7 @@ public class GamePanel extends JPanel {
         } else {
             skillQText = "Q: READY";
         }
-        g.setColor(Color.YELLOW);
+        g.setColor(HeroEffects.LIGHT);
         g.drawString(skillQText, 700, 365);
         g.setColor(Color.ORANGE);
         g.drawString("BOSS: " + boss.getAttackName(), 700, 405);

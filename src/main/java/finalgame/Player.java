@@ -13,6 +13,7 @@ public class Player {
     private final int maxHp = 100;
     private int hp = maxHp;
     private double invincibleTime = 0.0;
+    private double effectTime,shotFlash,eReleaseFlash,qBurstTime,qGuardTime;
 
     private static final double SKILL_E_COOLDOWN = 5.0;
     private static final double SKILL_E_CHARGE = 0.55;
@@ -60,6 +61,11 @@ public class Player {
     }
 
     public void update(double seconds) {
+        effectTime+=seconds;
+        shotFlash=Math.max(0,shotFlash-seconds);
+        eReleaseFlash=Math.max(0,eReleaseFlash-seconds);
+        qBurstTime=Math.max(0,qBurstTime-seconds);
+        qGuardTime=Math.max(0,qGuardTime-seconds);
         invincibleTime = Math.max(0.0, invincibleTime - seconds);
         skillECooldown = Math.max(0.0, skillECooldown - seconds);
         skillQCooldown = Math.max(0.0, skillQCooldown - seconds);
@@ -81,6 +87,7 @@ public class Player {
             if (skillQChargeTime <= 0.0 && isAlive()) {
                 double overshoot = Math.max(0.0, seconds - before);
                 ultimateTime = Math.max(0.0, SKILL_Q_DURATION - overshoot);
+                qBurstTime=Math.max(0,.42-overshoot);
             }
         }
     }
@@ -95,6 +102,7 @@ public class Player {
         if (!isAlive() || isUsingSkill()) {
             return null;
         }
+        shotFlash=.12;
         return new Projectile(x + size / 2.0 - 3, y - 12);
     }
 
@@ -113,6 +121,7 @@ public class Player {
             return null;
         }
         skillEReadyToFire = false;
+        if(isAlive())eReleaseFlash=.24;
         return isAlive() ? new SkillProjectile(x + size / 2.0, y) : null;
     }
 
@@ -136,6 +145,7 @@ public class Player {
         skillEChargeTime=0;skillEReadyToFire=false;skillRecoveryTime=0;
         skillQChargeTime=0;ultimateTime=SKILL_Q_DURATION;skillQCooldown=SKILL_Q_COOLDOWN;
         invincibleTime=Math.max(invincibleTime,1.5);
+        qGuardTime=1.5;qBurstTime=.42;
     }
 
     public boolean useSkillQ() {
@@ -145,6 +155,7 @@ public class Player {
         skillQChargeTime = SKILL_Q_CHARGE;
         skillQCooldown = SKILL_Q_COOLDOWN;
         invincibleTime=Math.max(invincibleTime,1.5);
+        qGuardTime=1.5;
         return true;
     }
 
@@ -218,6 +229,7 @@ public class Player {
         ultimateTime = 0.0;
         skillQCooldown = 0.0;
         skillQChargeTime = 0.0;
+        effectTime=0;shotFlash=0;eReleaseFlash=0;qBurstTime=0;qGuardTime=0;
     }
 
     private static final String[] HEART = {
@@ -228,29 +240,22 @@ public class Player {
     };
 
     public void draw(Graphics g) {
+        int cx=(int)x+size/2,cy=(int)y+size/2;
         if (isAlive() && (skillQChargeTime > 0.0||storyQAura>=0)) {
-            // Placeholder activation aura; replace with sprite animation later.
             double progress = storyQAura>=0?storyQAura:1.0 - skillQChargeTime / SKILL_Q_CHARGE;
-            int padding = 7 + (int) (progress * 12);
-            g.setColor(new Color(255, 190, 30));
-            g.drawOval((int) x - padding, (int) y - padding,
-                    size + padding * 2, size + padding * 2);
-            g.setColor(Color.YELLOW);
-            g.drawOval((int) x - padding - 4, (int) y - padding - 4,
-                    size + padding * 2 + 8, size + padding * 2 + 8);
+            HeroEffects.chargeQ(g,cx,cy,progress);
         }
         if (isAlive() && skillEChargeTime > 0.0) {
             double progress = 1.0 - skillEChargeTime / SKILL_E_CHARGE;
-            int diameter = 6 + (int) (progress * 16);
-            g.setColor(Color.MAGENTA);
-            g.fillOval((int) (x + size / 2.0 - diameter / 2.0),
-                    (int) y - diameter - 5, diameter, diameter);
+            HeroEffects.chargeE(g,cx,(int)y-8,progress);
         }
         if (isAlive() && isUltimateActive()) {
-            g.setColor(Color.YELLOW);
-            g.drawRect((int) x - 3, (int) y - 3, size + 6, size + 6);
+            HeroEffects.aura(g,cx,cy,effectTime,ultimateTime,qGuardTime>0);
         }
-        g.setColor(invincibleTime>0.0 ? new Color(255,120,120) : new Color(235,35,50));
+        if(isAlive()&&eReleaseFlash>0)HeroEffects.burst(g,cx,(int)y-8,1-eReleaseFlash/.24,true);
+        if(isAlive()&&qBurstTime>0)HeroEffects.burst(g,cx,cy,1-qBurstTime/.42,false);
+        if(isAlive()&&shotFlash>0)HeroEffects.muzzle(g,cx,(int)y-7,1-shotFlash/.12);
+        g.setColor(qGuardTime>0?new Color(244,105,111):invincibleTime>0.0 ? new Color(255,120,120) : new Color(235,35,50));
         for(int row=0;row<HEART.length;row++)
             for(int col=0;col<HEART[row].length();col++)
                 if(HEART[row].charAt(col)=='1') g.fillRect((int)x+col*2,(int)y+row*2,2,2);
