@@ -13,6 +13,12 @@ public class MaskedBoss extends Boss {
         return new Rectangle(base.x+base.width/2-140,48,240,240);
     }
     @Override
+    public Rectangle getHitBounds() {
+        Rectangle art=getBounds();
+        // Target the body, excluding weapons, limbs and cloak; stable in both phases.
+        return new Rectangle(art.x+120,art.y+56,40,156);
+    }
+    @Override
     public void draw(Graphics graphics) {
         if(!isAlive())return;
         Graphics g=graphics.create();BossArtwork.drawMaskedBattle(g,getBounds(),phaseTwo,transitionTime);g.dispose();

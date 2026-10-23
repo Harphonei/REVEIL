@@ -35,6 +35,12 @@ public class ForestBoss extends Boss {
     }
 
     @Override
+    public Rectangle getHitBounds() {
+        Rectangle art=getBounds();
+        return new Rectangle(art.x+36,art.y+40,40,108);
+    }
+
+    @Override
     public void draw(Graphics graphics) {
         if(!isAlive())return;
         Graphics g=graphics.create();BossArtwork.drawBattle(g,getBounds());g.dispose();

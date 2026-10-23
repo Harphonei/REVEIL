@@ -815,7 +815,7 @@ public class GamePanel extends JPanel {
             StoryDirector.action("skill-e-auto-fire",()->{
                 Projectile charged=player.pollSkillProjectile();
                 if(charged!=null){
-                    Rectangle heart=player.getBounds(),target=boss.getBounds();
+                    Rectangle heart=player.getBounds(),target=boss.getHitBounds();
                     projectiles.add(new SkillProjectile(heart.getCenterX(),heart.y,target.getCenterX(),target.getCenterY()));
                 }
             }),
@@ -824,7 +824,7 @@ public class GamePanel extends JPanel {
                 java.util.Iterator<Projectile> shots=projectiles.iterator();
                 while(shots.hasNext()){
                     Projectile shot=shots.next();shot.update(dt);
-                    if(shot.getBounds().intersects(boss.getBounds())){showShotImpact(shot);boss.takeDamage(shot.getDamage());shots.remove();}
+                    if(shot.getBounds().intersects(boss.getHitBounds())){showShotImpact(shot);boss.takeDamage(shot.getDamage());shots.remove();}
                 }
             }),
             StoryDirector.action("skill-e-clear-arena",()->projectiles.clear()),
@@ -1333,6 +1333,9 @@ public class GamePanel extends JPanel {
         if(devOverlay)drawBattleDebug(g);
     }
     private void drawBattleDebug(Graphics g){
+        Rectangle hit=boss.getHitBounds();
+        g.setColor(new Color(102,190,181));
+        g.drawRect(hit.x,hit.y,hit.width-1,hit.height-1);
         g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,13));g.setColor(new Color(163,151,158));
         String[] lines={"DEV / F1: Hide","Boss "+selectedBoss+" / 5","HP "+boss.getHp()+"/"+boss.getMaxHp(),
                 boss.getAttackName(),boss.getPhaseLabel(),"Target "+boss.getDifficultyLabel(),

@@ -15,6 +15,12 @@ public class KnightBoss extends Boss {
         return new Rectangle(base.x+base.width/2-91,100,134,184);
     }
     @Override
+    public Rectangle getHitBounds() {
+        Rectangle art=getBounds();
+        // Target the body, excluding weapons, limbs and cloak; stable in both phases.
+        return new Rectangle(art.x+71,art.y+40,40,124);
+    }
+    @Override
     public void draw(Graphics graphics) {
         if(!isAlive())return;
         Graphics g=graphics.create();BossArtwork.drawKnightBattle(g,getBounds());g.dispose();
@@ -35,7 +41,7 @@ public class KnightBoss extends Boss {
     private int gridVolleys = 0;
 
     public KnightBoss(int startX, int startY) {
-        super(startX, startY, 1400, "THE LAST GUARDIAN");
+        super(startX, startY, 1500, "THE LAST GUARDIAN");
         beginAttack();
     }
 

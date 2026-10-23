@@ -6,7 +6,7 @@ import java.util.ArrayList;
 /** Full-arena lattice: straight / diagonal repeated three times, ending straight. */
 final class GuardianGridPattern {
     static final int VOLLEYS=7;
-    private static final double SPACING=88;
+    private static final double SPACING=76;
     private static final double[] OFFSETS={.0,.33,.5,.83,.25,.58,.75};
     private GuardianGridPattern() {}
 
@@ -26,7 +26,7 @@ final class GuardianGridPattern {
                 double cx=arena.getCenterX()+nx*distance;
                 double cy=arena.getCenterY()+ny*distance;
                 strikes.add(new SwordStrike(cx-tx*span,cy-ty*span,
-                        cx+tx*span,cy+ty*span,12f,.72,.24,arena));
+                        cx+tx*span,cy+ty*span,14f,.72,.24,arena));
             }
         }
     }
