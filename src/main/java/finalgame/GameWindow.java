@@ -8,7 +8,7 @@ public class GameWindow extends JFrame {
     private final GamePanel gamePanel;
 
     public GameWindow() {
-        super("REVEIL v3.109");
+        super("REVEIL v3.110");
         gamePanel = new GamePanel();
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         setResizable(false);

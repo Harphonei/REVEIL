@@ -1487,7 +1487,7 @@ public class GamePanel extends JPanel {
             g.setColor(new Color(15,18,25,242));g.fillRoundRect(690,82,260,477,8,8);
             g.setColor(new Color(127,106,113));g.drawRoundRect(690,82,260,477,8,8);
             g.setFont(new Font(Font.MONOSPACED,Font.BOLD,14));g.setColor(new Color(219,205,188));g.drawString("PRESENTATION / DEV",704,108);
-            String[] lines={"Build 3.109","Map "+currentMap()+" / Boss "+selectedBoss,"Boss HP "+boss.getHp()+" / "+boss.getMaxHp(),
+            String[] lines={"Build 3.110","Map "+currentMap()+" / Boss "+selectedBoss,"Boss HP "+boss.getHp()+" / "+boss.getMaxHp(),
                 "F1  Show / hide panel","F3  Map collision","F6  Next map","F7  Replay map story",
                 "1-5 Test boss (battle)","K   Kill boss / all phases","G   God mode: "+(devGod?"ON":"OFF"),
                 "H   Heal player","U   E/Q preview: "+(devSkills?"ON":"OFF"),"C   Clear enemy bullets","P   Final boss phase 2",

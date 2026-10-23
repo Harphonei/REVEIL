@@ -1,3 +1,12 @@
+# REVEIL v3.110 — Remove unused legacy files
+
+- เอา TrainingBoss.java และ DoomOrb.java ที่ไม่มีจุดเรียกใช้ออก บอสจริงยังใช้ MaskedDoomOrb
+- เอา moth-flight.png รุ่นเก่าออก คัตซีนใช้ moth-flight-side.png ตามเดิม
+- src เหลือ98ไฟล์: Java55ไฟล์ + ภาพ41ไฟล์ + ฟอนต์และลิขสิทธิ์2ไฟล์
+- คงโครงสร้างคลาสตามหน้าที่และหลัก OOP ไม่รวมคลาสเพียงเพื่อลดจำนวนไฟล์
+
+## Previous version
+
 # REVEIL v3.109 — Presentation before Boss Rematch
 
 - เปิดด้วย Open-Dev.bat เดิม แล้วกด Ctrl+Shift+F12 เปิด Dev
