@@ -43,7 +43,7 @@ public final class MenuScreen {
         g.setColor(new Color(83,37,45));g.fillOval(823,593,8,8);
         g.setColor(new Color(175,78,83));g.fillRect(825,595,3,3);
         g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,10));g.setColor(new Color(130,121,111));g.drawString("POWER",841,601);
-        g.setColor(new Color(112,104,97));g.drawString("FINAL / 3.94",72,603);
+        g.setColor(new Color(112,104,97));g.drawString("FINAL / 3.95",72,603);
     }
     private static void knob(Graphics2D g,int cx,int cy,int radius,double angle){
         g.setColor(new Color(10,11,15));g.fillOval(cx-radius-3,cy-radius-1,radius*2+6,radius*2+6);
@@ -96,21 +96,58 @@ public final class MenuScreen {
         if(!notice.isEmpty())text(screen,notice,426,551,10,new Color(196,129,120));
         screen.dispose();scan(g);g.dispose();
     }
+    private static void keycap(Graphics g,String label,int x,int y,int w){
+        g.setColor(new Color(10,14,20));g.fillRoundRect(x,y+4,w,31,6,6);
+        g.setColor(new Color(67,73,78));g.fillRoundRect(x,y,w,30,6,6);
+        g.setColor(new Color(116,119,116));g.drawRoundRect(x,y,w,30,6,6);
+        g.setFont(new Font(Font.MONOSPACED,Font.BOLD,label.length()>4?11:14));g.setColor(IVORY);
+        g.drawString(label,x+(w-g.getFontMetrics().stringWidth(label))/2,y+20);
+    }
+    private static void mouse(Graphics g,int x,int y){
+        g.setColor(new Color(62,69,75));g.fillRoundRect(x,y,36,53,15,15);
+        g.setColor(new Color(173,111,116));g.fillArc(x+18,y+2,16,29,0,90);
+        g.setColor(IVORY);g.drawRoundRect(x,y,36,53,15,15);g.drawLine(x+18,y,x+18,y+24);g.drawLine(x,y+24,x+35,y+24);
+        g.setFont(new Font(Font.MONOSPACED,Font.BOLD,12));g.drawString("R",x+23,y+18);
+    }
+    private static void controls(Graphics g,String icon,int x,int y){
+        if(icon.equals("WASD")){
+            keycap(g,"W",x+29,y-8,26);keycap(g,"A",x,y+25,26);
+            keycap(g,"S",x+29,y+25,26);keycap(g,"D",x+58,y+25,26);
+        }else if(icon.equals("MOUSE"))mouse(g,x+23,y);
+        else if(icon.equals("TALK")){keycap(g,"ENTER",x,y-3,80);keycap(g,"SPACE",x,y+32,80);}
+        else keycap(g,icon,x+6,y+12,68);
+    }
+    private static void controlCard(Graphics g,int x,int y,String icon,String title,String detail){
+        g.setColor(new Color(25,31,37,220));g.fillRoundRect(x,y,302,76,8,8);
+        g.setColor(new Color(54,62,67));g.drawRoundRect(x,y,302,76,8,8);
+        controls(g,icon,x+10,y+11);
+        g.setFont(new Font(Font.MONOSPACED,Font.BOLD,13));g.setColor(IVORY);g.drawString(title,x+111,y+30);
+        g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,11));g.setColor(DIM);g.drawString(detail,x+111,y+51);
+    }
+    public static void skipButton(Graphics g,Rectangle b){
+        g.setColor(new Color(16,20,27,225));g.fillRoundRect(b.x,b.y,b.width,b.height,6,6);
+        g.setColor(new Color(101,105,108));g.drawRoundRect(b.x,b.y,b.width,b.height,6,6);
+        g.setFont(new Font(Font.MONOSPACED,Font.BOLD,13));g.setColor(IVORY);g.drawString("TAB  SKIP SCENE",b.x+24,b.y+24);
+    }
+    public static void battleTutorial(Graphics graphics){
+        Graphics2D g=(Graphics2D)graphics.create();
+        g.setColor(new Color(15,20,27,250));g.fillRoundRect(206,344,548,233,12,12);
+        g.setColor(new Color(120,106,107));g.drawRoundRect(206,344,548,233,12,12);
+        PixelLetters.centered(g,"SURVIVE",480,363,3,IVORY);
+        controlCard(g,224,406,"MOUSE","HOLD TO FIRE","Shots go upward");
+        controls(g,"WASD",550,418);text(g,"DODGE",592,505,13,IVORY);
+        text(g,"ENTER / SPACE / CLICK TO BEGIN",480,551,13,DIM);g.dispose();
+    }
     public static void help(Graphics graphics,double time,Rectangle back){
         Graphics2D g=(Graphics2D)graphics.create();shell(g);Graphics2D screen=glass(g,time);
-        PixelLetters.centered(screen,"HOW TO PLAY",426,91,3,IVORY);
-        String[][] lines={
-            {"EXPLORE","WASD to move / Shift to run"},{"DIALOGUE","Enter, Space or left click"},
-            {"BATTLE","WASD to move your heart"},{"FIRE","Hold right mouse button"},
-            {"E","Charge a heavy attack"},{"Q","Ultimate power / hold fire to attack"},
-            {"SKILLS","Awaken as the story progresses"},{"PAUSE","Esc / time stops in menus"},
-            {"RETRY","Restart the same battle"},{"CONTINUE","Restart at the map entrance"}
+        PixelLetters.centered(screen,"HOW TO PLAY",426,85,3,IVORY);
+        String[][] items={
+            {"WASD","MOVE / DODGE","World and red heart"},{"SHIFT","RUN","While exploring"},
+            {"MOUSE","HOLD TO FIRE","Right mouse button"},{"TALK","READ / CONFIRM","Advance dialogue"},
+            {"E","HEAVY ATTACK","Charge, then fire"},{"Q","ULTIMATE","Boost fire for 5s"},
+            {"TAB","SKIP SCENE","Or click SKIP SCENE"},{"ESC","PAUSE / HELP","Time stops in menus"}
         };
-        screen.setFont(new Font(Font.MONOSPACED,Font.PLAIN,13));
-        for(int i=0;i<lines.length;i++){
-            int y=155+i*27;screen.setColor(new Color(178,138,137));screen.drawString(lines[i][0],115,y);
-            screen.setColor(new Color(182,186,178));screen.drawString(lines[i][1],211,y);
-        }
+        for(int i=0;i<items.length;i++)controlCard(screen,112+(i%2)*322,126+(i/2)*84,items[i][0],items[i][1],items[i][2]);
         button(screen,back,"BACK",true);text(screen,"ESC / ENTER TO GO BACK",426,548,12,DIM);
         screen.dispose();scan(g);g.dispose();
     }

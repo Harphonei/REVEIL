@@ -257,11 +257,6 @@ public class ExplorationRoom {
             debug.draw(new Rectangle2D.Double(x+4,y+10,8,6));
             debug.dispose();
         }
-        if(!cleared) {
-            g.setColor(new Color(115,54,45));
-            int bx=(int)(1658*scaleX);
-            g.fillRect(bx,(int)(345*scaleY),8,(int)(85*scaleY));
-        }
         int feetX=(int)Math.round((x+SIZE/2)*scaleX);
         int feetY=(int)Math.round((y+SIZE)*scaleY);
         int bossFeetX=(int)Math.round(storyBossX*scaleX);

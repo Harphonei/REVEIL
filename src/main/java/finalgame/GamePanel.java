@@ -51,6 +51,7 @@ public class GamePanel extends JPanel {
     private final Rectangle resumeButton = new Rectangle(340, 270, 280, 60);
     private final Rectangle overlayHelpButton=new Rectangle(340,350,280,60);
     private final Rectangle menuButton = new Rectangle(340, 430, 280, 60);
+    private final Rectangle skipStoryButton=new Rectangle(756,14,184,38);
     private final Rectangle battleArea = new Rectangle(300, 300, 360, 260);
     private final Player player;
     private Boss boss;
@@ -113,7 +114,7 @@ public class GamePanel extends JPanel {
             if(state!=GameState.PAUSED && story.active())story.advance();
         });
         bindScreenAction("released TAB", "skip-seen-scene", () -> {
-            if(state!=GameState.PAUSED && story.active() && storySkippable)finishForestEntrance();
+            skipStory();
         });
         bindScreenAction("released M", "menu", () -> {
             if (state == GameState.PAUSED||state==GameState.GAME_OVER) returnToMenu();
@@ -216,6 +217,7 @@ public class GamePanel extends JPanel {
             int choice=resumeButton.contains(x,y)?0:overlayHelpButton.contains(x,y)?1:menuButton.contains(x,y)?2:-1;
             if(choice>=0){over=true;if(state==GameState.PAUSED)pauseChoice=choice;else deathChoice=choice;}
         }
+        if(story.active()&&(state==GameState.EXPLORATION||state==GameState.BATTLE)&&skipStoryButton.contains(x,y))over=true;
         setCursor(java.awt.Cursor.getPredefinedCursor(over?java.awt.Cursor.HAND_CURSOR:java.awt.Cursor.DEFAULT_CURSOR));
         repaint();
     }
@@ -376,7 +378,13 @@ public class GamePanel extends JPanel {
         }
     }
 
+    private void skipStory(){
+        if(state==GameState.PAUSED||state==GameState.HELP||!story.active())return;
+        clearInput();story.skip();clearInput();repaint();
+    }
+
     private void handleClick(int x, int y) {
+        if(state!=GameState.PAUSED&&story.active()&&skipStoryButton.contains(x,y)){skipStory();return;}
         if(state==GameState.GAME_OVER){
             if(resumeButton.contains(x,y))retryFight();else if(overlayHelpButton.contains(x,y))openHelp();else if(menuButton.contains(x,y))returnToMenu();return;
         }
@@ -917,13 +925,27 @@ public class GamePanel extends JPanel {
             StoryDirector.waitFor("battle-black",.18),
             StoryDirector.motion("battle-fade",.65,p->storyFade=1-p),
             StoryDirector.waitFor("battle-settle",.35),
-            StoryDirector.say(DialogueBox.Face.SHOCKED,"ยะ...อย่าเข้ามานะ!"));
+            StoryDirector.say(DialogueBox.Face.SHOCKED,"ยะ...อย่าเข้ามานะ!"),
+            StoryDirector.prompt("battle-controls","Hold right mouse to fire. WASD to dodge."));
     }
 
     private void finishForestEntrance() {
         story.cancel();selectedBoss=1;boss=new ForestBoss(430,210);forestStoryBattle=true;
         exploration.finishStory();storyFade=0;storySkippable=false;
         restartBattle();changeState(GameState.BATTLE);
+    }
+
+    private void returnAfterBattle(){
+        clearInput();projectiles.clear();enemyProjectiles.clear();laser.reset();
+        story.play(()->{storyFade=0;clearInput();},
+            StoryDirector.motion("return-fade-out",.6,p->storyFade=p),
+            StoryDirector.action("return-map",()->{
+                if(inThrone)throne.returnFromBattle();else if(inTemple)temple.returnFromBattle();
+                else if(inButterfly)butterfly.returnFromBattle();else if(inMine)mine.returnFromBattle();
+                else exploration.returnFromBattle();
+                changeState(GameState.EXPLORATION);storyFade=1;
+            }),
+            StoryDirector.motion("return-fade-in",.7,p->storyFade=1-p));
     }
 
     private void playForestVictory() {
@@ -1069,11 +1091,7 @@ public class GamePanel extends JPanel {
             if(!boss.isAlive()&&player.isAlive()&&mothStoryBattle&&!mothVictorySeen){playMothVictory();repaint();return;}
             if(!boss.isAlive()&&player.isAlive()&&templeStoryBattle&&!templeVictorySeen){playTempleVictory();repaint();return;}
             if(!boss.isAlive()&&player.isAlive()&&throneStoryBattle&&!throneVictorySeen){playThroneEnding();repaint();return;}
-            projectiles.clear();
-            enemyProjectiles.clear();
-            laser.reset();
-            repaint();
-            return;
+            returnAfterBattle();repaint();return;
         }
 
         if(tryThronePhase()||tryUnlockMineE()||tryUnlockMothQ()){repaint();return;}
@@ -1136,6 +1154,7 @@ public class GamePanel extends JPanel {
             else if(mothStoryBattle&&!mothVictorySeen)playMothVictory();
             else if(templeStoryBattle&&!templeVictorySeen)playTempleVictory();
             else if(throneStoryBattle&&!throneVictorySeen)playThroneEnding();
+            else returnAfterBattle();
             repaint();
             return;
         }
@@ -1241,11 +1260,10 @@ public class GamePanel extends JPanel {
                 Graphics2D fade=(Graphics2D)g.create();fade.setColor(new Color(0,0,0,(int)(Math.min(1,storyFade)*255)));
                 fade.fillRect(0,0,VIEW_WIDTH,VIEW_HEIGHT);fade.dispose();
             }
-            dialogue.draw(g);
-            if(storySkippable) {
-                g.setColor(new Color(200,196,180));g.setFont(DialogueBox.font(16));
-                g.drawString("Tab: ข้ามฉากที่เคยดูแล้ว",690,36);
-            }
+            if(story.currentId().equals("battle-controls"))MenuScreen.battleTutorial(g);
+            else dialogue.draw(g);
+            MenuScreen.skipButton(g,skipStoryButton);
+
         }
         if (state == GameState.PAUSED) drawPause(g);
         if(state==GameState.GAME_OVER)drawGameOver(g);
@@ -1325,11 +1343,6 @@ public class GamePanel extends JPanel {
             shot.draw(enemy,selectedBoss,selectedBoss==5&&boss.getPhaseLabel().equals("PHASE 2"));
         enemy.dispose();
         BattleHud.player(g,player,battleArea,skillEUnlocked,skillQUnlocked);
-        if(player.isAlive()&&!boss.isAlive()&&!throneStoryBattle){
-            g.setFont(new Font(Font.MONOSPACED,Font.BOLD,24));g.setColor(HeroEffects.LIGHT);
-            g.drawString("VICTORY",428,420);
-            g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));g.drawString("Enter: Return to map",395,450);
-        }
         if(devOverlay)drawBattleDebug(g);
     }
     private void drawBattleDebug(Graphics g){

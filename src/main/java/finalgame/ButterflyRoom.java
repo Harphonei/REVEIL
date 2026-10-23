@@ -10,6 +10,10 @@ public final class ButterflyRoom {
     private static final double ZOOM=1.45, SPEED=90;
     private final BufferedImage background;
     private final BufferedImage rootArtwork;
+    // Only the pointed foreground shrub shown on the upper corridor is passable.
+    private static final Polygon PATH_RELIEF=new Polygon(
+        new int[]{571,578,584,592,600,610,614,571},
+        new int[]{306,291,281,280,290,301,307,307},8);
     private final Area floor=loadMask("butterfly-floor.png");
     private final Shape[] obstacles={loadMask("butterfly-objects.png")};
     private final int[] blockedPrefix=createBlockedPrefix();
@@ -52,6 +56,8 @@ public final class ButterflyRoom {
             if(background==null || background.getWidth()!=1536 || background.getHeight()!=1024)
                 throw new IllegalStateException("Invalid butterfly map");
         } catch(Exception ex) {throw new IllegalStateException("Cannot load butterfly-map.png",ex);}
+        floor.add(new Area(PATH_RELIEF));
+        ((Area)obstacles[0]).subtract(new Area(PATH_RELIEF));
         reset();
     }
     private static Area loadMask(String name) {
@@ -81,7 +87,7 @@ public final class ButterflyRoom {
             for(int y=0;y<1024;y++) {
                 int row=0;
                 for(int x=0;x<1536;x++) {
-                    if((ground.getRGB(x,y)&255)<128 || (objects.getRGB(x,y)&255)>=128)row++;
+                    if(!PATH_RELIEF.contains(x+.5,y+.5) && ((ground.getRGB(x,y)&255)<128 || (objects.getRGB(x,y)&255)>=128))row++;
                     sums[(y+1)*stride+x+1]=sums[y*stride+x+1]+row;
                 }
             }

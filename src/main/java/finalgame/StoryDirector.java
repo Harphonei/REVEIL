@@ -44,5 +44,14 @@ public final class StoryDirector {
         if(elapsed>=current.duration)next();
     }
     public void advance(){if(current!=null&&current.text!=null&&dialogue.advance())next();}
+    public static Beat prompt(String id,String text){return new Beat(id,-1,null,null,DialogueBox.Face.NONE,text);}
+    /** Fast-forward the script itself so actions, skill unlocks and callbacks still run. */
+    public void skip(){
+        int guard=0;
+        while(active() && guard++<60000){
+            if(current.text!=null)next();
+            else update(1.0/60);
+        }
+    }
     public void cancel(){queue.clear();current=null;finish=null;dialogue.close();}
 }
