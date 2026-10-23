@@ -7,6 +7,22 @@ import javax.imageio.ImageIO;
 
 /** Butterfly forest world uses native artwork pixels; collision is always at the feet. */
 public final class ButterflyRoom {
+    public enum InspectPoint {
+        TREE(276,125,276,83,68,false,
+            "ต้นไม้พวกนี้…รูปร่างแปลกชะมัด", "ทำไมป่านี้ถึงเงียบขนาดนี้นะ"),
+        COCOON(463,681,463,637,74,false,
+            "รังไหม…ใหญ่เกินไปหรือเปล่า", "เมื่อกี้…ข้างในขยับงั้นเหรอ?"),
+        TORN_COCOON(935,862,935,815,86,true,
+            "ข้างในว่างเปล่า…", "หวังว่าเจ้าของมันจะไม่อยู่แถวนี้แล้วนะ");
+        final double x,y,promptX,promptY,radius;
+        final boolean afterBoss;
+        private final String[] lines;
+        InspectPoint(double x,double y,double promptX,double promptY,double radius,boolean afterBoss,String... lines){
+            this.x=x;this.y=y;this.promptX=promptX;this.promptY=promptY;this.radius=radius;this.afterBoss=afterBoss;this.lines=lines;
+        }
+        public String[] lines(){return lines.clone();}
+    }
+
     private static final double ZOOM=1.45, SPEED=90;
     private final BufferedImage background;
     private final BufferedImage rootArtwork;
@@ -107,6 +123,40 @@ public final class ButterflyRoom {
     private void drawRootGate(Graphics2D g) {
         g.drawImage(rootArtwork,1076,175,88,142,null);
     }
+    public InspectPoint nearestInspection(){
+        InspectPoint nearest=null;double best=Double.POSITIVE_INFINITY;
+        for(InspectPoint point:InspectPoint.values()){
+            if(point.afterBoss&&!cleared)continue;
+            double distance=Point2D.distance(x+8,y+16,point.x,point.y);
+            if(distance<=point.radius&&distance<best){best=distance;nearest=point;}
+        }
+        return nearest;
+    }
+    public void faceStoryPoint(double targetX,double targetY){
+        double dx=targetX-(x+8),dy=targetY-(y+16),ax=Math.abs(dx),ay=Math.abs(dy);
+        int direction;
+        if(Math.min(ax,ay)>Math.max(ax,ay)*0.41421356237)
+            direction=dy>0?(dx>0?SpriteAnimator.DOWN_RIGHT:SpriteAnimator.DOWN_LEFT)
+                          :(dx>0?SpriteAnimator.UP_RIGHT:SpriteAnimator.UP_LEFT);
+        else direction=ax>=ay?(dx>=0?SpriteAnimator.RIGHT:SpriteAnimator.LEFT)
+                            :(dy>=0?SpriteAnimator.DOWN:SpriteAnimator.UP);
+        animation.reset(direction);
+    }
+    public void drawInspectionPrompt(Graphics graphics){
+        InspectPoint point=nearestInspection();if(point==null)return;
+        Graphics2D g=(Graphics2D)graphics.create();g.setFont(DialogueBox.font(17));
+        String label="สำรวจ";int width=48+g.getFontMetrics().stringWidth(label),height=32;
+        int sx=(int)Math.round((point.promptX-Math.round(cameraX))*ZOOM)-width/2;
+        int sy=60+(int)Math.round((point.promptY-Math.round(cameraY))*ZOOM)-height/2;
+        sx=Math.max(8,Math.min(960-width-8,sx));sy=Math.max(68,Math.min(580-height-8,sy));
+        g.setColor(new Color(10,16,20,230));g.fillRoundRect(sx,sy,width,height,6,6);
+        g.setColor(new Color(118,126,118));g.drawRoundRect(sx,sy,width,height,6,6);
+        g.setColor(new Color(45,52,53));g.fillRect(sx+7,sy+5,22,22);
+        g.setColor(new Color(158,159,143));g.drawRect(sx+7,sy+5,22,22);
+        g.setFont(new Font(Font.MONOSPACED,Font.BOLD,15));g.setColor(new Color(219,214,192));g.drawString("F",sx+14,sy+22);
+        g.setFont(DialogueBox.font(17));g.drawString(label,sx+37,sy+23);g.dispose();
+    }
+
     public void stopMovement(){animation.stop();}
     public void toggleCollisionView(){showCollision=!showCollision;}
     private boolean canStand(double px,double py) {
@@ -164,6 +214,14 @@ public final class ButterflyRoom {
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
         g.translate(0,60);g.scale(ZOOM,ZOOM);g.translate(-Math.round(cameraX),-Math.round(cameraY));
         g.drawImage(background,0,0,null);
+        if(cleared){
+            // A small pixel slit opens the existing lower-edge cocoon after the fight.
+            // Decoration only; the original floor and object collision are unchanged.
+            g.setColor(new Color(31,23,42));
+            g.fillPolygon(new int[]{932,937,935,938,934,936,931},
+                          new int[]{852,857,862,869,874,878,868},7);
+            g.setColor(new Color(109,89,139));g.fillRect(930,861,2,6);g.fillRect(936,870,2,4);
+        }
         if(!cleared) drawRootGate(g);
         if(showCollision) {
             g.setColor(new Color(30,240,80,65));g.fill(floor);
