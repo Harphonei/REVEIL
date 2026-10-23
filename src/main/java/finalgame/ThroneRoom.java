@@ -93,6 +93,7 @@ public final class ThroneRoom {
     public void reset(){cleared=false;battleRequested=false;resetStory();enter();}
     public void enter(){x=100;y=392;backRequested=false;battleRequested=false;animation.reset(SpriteAnimator.RIGHT);updateCamera();}
     public void stopMovement(){animation.stop();}
+    public void setCollisionView(boolean value){showCollision=value;}
     public void toggleCollisionView(){showCollision=!showCollision;}
     private boolean canStand(double px,double py) {
         int left=(int)Math.floor(px+4),right=(int)Math.ceil(px+12);
@@ -160,13 +161,6 @@ public final class ThroneRoom {
         }
         if(showCollision){g.drawImage(collision,0,0,null);g.setColor(Color.CYAN);g.drawRect((int)x+4,(int)y+10,8,6);}
         g.dispose();
-        graphics.setColor(new Color(10,13,18));graphics.fillRect(0,0,960,60);graphics.fillRect(0,580,960,60);
-        if(cinematic)return;
-        graphics.setColor(new Color(190,194,205));graphics.setFont(new Font(Font.MONOSPACED,Font.BOLD,18));
-        graphics.drawString("INNER SANCTUARY  |  The masked one",20,25);
-        graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
-graphics.drawString("WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip | F7: Replay",20,47);
-        graphics.setColor(new Color(150,156,172));
-        graphics.drawString(x<1170?"Only your footsteps answer.":"Silence fills the throne hall.",20,612);
+        GameUi.exploration(graphics,"INNER SANCTUARY",5);
     }
 }

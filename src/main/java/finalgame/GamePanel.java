@@ -36,6 +36,8 @@ public class GamePanel extends JPanel {
     private int deathChoice;
     private int pauseChoice;
     private GameState helpReturnState=GameState.MENU;
+    private final boolean devAuthorized=DevAccess.authorized();
+    private boolean devEnabled,devGod,devSkills;
     private boolean devOverlay;
     private double menuClock;
     private double creditsTime;
@@ -107,11 +109,18 @@ public class GamePanel extends JPanel {
         bindBossSelection("5", 5);
         bindScreenAction("released F", "inspect-nearby", this::inspectNearby);
         bindScreenAction("released F3", "collision-view", () -> {
-            if (state == GameState.EXPLORATION) { if(inThrone) throne.toggleCollisionView(); else if(inTemple) temple.toggleCollisionView(); else if(inButterfly) butterfly.toggleCollisionView(); else if(inMine) mine.toggleCollisionView(); else exploration.toggleCollisionView(); repaint(); }
+            if (devEnabled && state == GameState.EXPLORATION) { if(inThrone) throne.toggleCollisionView(); else if(inTemple) temple.toggleCollisionView(); else if(inButterfly) butterfly.toggleCollisionView(); else if(inMine) mine.toggleCollisionView(); else exploration.toggleCollisionView(); repaint(); }
         });
-        bindScreenAction("released F6", "skip-map", () -> skipMap());
-        bindScreenAction("released F7", "replay-map", () -> replayCurrentMap());
-        bindScreenAction("released F1", "dev-overlay", () -> {devOverlay=!devOverlay;repaint();});
+        bindScreenAction("released F6", "skip-map", () -> {if(devEnabled)skipMap();});
+        bindScreenAction("released F7", "replay-map", () -> {if(devEnabled)replayCurrentMap();});
+        bindScreenAction("released F1", "dev-overlay", () -> {if(devEnabled){devOverlay=!devOverlay;repaint();}});
+        bindScreenAction("ctrl shift released F12","toggle-private-dev",this::toggleDev);
+        bindDevAction("K","dev-kill",()->{if(devBattleReady())boss.devDefeat();});
+        bindDevAction("G","dev-god",()->{devGod=!devGod;player.setDevInvulnerable(devGod);});
+        bindDevAction("H","dev-heal",()->{if(devBattleReady())player.devHeal();});
+        bindDevAction("U","dev-skills",()->devSkills=!devSkills);
+        bindDevAction("C","dev-clear",()->{if(devBattleReady())enemyProjectiles.clear();});
+        bindDevAction("P","dev-phase",this::devFinalPhase);
         bindScreenAction("released ESCAPE", "pause", () -> togglePause());
         bindScreenAction("released ENTER", "confirm", () -> confirmScreen());
         bindScreenAction("released UP", "menu-up", () -> moveMenu(-1));
@@ -124,7 +133,7 @@ public class GamePanel extends JPanel {
             if(state==GameState.CREDITS)leaveCredits();else skipStory();
         });
         bindScreenAction("released M", "menu", () -> {
-            if (state == GameState.PAUSED||state==GameState.GAME_OVER) returnToMenu();
+            if (devEnabled&&(state == GameState.PAUSED||state==GameState.GAME_OVER)) returnToMenu();
         });
 
         getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
@@ -132,6 +141,7 @@ public class GamePanel extends JPanel {
         getActionMap().put("restart-battle", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent event) {
+                if(!devEnabled)return;
                 if(state==GameState.GAME_OVER){retryFight();return;}
                 if (state == GameState.BATTLE
                         && !story.active()
@@ -243,6 +253,26 @@ public class GamePanel extends JPanel {
                 command.run();
             }
         });
+    }
+
+    private void bindDevAction(String key,String name,Runnable command){
+        bindScreenAction("released "+key,name,()->{if(devEnabled){command.run();repaint();}});
+    }
+    private boolean devBattleReady(){return state==GameState.BATTLE&&!story.active()&&player.isAlive()&&boss.isAlive();}
+    private void toggleDev(){
+        if(!devAuthorized)return;
+        devEnabled=!devEnabled;devOverlay=devEnabled;clearInput();
+        if(!devEnabled){
+            devGod=false;devSkills=false;player.setDevInvulnerable(false);
+            exploration.setCollisionView(false);mine.setCollisionView(false);butterfly.setCollisionView(false);
+            temple.setCollisionView(false);throne.setCollisionView(false);
+        }
+        repaint();
+    }
+    private void devFinalPhase(){
+        if(!devBattleReady()||!(boss instanceof MaskedBoss)||boss.getPhaseLabel().equals("PHASE 2"))return;
+        boss.takeDamage(Math.max(0,boss.getHp()-boss.getMaxHp()/2));
+        if(throneStoryBattle)tryThronePhase();
     }
 
     private void changeState(GameState nextState) {
@@ -475,7 +505,7 @@ public class GamePanel extends JPanel {
     }
 
     private void skipMap() {
-        if(state!=GameState.EXPLORATION || story.active())return;
+        if(!devEnabled||state!=GameState.EXPLORATION || story.active())return;
         exploration.finishStory();mine.finishStory();butterfly.finishStory();temple.finishStory();forestStoryBattle=false;mineStoryBattle=false;mothStoryBattle=false;templeStoryBattle=false;
         if(inThrone) throne.skipToHall();
         else if(inTemple) {
@@ -495,7 +525,7 @@ public class GamePanel extends JPanel {
 
     /** Developer replay resets only the current room and its story flags. */
     private void replayCurrentMap(){
-        if(rematchActive||state==GameState.CREDITS||state==GameState.REMATCH||state==GameState.MENU||state==GameState.HELP)return;
+        if(!devEnabled||rematchActive||state==GameState.CREDITS||state==GameState.REMATCH||state==GameState.MENU||state==GameState.HELP)return;
         story.cancel();storyFade=0;storySkippable=false;
         cinematicFlash=0;phaseSlash=0;menuFade=0;throneStoryBattle=false;
         exploration.finishStory();mine.finishStory();butterfly.finishStory();temple.finishStory();
@@ -675,8 +705,8 @@ public class GamePanel extends JPanel {
         playForestEntrance();
     }
 
-    private boolean canUseSkillE(){return !forestStoryBattle&&(!mineStoryBattle||skillEUnlocked);}
-    private boolean canUseSkillQ(){return !forestStoryBattle&&!mineStoryBattle&&(!mothStoryBattle||skillQUnlocked);}
+    private boolean canUseSkillE(){return devEnabled&&devSkills||!forestStoryBattle&&(!mineStoryBattle||skillEUnlocked);}
+    private boolean canUseSkillQ(){return devEnabled&&devSkills||!forestStoryBattle&&!mineStoryBattle&&(!mothStoryBattle||skillQUnlocked);}
 
     private void enterTemple(){
         inTemple=true;temple.enter();clearInput();
@@ -788,7 +818,7 @@ public class GamePanel extends JPanel {
     }
 
     private boolean tryUnlockMothQ(){
-        if(!mothStoryBattle||skillQUnlocked||!player.isAlive()||!boss.isAlive()
+        if(devEnabled&&devSkills||!mothStoryBattle||skillQUnlocked||!player.isAlive()||!boss.isAlive()
                 ||(boss.getHp()*100>boss.getMaxHp()*65&&player.getHp()*100>player.getMaxHp()*60))return false;
         clearInput();projectiles.clear();enemyProjectiles.clear();laser.reset();
         ((MothBoss)boss).clearStoryHazards();
@@ -869,7 +899,7 @@ public class GamePanel extends JPanel {
     }
 
     private boolean tryUnlockMineE(){
-        if(!mineStoryBattle||skillEUnlocked||!boss.isAlive()||!player.isAlive()
+        if(devEnabled&&devSkills||!mineStoryBattle||skillEUnlocked||!boss.isAlive()||!player.isAlive()
                 ||(boss.getHp()*5>boss.getMaxHp()*4&&player.getHp()*10>player.getMaxHp()*7))return false;
         clearInput();projectiles.clear();enemyProjectiles.clear();laser.reset();
         if(boss instanceof ScientistBoss)((ScientistBoss)boss).clearStoryHazards();
@@ -1113,7 +1143,7 @@ public class GamePanel extends JPanel {
         getActionMap().put(action, new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent event) {
-                if (state != GameState.BATTLE || story.active()) return;
+                if (!devEnabled || state != GameState.BATTLE || story.active()) return;
                 if(rematchActive){startRematch(number);return;}
                 throneStoryBattle=false;
                 forestStoryBattle=false;mineStoryBattle=false;mothStoryBattle=false;templeStoryBattle=false;
@@ -1360,16 +1390,16 @@ public class GamePanel extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         if(state==GameState.CREDITS){
-            CreditsScreen.draw(g,creditsTime);
-            if(!saveNotice.isEmpty()){g.setColor(new Color(244,173,156));g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,12));g.drawString(saveNotice,20,620);}
+            CreditsScreen.draw(g,creditsTime);drawDevPanel(g);
+        if(!saveNotice.isEmpty()){g.setColor(new Color(244,173,156));g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,12));g.drawString(saveNotice,20,620);}
             return;
         }
-        if(state==GameState.HELP){drawHelp(g);return;}
-        if(state==GameState.REMATCH){RematchScreen.draw(g,menuClock,rematchChoice,rematchWins);return;}
+        if(state==GameState.HELP){drawHelp(g);drawDevPanel(g);return;}
+        if(state==GameState.REMATCH){RematchScreen.draw(g,menuClock,rematchChoice,rematchWins);drawDevPanel(g);return;}
         if (state == GameState.MENU) {
             drawMenu(g);
             if(menuFade>0){g.setColor(new Color(0,0,0,(int)(255*menuFade)));g.fillRect(0,0,960,640);}
-            return;
+            drawDevPanel(g);return;
         }
         GameState visibleState = state == GameState.PAUSED ? stateBeforePause : state;
         if(story.currentId().equals("fade-from-menu"))drawMenu(g);
@@ -1392,18 +1422,8 @@ public class GamePanel extends JPanel {
         }
         if (state == GameState.PAUSED) drawPause(g);
         if(state==GameState.GAME_OVER)drawGameOver(g);
+        drawDevPanel(g);
         if(!saveNotice.isEmpty()){g.setColor(new Color(244,173,156));g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,12));g.drawString(saveNotice,20,600);}
-    }
-
-    private void drawButton(Graphics g, Rectangle bounds, String text) {
-        g.setColor(new Color(30, 34, 42));
-        g.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
-        g.setColor(Color.WHITE);
-        g.drawRect(bounds.x, bounds.y, bounds.width, bounds.height);
-        g.setFont(new Font(Font.MONOSPACED, Font.BOLD, 22));
-        int textWidth = g.getFontMetrics().stringWidth(text);
-        g.drawString(text, bounds.x + (bounds.width - textWidth) / 2,
-                bounds.y + 38);
     }
 
     private void drawMenu(Graphics g) {
@@ -1415,35 +1435,11 @@ public class GamePanel extends JPanel {
         MenuScreen.help(g,menuClock,helpBackButton);
     }
 
-    private void drawPause(Graphics g) {
-        g.setColor(new Color(0, 0, 0, 215));
-        g.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
-        g.setFont(new Font(Font.MONOSPACED, Font.BOLD, 40));
-        g.setColor(Color.WHITE);
-        g.drawString("PAUSED", 405, 210);
-        drawButton(g, resumeButton, "RESUME");
-        drawButton(g,overlayHelpButton,"HOW TO PLAY");
-        drawButton(g, menuButton, rematchActive?"BOSS SELECT":"MAIN MENU");
-        Rectangle selected=pauseChoice==0?resumeButton:pauseChoice==1?overlayHelpButton:menuButton;
-        g.setColor(HeroEffects.LIGHT);g.drawRect(selected.x-3,selected.y-3,selected.width+6,selected.height+6);
-        g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
-        g.drawString("Esc: Resume | Arrows + Enter: Select", 300, 530);
-        g.setColor(Color.LIGHT_GRAY);
-        g.drawString(rematchActive?"Rematch does not change your story save.":"Continue returns to this map's entrance.", 250, 565);
+    private void drawPause(Graphics g){
+        GameUi.overlay(g,false,pauseChoice,rematchActive,resumeButton,overlayHelpButton,menuButton);
     }
-
-    private void drawGameOver(Graphics graphics){
-        Graphics2D g=(Graphics2D)graphics.create();
-        g.setColor(new Color(6,8,12,245));g.fillRect(0,0,960,640);
-        g.setFont(new Font(Font.MONOSPACED,Font.BOLD,60));g.setColor(HeroEffects.RED);
-        String title="YOU DIED";g.drawString(title,(960-g.getFontMetrics().stringWidth(title))/2,205);
-        drawButton(g,resumeButton,"RETRY");drawButton(g,overlayHelpButton,"HOW TO PLAY");drawButton(g,menuButton,rematchActive?"BOSS SELECT":"MAIN MENU");
-        Rectangle selected=deathChoice==0?resumeButton:deathChoice==1?overlayHelpButton:menuButton;
-        g.setColor(HeroEffects.LIGHT);g.drawRect(selected.x-3,selected.y-3,selected.width+6,selected.height+6);
-        g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,16));g.setColor(new Color(205,196,188));
-        String hint="Retry: Restart this fight";g.drawString(hint,(960-g.getFontMetrics().stringWidth(hint))/2,530);
-        hint="W/S or arrows: Select | Enter: Confirm | R: Retry";g.drawString(hint,(960-g.getFontMetrics().stringWidth(hint))/2,565);
-        g.dispose();
+    private void drawGameOver(Graphics g){
+        GameUi.overlay(g,true,deathChoice,rematchActive,resumeButton,overlayHelpButton,menuButton);
     }
 
     private void showShotImpact(Projectile shot){
@@ -1468,17 +1464,30 @@ public class GamePanel extends JPanel {
         for(EnemyProjectile shot:enemyProjectiles)
             shot.draw(enemy,selectedBoss,selectedBoss==5&&boss.getPhaseLabel().equals("PHASE 2"));
         enemy.dispose();
-        BattleHud.player(g,player,battleArea,skillEUnlocked,skillQUnlocked);
-        if(devOverlay)drawBattleDebug(g);
+        BattleHud.player(g,player,battleArea,skillEUnlocked||devEnabled&&devSkills,skillQUnlocked||devEnabled&&devSkills);
+        if(devEnabled&&devOverlay)drawBattleDebug(g);
     }
     private void drawBattleDebug(Graphics g){
-        Rectangle hit=boss.getHitBounds();
-        g.setColor(new Color(102,190,181));
+        Rectangle hit=boss.getHitBounds();g.setColor(new Color(102,190,181));
         g.drawRect(hit.x,hit.y,hit.width-1,hit.height-1);
-        g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,13));g.setColor(new Color(163,151,158));
-        String[] lines={"DEV / F1: Hide","Boss "+selectedBoss+" / 5","HP "+boss.getHp()+"/"+boss.getMaxHp(),
-                boss.getAttackName(),boss.getPhaseLabel(),"Target "+boss.getDifficultyLabel(),
-                "1-5: Select boss","F6: Skip map","F7: Replay map"};
-        for(int i=0;i<lines.length;i++)g.drawString(lines[i],700,320+i*23);
+    }
+    private void drawDevPanel(Graphics graphics){
+        if(!devEnabled)return;
+        Graphics2D g=(Graphics2D)graphics.create();g.setFont(new Font(Font.MONOSPACED,Font.BOLD,11));
+        g.setColor(new Color(23,21,28,235));g.fillRect(800,614,150,20);
+        g.setColor(new Color(185,155,123));g.drawString("DEV ON / F1 PANEL",808,628);
+        if(devOverlay){
+            g.setColor(new Color(15,18,25,242));g.fillRoundRect(690,82,260,453,8,8);
+            g.setColor(new Color(127,106,113));g.drawRoundRect(690,82,260,453,8,8);
+            g.setFont(new Font(Font.MONOSPACED,Font.BOLD,14));g.setColor(new Color(219,205,188));g.drawString("PRESENTATION / DEV",704,108);
+            String[] lines={"Build 3.107","Map "+currentMap()+" / Boss "+selectedBoss,"Boss HP "+boss.getHp()+" / "+boss.getMaxHp(),
+                "F1  Show / hide panel","F3  Map collision","F6  Next map","F7  Replay map story",
+                "1-5 Test boss (battle)","K   Kill boss / all phases","G   God mode: "+(devGod?"ON":"OFF"),
+                "H   Heal player","U   E/Q preview: "+(devSkills?"ON":"OFF"),"C   Clear enemy bullets","P   Final boss phase 2",
+                "R   Retry fight","M   Menu (pause / death)","Ctrl+Shift+F12  DEV OFF"};
+            g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,12));
+            for(int i=0;i<lines.length;i++){g.setColor(i<2?new Color(153,165,163):new Color(199,190,180));g.drawString(lines[i],704,137+i*24);}
+        }
+        g.dispose();
     }
 }

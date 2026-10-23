@@ -58,6 +58,8 @@ public abstract class Boss {
         return getBounds();
     }
 
+    final void devDefeat(){hp=0;}
+
     public void takeDamage(int damage) {
         if (damage > 0) {
             hp = Math.max(0, hp - damage);

@@ -132,6 +132,7 @@ public final class TempleRoom {
     }
 
     public void stopMovement(){animation.stop();}
+    public void setCollisionView(boolean value){showCollision=value;}
     public void toggleCollisionView(){showCollision=!showCollision;}
     private boolean canStand(double px,double py) {
         Rectangle2D feet=new Rectangle2D.Double(px+4,py+10,8,6);
@@ -207,13 +208,6 @@ public final class TempleRoom {
             if(!cleared){g.setColor(Color.MAGENTA);g.draw(encounterStep);}
         }
         g.dispose();
-        graphics.setColor(new Color(15,20,19));graphics.fillRect(0,0,960,60);graphics.fillRect(0,580,960,60);
-        graphics.setColor(Color.WHITE);graphics.setFont(new Font(Font.MONOSPACED,Font.BOLD,18));
-        graphics.drawString("RUINED TEMPLE v3.43  |  The silent forecourt",20,25);
-        graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
-graphics.drawString("WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip | F7: Replay",20,47);
-        graphics.setColor(Color.LIGHT_GRAY);
-        graphics.drawString(exitReached?"The inner sanctuary lies beyond.":
-            "Follow the stone path to the temple entrance.",20,612);
+        GameUi.exploration(graphics,"RUINED TEMPLE",4);
     }
 }

@@ -4,14 +4,14 @@
     <groupId>finalgame</groupId>
     <artifactId>final-game</artifactId>
     <version>0.1.0</version>
-    <name>FINAL</name>
+    <name>REVEIL</name>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>17</maven.compiler.release>
         <exec.mainClass>finalgame.GameApplication</exec.mainClass>
     </properties>
     <build>
-        <finalName>FINAL</finalName>
+        <finalName>REVEIL</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

@@ -197,7 +197,12 @@ public class Player {
     /** Visual reaction for the scripted hit; does not add hidden HP damage. */
     public void showHitReaction(){invincibleTime=Math.max(invincibleTime,.75);}
 
+    private boolean devInvulnerable;
+    void setDevInvulnerable(boolean value){devInvulnerable=value;}
+    void devHeal(){if(isAlive())hp=maxHp;}
+
     public void takeDamage(int damage) {
+        if(devInvulnerable)return;
         if (damage > 0 && isAlive() && invincibleTime <= 0.0) {
             hp = Math.max(0, hp - damage);
             invincibleTime = 0.75;

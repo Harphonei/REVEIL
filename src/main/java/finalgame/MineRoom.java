@@ -141,6 +141,7 @@ public final class MineRoom {
     }
 
     public void stopMovement(){animation.stop();}
+    public void setCollisionView(boolean value){showCollision=value;}
     public void toggleCollisionView(){showCollision=!showCollision;}
     private boolean canStand(double px,double py) {
         Rectangle2D feet=new Rectangle2D.Double(px+4,py+10,8,6);
@@ -224,15 +225,7 @@ public final class MineRoom {
             animation.draw(g,feetX,feetY,36,54);
         }
         g.dispose();
-        graphics.setColor(new Color(15,20,19));graphics.fillRect(0,0,960,60);graphics.fillRect(0,580,960,60);
-        graphics.setColor(Color.WHITE);graphics.setFont(new Font(Font.MONOSPACED,Font.BOLD,18));
-        graphics.drawString("THE MINE  |  "+(cleared?"Laboratory cleared":"Follow the rails"),20,25);
-        graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
-graphics.drawString("WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip | F7: Replay",20,47);
-        graphics.setColor(Color.LIGHT_GRAY);
-        graphics.drawString(exitReached?"Entering the butterfly forest...":
-            cleared?"Follow the eastern passage, then walk UP into the dark doorway.":
-            "A hidden laboratory lies ahead. Explore the room to meet its keeper.",20,612);
+        GameUi.exploration(graphics,"THE MINE",2);
     }
     private void drawScientist(Graphics2D g){
         int footY=(int)Math.round(SCIENTIST_Y+(scientistFacingFront?0:workBob+(!storyCamera?Math.sin(workClock*4):0)));

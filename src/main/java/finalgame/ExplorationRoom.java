@@ -164,6 +164,7 @@ public class ExplorationRoom {
         g.setFont(DialogueBox.font(17));g.drawString(label,sx+37,sy+23);g.dispose();
     }
 
+    public void setCollisionView(boolean value){showCollision=value;}
     public void toggleCollisionView() { showCollision=!showCollision; }
 
     public void stopMovement() { animation.stop(); }
@@ -309,15 +310,6 @@ public class ExplorationRoom {
             drawPlayer(g,feetX,feetY);
         }
         g.dispose();
-        graphics.setColor(new Color(15,20,19));
-        graphics.fillRect(0,0,VIEW_W,TOP);
-        graphics.fillRect(0,TOP+VIEW_H,VIEW_W,60);
-        graphics.setFont(new Font(Font.MONOSPACED,Font.BOLD,18));
-        graphics.setColor(Color.WHITE);
-        graphics.drawString("THE FOREST  |  "+(cleared?"Route to mine: OPEN":"Follow the trail"),20,25);
-        graphics.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));
-graphics.drawString(cleared ? "WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip | F7: Replay" : "WASD: Walk | Shift: Run | Esc: Pause | F3: Collision | F6: Skip | F7: Replay",20,47);
-        graphics.setColor(mineReached?new Color(175,210,175):Color.LIGHT_GRAY);
-        graphics.drawString(message,20,612);
+        GameUi.exploration(graphics,"THE FOREST",1);
     }
 }
