@@ -216,7 +216,7 @@ public class GamePanel extends JPanel {
             int index=menuIndexAt(x,y);if(index>=0){menuChoice=index;over=true;}
         }else if(state==GameState.REMATCH){
             int index=RematchScreen.choiceAt(x,y);
-            if(index>=0){rematchChoice=index;over=true;}
+            if(index>=0)over=true; // Hover indicates clickability; selection changes on click only.
             if(RematchScreen.FIGHT.contains(x,y)&&rematchChoice<5)over=true;
         }else if(state==GameState.HELP)over=helpBackButton.contains(x,y);
         else if(state==GameState.PAUSED||state==GameState.GAME_OVER){

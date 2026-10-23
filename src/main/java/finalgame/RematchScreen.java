@@ -54,7 +54,7 @@ final class RematchScreen {
         text(screen,"E + Q READY   /   STORY SAVE UNCHANGED",426,464,11,DIM);
         MenuScreen.button(screen,BACK,"BACK",choice==5);
         MenuScreen.button(screen,FIGHT,"FIGHT",choice<5);
-        text(screen,"W/S OR ARROWS: SELECT   ENTER: FIGHT   ESC: BACK",426,551,10,DIM);
+        text(screen,"CLICK A BOSS, THEN FIGHT  /  W/S + ENTER  /  ESC: BACK",426,551,10,DIM);
         screen.dispose();MenuScreen.scan(g);g.dispose();
     }
 }
