@@ -85,8 +85,9 @@ public abstract class Boss {
     }
 
     public boolean checkHazards(Rectangle playerBounds) {
-        return false;
+        return getHazardDamage(playerBounds)>0;
     }
+    public int getHazardDamage(Rectangle playerBounds){return 0;}
 
     public void drawHazards(Graphics g) {
         // Most bosses have no floor hazards.

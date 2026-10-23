@@ -12,6 +12,7 @@ public class DoomOrb extends EnemyProjectile {
 
     public DoomOrb(double x, double y, double burstY) {
         super(x, y, 0.0, 65.0, 44, new Color(190, 80, 160));
+        withDamage(20);
         this.burstY = burstY;
     }
 

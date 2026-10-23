@@ -24,7 +24,7 @@ public class ForestBoss extends Boss {
     private Rectangle arena = new Rectangle(300, 300, 360, 260);
 
     public ForestBoss(int startX, int startY) {
-        super(startX, startY, 1200, "FRENZIED FOREST BEAST");
+        super(startX, startY, 500, "FRENZIED FOREST BEAST");
         selectAttack();
     }
 
@@ -119,14 +119,14 @@ public class ForestBoss extends Boss {
     }
 
     @Override
-    public boolean checkHazards(Rectangle playerBounds) {
-        boolean hit = false;
+    public int getHazardDamage(Rectangle playerBounds) {
+        int damage = 0;
         for (RootHazard root : roots) {
             if (root.tryHit(playerBounds)) {
-                hit = true;
+                damage = 15;
             }
         }
-        return hit;
+        return damage;
     }
 
     @Override

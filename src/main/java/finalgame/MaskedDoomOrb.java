@@ -13,6 +13,7 @@ public final class MaskedDoomOrb extends EnemyProjectile {
     private boolean burstDone;
     public MaskedDoomOrb(double x,double y,double burstY,int volley,boolean phaseTwo) {
         super(x,y,0,85,44,new Color(190,80,160));
+        withDamage(20);
         this.burstY=burstY;this.volley=volley;this.phaseTwo=phaseTwo;
     }
     @Override public boolean shouldSplit(){return !burstDone && y>=burstY;}

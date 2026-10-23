@@ -16,10 +16,10 @@ public class GuardWallPattern implements AttackPattern {
         double gapRight = gapCentre + 28;
         int diameter = EnemyProjectile.NORMAL_DIAMETER;
         for (int x = arena.x; x + diameter <= gapLeft; x += diameter) {
-            projectiles.add(new EnemyProjectile(x, arena.y - 20, 0.0, 165.0));
+            projectiles.add(new EnemyProjectile(x, arena.y - 20, 0.0, 165.0,12));
         }
         for (int x = (int)Math.ceil(gapRight); x + diameter <= arena.x + arena.width; x += diameter) {
-            projectiles.add(new EnemyProjectile(x, arena.y - 20, 0.0, 165.0));
+            projectiles.add(new EnemyProjectile(x, arena.y - 20, 0.0, 165.0,12));
         }
         wave++;
     }

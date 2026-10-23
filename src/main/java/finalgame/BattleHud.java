@@ -22,7 +22,6 @@ public final class BattleHud {
         if(qVisible){skill(g,slotX,y,"Q",p.getSkillQCooldown(),p.isUltimateActive()?p.getUltimateProgress():p.getSkillQChargeProgress(),p.isUltimateActive());slotX+=52;}
         int hpX=slotX+4,w=arena.x+arena.width-hpX;
         g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,13));g.setColor(TEXT);g.drawString("HP",hpX,y+14);
-        String value=p.getHp()+" / "+p.getMaxHp();g.drawString(value,hpX+w-g.getFontMetrics().stringWidth(value),y+14);
         g.setColor(INK);g.fillRect(hpX,y+23,w,12);
         g.setColor(new Color(173,62,78));g.fillRect(hpX,y+23,w*p.getHp()/p.getMaxHp(),12);
         g.setColor(EDGE);g.drawRect(hpX,y+23,w,12);

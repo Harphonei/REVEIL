@@ -41,7 +41,7 @@ public class MothBoss extends Boss {
     private int echoesCreated = 0;
 
     public MothBoss(int startX, int startY) {
-        super(startX, startY, 1600, "MOTHER MOTH");
+        super(startX, startY, 1100, "MOTHER MOTH");
         beginAttack();
     }
 

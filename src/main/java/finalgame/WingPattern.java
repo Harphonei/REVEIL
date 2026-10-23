@@ -17,7 +17,7 @@ public class WingPattern implements AttackPattern {
                     centreX - EnemyProjectile.NORMAL_DIAMETER / 2.0,
                     source.y + source.height,
                     Math.sin(angle) * 165.0,
-                    Math.cos(angle) * 165.0));
+                    Math.cos(angle) * 165.0,12));
         }
         leftNext = !leftNext;
     }

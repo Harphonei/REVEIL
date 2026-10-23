@@ -19,6 +19,7 @@ public class SpiralProjectile extends EnemyProjectile {
                 - NORMAL_DIAMETER / 2.0, startY,
                 0.0, 0.0, NORMAL_DIAMETER, new Color(200, 130, 255));
         this.centreX = centreX;
+        withDamage(8);
         this.startY = startY;
         this.startAngle = startAngle;
         this.rotation=rotation;

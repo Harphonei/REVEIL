@@ -29,7 +29,7 @@ public class CrownPattern implements AttackPattern {
         for (int i = -1; i <= 1; i++) {
             double angle = centreAngle + Math.toRadians(i * 12);
             projectiles.add(new EnemyProjectile(x - 6, y,
-                    Math.sin(angle) * speed, Math.cos(angle) * speed));
+                    Math.sin(angle) * speed, Math.cos(angle) * speed,12));
         }
         wave++;
     }

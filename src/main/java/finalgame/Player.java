@@ -10,7 +10,7 @@ public class Player {
     private double y;
     private final int size = 24;
     private final double speed = 180.0;
-    private final int maxHp = 100;
+    private int maxHp = 150;
     private int hp = maxHp;
     private double invincibleTime = 0.0;
     private double effectTime,shotFlash,eReleaseFlash,qBurstTime,qGuardTime;
@@ -23,7 +23,7 @@ public class Player {
     private double skillRecoveryTime = 0.0;
     private boolean skillEReadyToFire = false;
 
-    private static final double SKILL_Q_DURATION = 4.0;
+    private static final double SKILL_Q_DURATION = 5.0;
     private static final double SKILL_Q_COOLDOWN = 15.0;
     private static final double SKILL_Q_CHARGE = 0.65;
     private static final double ULTIMATE_SPEED_MULTIPLIER = 1.2;
@@ -224,6 +224,11 @@ public class Player {
     }
 
     public void reset(double startX, double startY) {
+        reset(startX,startY,maxHp);
+    }
+    public void reset(double startX,double startY,int stageMaxHp){
+        if(stageMaxHp<=0)throw new IllegalArgumentException("Invalid player HP");
+        maxHp=stageMaxHp;
         storyQAura=-1;
         animation.reset(SpriteAnimator.UP);
         x = startX;

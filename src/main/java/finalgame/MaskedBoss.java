@@ -17,7 +17,7 @@ public class MaskedBoss extends Boss {
         if(!isAlive())return;
         Graphics g=graphics.create();BossArtwork.drawMaskedBattle(g,getBounds(),phaseTwo,transitionTime);g.dispose();
     }
-    private static final int MAX_HP = 2200;
+    private static final int MAX_HP = 1800;
     private final RandomAttackOrder phaseOneOrder = new RandomAttackOrder(4);
     private final RandomAttackOrder phaseTwoOrder = new RandomAttackOrder(5);
     private final CrownPattern crown = new CrownPattern(155.0);
@@ -190,22 +190,22 @@ public class MaskedBoss extends Boss {
         if(shape==0) {
             double shift=(wave%2)*41;
             for(double x=arena.x-41+shift;x<=arena.getMaxX()+41;x+=82)
-                beams.add(new SwordStrike(x,arena.y,x,arena.getMaxY(),stroke,warning,.20,arena));
+                beams.add(new SwordStrike(x,arena.y,x,arena.getMaxY(),stroke,warning,.20,arena).withDamage(attackIndex==4?14:18));
         } else if(shape==1) {
             double slope=(wave%2)==0?1:-1;
             for(double x=arena.x-arena.height-110;x<=arena.getMaxX()+arena.height+110;x+=110)
                 beams.add(new SwordStrike(x+wave*13,arena.y,
-                        x+wave*13+slope*arena.height,arena.getMaxY(),stroke,warning,.20,arena));
+                        x+wave*13+slope*arena.height,arena.getMaxY(),stroke,warning,.20,arena).withDamage(attackIndex==4?14:18));
         } else if(shape==2) {
             for(int inset:new int[]{26,88})
                 beams.add(new SwordStrike(new java.awt.geom.Rectangle2D.Double(
                         arena.x+inset,arena.y+inset,arena.width-2*inset,arena.height-2*inset),
-                        stroke,warning,.20,arena));
+                        stroke,warning,.20,arena).withDamage(attackIndex==4?14:18));
         } else {
             double cx=arena.getCenterX()+((wave%2)==0?-14:14),cy=arena.getCenterY();
             for(int radius:new int[]{48,110,172})
                 beams.add(new SwordStrike(new java.awt.geom.Ellipse2D.Double(
-                        cx-radius,cy-radius,radius*2,radius*2),stroke,warning,.20,arena));
+                        cx-radius,cy-radius,radius*2,radius*2),stroke,warning,.20,arena).withDamage(attackIndex==4?14:18));
         }
     }
 
@@ -220,7 +220,7 @@ public class MaskedBoss extends Boss {
                 if((finalStep&1)==0) {
                     double x=Math.max(arena.x+20,Math.min(target.getCenterX(),arena.getMaxX()-20));
                     beams.add(new SwordStrike(x,arena.y,x,arena.getMaxY(),
-                            26,.90,.22,arena));
+                            26,.90,.22,arena).withDamage(14));
                 }
                 finalStep++;
                 attackCooldown=.76;
@@ -246,19 +246,19 @@ public class MaskedBoss extends Boss {
         for(int i=-2;i<=2;i++) {
             double angle=aim+i*.14;
             projectiles.add(new EnemyProjectile(x-6,y-6,
-                    Math.cos(angle)*160,Math.sin(angle)*160));
+                    Math.cos(angle)*160,Math.sin(angle)*160,14));
         }
     }
 
     @Override
-    public boolean checkHazards(Rectangle playerBounds) {
-        boolean hit = false;
+    public int getHazardDamage(Rectangle playerBounds) {
+        int damage = 0;
         for (SwordStrike beam : beams) {
             if (beam.tryHit(playerBounds)) {
-                hit = true;
+                damage = Math.max(damage,beam.getDamage());
             }
         }
-        return hit;
+        return damage;
     }
 
     @Override

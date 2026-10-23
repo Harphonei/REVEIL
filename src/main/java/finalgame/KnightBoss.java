@@ -35,7 +35,7 @@ public class KnightBoss extends Boss {
     private int gridVolleys = 0;
 
     public KnightBoss(int startX, int startY) {
-        super(startX, startY, 1800, "THE LAST GUARDIAN");
+        super(startX, startY, 1400, "THE LAST GUARDIAN");
         beginAttack();
     }
 
@@ -106,7 +106,7 @@ public class KnightBoss extends Boss {
                     double x = Math.max(arena.x + 17,
                             Math.min(target.getCenterX(), arena.x + arena.width - 17));
                     strikes.add(new SwordStrike(x, arena.y,
-                            x, arena.y + arena.height, 34.0f, 0.65, 0.22, arena));
+                            x, arena.y + arena.height, 34.0f, 0.65, 0.22, arena).withDamage(20));
                     thrustsCreated++;
                 }
                 break;
@@ -119,14 +119,14 @@ public class KnightBoss extends Boss {
     }
 
     @Override
-    public boolean checkHazards(Rectangle playerBounds) {
-        boolean hit = false;
+    public int getHazardDamage(Rectangle playerBounds) {
+        int damage = 0;
         for (SwordStrike strike : strikes) {
             if (strike.tryHit(playerBounds)) {
-                hit = true;
+                damage = Math.max(damage,strike.getDamage());
             }
         }
-        return hit;
+        return damage;
     }
 
     @Override

@@ -283,6 +283,7 @@ public class GamePanel extends JPanel {
     private void checkpointMapIfChanged(){
         if(runActive&&(checkpoint==null||checkpoint.map()!=currentMap())){
             checkpoint=captureCheckpoint(currentMap());
+            player.reset(468,500,CombatTuning.playerHpForStage(currentMap()));
         }
     }
     private boolean persistCheckpoint(){
@@ -306,6 +307,7 @@ public class GamePanel extends JPanel {
     private void continueGame(){
         SaveStore.Checkpoint resume=saved.checkpoint();if(resume==null)return;
         resetRun();checkpoint=resume;runActive=true;skillEUnlocked=resume.skillE();skillQUnlocked=resume.skillQ();
+        player.reset(468,500,CombatTuning.playerHpForStage(resume.map()));
         int mask=resume.clearedMask();
         if((mask&1)!=0){exploration.returnFromBattle();forestCorpseSeen=true;forestEncounterSeen=true;forestVictorySeen=true;}
         if((mask&2)!=0){mine.returnFromBattle();mineEntrySeen=true;mineEncounterSeen=true;mineVictorySeen=true;}
@@ -1152,16 +1154,15 @@ public class GamePanel extends JPanel {
             }
             if (projectile.isDangerous()
                     && projectile.getBounds().intersects(player.getBounds())) {
-                player.takeDamage(10);
+                player.takeDamage(projectile.getDamage());
                 enemyProjectiles.remove(i);
             } else if (projectile.isOutsideScreen(getWidth(), getHeight())) {
                 enemyProjectiles.remove(i);
             }
         }
 
-        if (boss.checkHazards(player.getBounds())) {
-            player.takeDamage(10);
-        }
+        int hazardDamage=boss.getHazardDamage(player.getBounds());
+        if(hazardDamage>0)player.takeDamage(hazardDamage);
 
         if (!player.isAlive()) {
             showGameOver();return;
@@ -1181,7 +1182,7 @@ public class GamePanel extends JPanel {
         laser.reset();
         projectiles.clear();
         enemyProjectiles.clear();
-        player.reset(468, 500);
+        player.reset(468, 500,CombatTuning.playerHpForStage(selectedBoss));
         boss.reset();
         if(boss instanceof MaskedBoss){((MaskedBoss)boss).setStoryControlled(throneStoryBattle);thronePhaseSeen=false;}
         battleReadyTime=1;

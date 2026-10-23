@@ -10,7 +10,7 @@ public class SkillProjectile extends Projectile {
     private double aimedX,aimedY,velocityX,velocityY;
     public SkillProjectile(double centerX, double startY) {
         super(centerX - 16, startY - 32,
-                32, 32, 190.0, 30, Color.MAGENTA);
+                32, 32, 190.0, 40, Color.MAGENTA);
     }
 
     /** Scripted discovery shot uses the same artwork and damage, aimed at the boss. */

@@ -19,6 +19,9 @@ public class SwordStrike {
     private final float width;
     private double age = 0.0;
     private boolean hitConsumed = false;
+    private int damage=16;
+    public int getDamage(){return damage;}
+    public SwordStrike withDamage(int value){if(value<=0)throw new IllegalArgumentException("Invalid strike damage");damage=value;return this;}
 
     public SwordStrike(double x1, double y1, double x2, double y2,
             float width, double warningTime, double activeTime, Rectangle arena) {

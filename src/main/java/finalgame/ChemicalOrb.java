@@ -12,6 +12,7 @@ public class ChemicalOrb extends EnemyProjectile {
 
     public ChemicalOrb(double startX, double startY, double splitY) {
         super(startX, startY, 0.0, 85.0, 28, Color.MAGENTA);
+        withDamage(16);
         this.splitY = splitY;
     }
 
@@ -33,7 +34,7 @@ public class ChemicalOrb extends EnemyProjectile {
         for (int i = 0; i < 8; i++) {
             double angle = Math.toRadians(i * 45);
             fragments.add(new EnemyProjectile(x, y,
-                    Math.cos(angle) * 105.0, Math.sin(angle) * 105.0));
+                    Math.cos(angle) * 105.0, Math.sin(angle) * 105.0,8));
         }
         return fragments;
     }

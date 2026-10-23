@@ -5,7 +5,7 @@ import java.awt.Graphics;
 import java.awt.Rectangle;
 
 public class LaserBeam {
-    private static final int DAMAGE = 10;
+    private static final int DAMAGE = 20;
     private static final double BURST_DURATION = 0.2;
     private static final double BURST_GAP = 0.25;
 

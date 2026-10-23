@@ -20,7 +20,7 @@ public class SpreadPattern implements AttackPattern {
             double angle = Math.toRadians(centreAngle + i * 15);
             double velocityX = Math.sin(angle) * 145.0;
             double velocityY = Math.cos(angle) * 145.0;
-            projectiles.add(new EnemyProjectile(x, y, velocityX, velocityY));
+            projectiles.add(new EnemyProjectile(x, y, velocityX, velocityY,12));
         }
         wave++;
     }

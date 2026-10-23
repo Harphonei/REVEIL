@@ -36,7 +36,7 @@ public class ScientistBoss extends Boss {
     private int experimentWave = 0;
 
     public ScientistBoss(int startX, int startY) {
-        super(startX, startY, 1400, "THE SCIENTIST");
+        super(startX, startY, 800, "THE SCIENTIST");
         selectAttack();
     }
 
@@ -142,14 +142,14 @@ public class ScientistBoss extends Boss {
     }
 
     @Override
-    public boolean checkHazards(Rectangle playerBounds) {
-        boolean hit = false;
+    public int getHazardDamage(Rectangle playerBounds) {
+        int damage = 0;
         for (ExperimentZone zone : zones) {
             if (zone.tryHit(playerBounds)) {
-                hit = true;
+                damage = 14;
             }
         }
-        return hit;
+        return damage;
     }
 
     /** Give the new ability dialogue a clean, safe return to combat. */

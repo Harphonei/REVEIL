@@ -37,7 +37,7 @@ public class MemoryEcho {
         for (int i = 0; i < 6; i++) {
             double angle = Math.toRadians(i * 60);
             projectiles.add(new EnemyProjectile(x, y,
-                    Math.cos(angle) * 115.0, Math.sin(angle) * 115.0));
+                    Math.cos(angle) * 115.0, Math.sin(angle) * 115.0,14));
         }
     }
 
