@@ -29,6 +29,7 @@ public class GamePanel extends JPanel {
     private boolean runActive;
     private boolean savePending;
     private int menuChoice;
+    private int deathChoice;
     private String saveNotice=saveStore.warning();
     private final ExplorationRoom exploration = new ExplorationRoom();
     private final MineRoom mine = new MineRoom();
@@ -109,7 +110,7 @@ public class GamePanel extends JPanel {
             if(state!=GameState.PAUSED && story.active() && storySkippable)finishForestEntrance();
         });
         bindScreenAction("released M", "menu", () -> {
-            if (state == GameState.PAUSED) returnToMenu();
+            if (state == GameState.PAUSED||state==GameState.GAME_OVER) returnToMenu();
         });
 
         getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
@@ -117,6 +118,7 @@ public class GamePanel extends JPanel {
         getActionMap().put("restart-battle", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent event) {
+                if(state==GameState.GAME_OVER){retryFight();return;}
                 if (state == GameState.BATTLE
                         && !story.active()
                         && (!player.isAlive() || !boss.isAlive())) {
@@ -239,7 +241,7 @@ public class GamePanel extends JPanel {
     }
 
     private void startNewGame() {
-        resetRun();runActive=true;checkpoint=captureCheckpoint(1);persistCheckpoint();
+        resetRun();runActive=true;checkpoint=captureCheckpoint(1);
         playForestOpening();
         changeState(GameState.EXPLORATION);
     }
@@ -251,7 +253,7 @@ public class GamePanel extends JPanel {
     }
     private void checkpointMapIfChanged(){
         if(runActive&&(checkpoint==null||checkpoint.map()!=currentMap())){
-            checkpoint=captureCheckpoint(currentMap());persistCheckpoint();
+            checkpoint=captureCheckpoint(currentMap());
         }
     }
     private boolean persistCheckpoint(){
@@ -298,6 +300,7 @@ public class GamePanel extends JPanel {
     }
 
     private void moveMenu(int delta){
+        if(state==GameState.GAME_OVER){deathChoice=Math.floorMod(deathChoice+delta,2);repaint();return;}
         if(state!=GameState.MENU)return;
         menuChoice=Math.floorMod(menuChoice+delta,saved.checkpoint()==null?2:3);repaint();
     }
@@ -310,6 +313,7 @@ public class GamePanel extends JPanel {
 
     private void confirmScreen() {
         if (state == GameState.MENU) activateMenu();
+        else if(state==GameState.GAME_OVER){if(deathChoice==0)retryFight();else returnToMenu();}
         else if(state==GameState.HELP)changeState(GameState.MENU);
         else if (state == GameState.PAUSED) togglePause();
         else if(story.active()){story.advance();repaint();}
@@ -332,6 +336,9 @@ public class GamePanel extends JPanel {
     }
 
     private void handleClick(int x, int y) {
+        if(state==GameState.GAME_OVER){
+            if(resumeButton.contains(x,y))retryFight();else if(menuButton.contains(x,y))returnToMenu();return;
+        }
         if(state==GameState.HELP){if(helpBackButton.contains(x,y))changeState(GameState.MENU);return;}
         if(state!=GameState.PAUSED && story.active()){story.advance();repaint();return;}
         if (state == GameState.MENU && startButton.contains(x, y)) {
@@ -920,7 +927,7 @@ public class GamePanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent event) {
                 pressed[index] = false;
-                if(state==GameState.MENU&&(index==0||index==2))moveMenu(index==0?-1:1);
+                if((state==GameState.MENU||state==GameState.GAME_OVER)&&(index==0||index==2))moveMenu(index==0?-1:1);
             }
         });
     }
@@ -960,7 +967,7 @@ public class GamePanel extends JPanel {
         double seconds = Math.min((now - previousTime) / 1_000_000_000.0, 0.05);
         previousTime = now;
 
-        if(state==GameState.HELP)return;
+        if(state==GameState.HELP||state==GameState.GAME_OVER)return;
         if(state==GameState.MENU){if(menuFade>0){menuFade=Math.max(0,menuFade-seconds/1.2);repaint();}return;}
         if (state == GameState.PAUSED) return;
         if(story.active()){story.update(seconds);repaint();return;}
@@ -1010,7 +1017,8 @@ public class GamePanel extends JPanel {
             return;
         }
 
-        if (!player.isAlive() || !boss.isAlive()) {
+        if(!player.isAlive()){showGameOver();return;}
+        if (!boss.isAlive()) {
             if(!boss.isAlive() && player.isAlive() && forestStoryBattle && !forestVictorySeen) {
                 playForestVictory();repaint();return;
             }
@@ -1115,12 +1123,16 @@ public class GamePanel extends JPanel {
         }
 
         if (!player.isAlive()) {
-            projectiles.clear();
-            enemyProjectiles.clear();
-            laser.reset();
+            showGameOver();return;
         }
         repaint();
     }
+
+    private void showGameOver(){
+        projectiles.clear();enemyProjectiles.clear();laser.reset();battleEffects.reset();deathChoice=0;
+        changeState(GameState.GAME_OVER);
+    }
+    private void retryFight(){restartBattle();changeState(GameState.BATTLE);}
 
     private void restartBattle() {
         clearInput();
@@ -1194,6 +1206,7 @@ public class GamePanel extends JPanel {
             }
         }
         if (state == GameState.PAUSED) drawPause(g);
+        if(state==GameState.GAME_OVER)drawGameOver(g);
         if(!saveNotice.isEmpty()){g.setColor(new Color(244,173,156));g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,12));g.drawString(saveNotice,20,600);}
     }
 
@@ -1221,7 +1234,7 @@ public class GamePanel extends JPanel {
         g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 18));
         g.setColor(Color.LIGHT_GRAY);
         g.drawString("W/S or arrows: Select | Enter: Confirm", 270, 485);
-        g.drawString("The complete loop  |  v3.87", 325, 525);
+        g.drawString("The complete loop  |  v3.89", 325, 525);
         if(hasContinue)g.drawString("Continue from Map "+saved.checkpoint().map()+" entrance",325,555);
         else if(saved.completed())g.drawString("THE LOOP IS COMPLETE",365,555);
         if(!saveNotice.isEmpty()){g.setColor(new Color(244,173,156));g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,12));g.drawString(saveNotice,20,600);}
@@ -1254,6 +1267,20 @@ public class GamePanel extends JPanel {
         g.drawString("Esc / Enter: Resume | M: Main menu", 320, 455);
         g.setColor(Color.LIGHT_GRAY);
         g.drawString("Continue returns to this map's entrance.", 290, 490);
+    }
+
+    private void drawGameOver(Graphics graphics){
+        Graphics2D g=(Graphics2D)graphics.create();
+        g.setColor(new Color(6,8,12,245));g.fillRect(0,0,960,640);
+        g.setFont(new Font(Font.MONOSPACED,Font.BOLD,60));g.setColor(HeroEffects.RED);
+        String title="YOU DIED";g.drawString(title,(960-g.getFontMetrics().stringWidth(title))/2,205);
+        drawButton(g,resumeButton,"RETRY");drawButton(g,menuButton,"MAIN MENU");
+        Rectangle selected=deathChoice==0?resumeButton:menuButton;
+        g.setColor(HeroEffects.LIGHT);g.drawRect(selected.x-3,selected.y-3,selected.width+6,selected.height+6);
+        g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,16));g.setColor(new Color(205,196,188));
+        String hint="Retry: Restart this fight";g.drawString(hint,(960-g.getFontMetrics().stringWidth(hint))/2,455);
+        hint="W/S or arrows: Select | Enter: Confirm | R: Retry";g.drawString(hint,(960-g.getFontMetrics().stringWidth(hint))/2,490);
+        g.dispose();
     }
 
     private void showShotImpact(Projectile shot){
@@ -1343,14 +1370,11 @@ public class GamePanel extends JPanel {
         g.setColor(Color.ORANGE);
         g.drawString("Tuning: +1 STEP", 700, 525);
 
-        if (!player.isAlive()) {
-            g.setColor(Color.RED);
-            g.drawString("YOU DIED", battleArea.x + 120, battleArea.y + 130);
-        } else if (!boss.isAlive() && !throneStoryBattle) {
+        if (player.isAlive()&&!boss.isAlive() && !throneStoryBattle) {
             g.setColor(Color.GREEN);
             g.drawString("VICTORY", battleArea.x + 120, battleArea.y + 130);
         }
-        if (!player.isAlive() || (!boss.isAlive()&&!throneStoryBattle)) {
+        if (player.isAlive()&&!boss.isAlive()&&!throneStoryBattle) {
             g.setColor(Color.WHITE);
             g.drawString("Press R to retry",
                     battleArea.x + 95, battleArea.y + 165);
