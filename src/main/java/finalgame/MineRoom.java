@@ -47,7 +47,7 @@ public final class MineRoom {
     public void focusStory(double centreX,double centreY,double zoom){
         storyCamera=true;drawZoom=zoom;
         cameraX=Math.max(0,Math.min(centreX-960/(2*zoom),Math.max(0,background.getWidth()-960/zoom)));
-        cameraY=Math.max(0,Math.min(centreY-520/(2*zoom),Math.max(0,background.getHeight()-520/zoom)));
+        cameraY=Math.max(0,Math.min(centreY-640/(2*zoom),Math.max(0,background.getHeight()-640/zoom)));
     }
     public void moveStoryHero(double px,double py,double seconds){
         double ox=x,oy=y;
@@ -130,8 +130,8 @@ public final class MineRoom {
         Graphics2D g=(Graphics2D)graphics.create();g.setFont(DialogueBox.font(17));
         String label="สำรวจ";int width=48+g.getFontMetrics().stringWidth(label),height=32;
         int sx=(int)Math.round((point.promptX-Math.round(cameraX))*drawZoom)-width/2;
-        int sy=60+(int)Math.round((point.promptY-Math.round(cameraY))*drawZoom)-height/2;
-        sx=Math.max(8,Math.min(960-width-8,sx));sy=Math.max(68,Math.min(580-height-8,sy));
+        int sy=0+(int)Math.round((point.promptY-Math.round(cameraY))*drawZoom)-height/2;
+        sx=Math.max(8,Math.min(960-width-8,sx));sy=Math.max(8,Math.min(640-height-8,sy));
         g.setColor(new Color(10,16,20,230));g.fillRoundRect(sx,sy,width,height,6,6);
         g.setColor(new Color(118,126,118));g.drawRoundRect(sx,sy,width,height,6,6);
         g.setColor(new Color(45,52,53));g.fillRect(sx+7,sy+5,22,22);
@@ -181,15 +181,15 @@ public final class MineRoom {
     private void updateCamera() {
         if(storyCamera)return;
         cameraX=Math.max(0,Math.min(x+8-960/(2*ZOOM),background.getWidth()-960/ZOOM));
-        cameraY=Math.max(0,Math.min(y+8-520/(2*ZOOM),background.getHeight()-520/ZOOM));
+        cameraY=Math.max(0,Math.min(y+8-640/(2*ZOOM),background.getHeight()-640/ZOOM));
     }
     public boolean consumeExitRequest(){boolean b=exitReached;exitReached=false;return b;}
     public void returnFromButterfly(){x=1465;y=522;exitReached=false;battleRequested=false;animation.reset(SpriteAnimator.LEFT);updateCamera();}
     public boolean consumeBattleRequest(){boolean b=battleRequested;battleRequested=false;return b;}
     public boolean consumeBackRequest(){boolean b=backRequested;backRequested=false;return b;}
     public boolean interact(int mx,int my) {
-        if(my<60||my>=580)return false;
-        double wx=(mx/ZOOM+Math.round(cameraX)),wy=((my-60)/ZOOM+Math.round(cameraY));
+        if(my<0||my>=640)return false;
+        double wx=(mx/ZOOM+Math.round(cameraX)),wy=(my/ZOOM+Math.round(cameraY));
         return !cleared && bossZone.contains(wx,wy) && Point2D.distance(x,y,wx,wy)<110;
     }
     public void returnFromBattle() {
@@ -198,9 +198,10 @@ public final class MineRoom {
     }
     public void draw(Graphics graphics) {
         Graphics2D g=(Graphics2D)graphics.create();
-        g.setClip(0,60,960,520);
+        g.setClip(0,0,960,640);
+        g.setColor(Color.BLACK);g.fillRect(0,0,960,640);
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-        g.translate(0,60);g.scale(drawZoom,drawZoom);g.translate(-Math.round(cameraX),-Math.round(cameraY));
+        g.translate(0,0);g.scale(drawZoom,drawZoom);g.translate(-Math.round(cameraX),-Math.round(cameraY));
         g.drawImage(background,0,0,null);
         if(!cleared) {
             g.setColor(new Color(44,29,23));g.fillRect(1005,351,8,34);g.fillRect(1116,351,8,34);
@@ -225,7 +226,6 @@ public final class MineRoom {
             animation.draw(g,feetX,feetY,36,54);
         }
         g.dispose();
-        GameUi.exploration(graphics,"THE MINE",2);
     }
     private void drawScientist(Graphics2D g){
         int footY=(int)Math.round(SCIENTIST_Y+(scientistFacingFront?0:workBob+(!storyCamera?Math.sin(workClock*4):0)));

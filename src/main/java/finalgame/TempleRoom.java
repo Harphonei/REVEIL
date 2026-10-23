@@ -47,7 +47,7 @@ public final class TempleRoom {
     public void focusStory(double cx,double cy){
         storyCamera=true;
         cameraX=Math.max(0,Math.min(cx-960/(2*ZOOM),1536-960/ZOOM));
-        cameraY=Math.max(0,Math.min(cy-520/(2*ZOOM),1024-520/ZOOM));
+        cameraY=Math.max(0,Math.min(cy-640/(2*ZOOM),1024-640/ZOOM));
     }
     public void finishStory(){storyCamera=false;animation.stop();updateCamera();}
     private final Rectangle encounterStep=new Rectangle(1110,272,152,12);
@@ -121,8 +121,8 @@ public final class TempleRoom {
         Graphics2D g=(Graphics2D)graphics.create();g.setFont(DialogueBox.font(17));
         String label="สำรวจ";int width=48+g.getFontMetrics().stringWidth(label),height=32;
         int sx=(int)Math.round((point.promptX-Math.round(cameraX))*ZOOM)-width/2;
-        int sy=60+(int)Math.round((point.promptY-Math.round(cameraY))*ZOOM)-height/2;
-        sx=Math.max(8,Math.min(960-width-8,sx));sy=Math.max(68,Math.min(580-height-8,sy));
+        int sy=0+(int)Math.round((point.promptY-Math.round(cameraY))*ZOOM)-height/2;
+        sx=Math.max(8,Math.min(960-width-8,sx));sy=Math.max(8,Math.min(640-height-8,sy));
         g.setColor(new Color(10,16,20,230));g.fillRoundRect(sx,sy,width,height,6,6);
         g.setColor(new Color(118,126,118));g.drawRoundRect(sx,sy,width,height,6,6);
         g.setColor(new Color(45,52,53));g.fillRect(sx+7,sy+5,22,22);
@@ -168,7 +168,7 @@ public final class TempleRoom {
     private void updateCamera() {
         if(storyCamera)return;
         cameraX=Math.max(0,Math.min(x+8-960/(2*ZOOM),background.getWidth()-960/ZOOM));
-        cameraY=Math.max(0,Math.min(y+8-520/(2*ZOOM),background.getHeight()-520/ZOOM));
+        cameraY=Math.max(0,Math.min(y+8-640/(2*ZOOM),background.getHeight()-640/ZOOM));
     }
     public boolean consumeExitRequest(){boolean exit=exitReached;exitReached=false;return exit;}
     public void returnFromThrone(){x=1180;y=200;exitReached=false;backRequested=false;battleRequested=false;animation.reset(SpriteAnimator.DOWN);updateCamera();}
@@ -190,9 +190,10 @@ public final class TempleRoom {
 
     public void draw(Graphics graphics) {
         Graphics2D g=(Graphics2D)graphics.create();
-        g.setClip(0,60,960,520);
+        g.setClip(0,0,960,640);
+        g.setColor(Color.BLACK);g.fillRect(0,0,960,640);
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-        g.translate(0,60);g.scale(ZOOM,ZOOM);g.translate(-Math.round(cameraX),-Math.round(cameraY));
+        g.translate(0,0);g.scale(ZOOM,ZOOM);g.translate(-Math.round(cameraX),-Math.round(cameraY));
         g.drawImage(background,0,0,null);
         if(!cleared)BossArtwork.drawKnightTurn(g,1377,273,ACTOR_SCALE,knightTurn);
         else drawDroppedSword(g);
@@ -208,6 +209,5 @@ public final class TempleRoom {
             if(!cleared){g.setColor(Color.MAGENTA);g.draw(encounterStep);}
         }
         g.dispose();
-        GameUi.exploration(graphics,"RUINED TEMPLE",4);
     }
 }

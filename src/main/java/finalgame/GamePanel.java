@@ -58,7 +58,7 @@ public class GamePanel extends JPanel {
     private final Rectangle resumeButton = new Rectangle(340, 270, 280, 60);
     private final Rectangle overlayHelpButton=new Rectangle(340,350,280,60);
     private final Rectangle menuButton = new Rectangle(340, 430, 280, 60);
-    private final Rectangle skipStoryButton=new Rectangle(824,74,116,38);
+    private final Rectangle skipStoryButton=new Rectangle(824,16,116,38);
     private final Rectangle battleArea = new Rectangle(300, 300, 360, 260);
     private final Player player;
     private Boss boss;
@@ -261,7 +261,7 @@ public class GamePanel extends JPanel {
     private boolean devBattleReady(){return state==GameState.BATTLE&&!story.active()&&player.isAlive()&&boss.isAlive();}
     private void toggleDev(){
         if(!devAuthorized)return;
-        devEnabled=!devEnabled;devOverlay=devEnabled;clearInput();
+        devEnabled=!devEnabled;devOverlay=false;clearInput();
         if(!devEnabled){
             devGod=false;devSkills=false;player.setDevInvulnerable(false);
             exploration.setCollisionView(false);mine.setCollisionView(false);butterfly.setCollisionView(false);
@@ -1472,7 +1472,7 @@ public class GamePanel extends JPanel {
         g.drawRect(hit.x,hit.y,hit.width-1,hit.height-1);
     }
     private void drawDevPanel(Graphics graphics){
-        if(!devEnabled)return;
+        if(!devEnabled||state==GameState.EXPLORATION&&!devOverlay)return;
         Graphics2D g=(Graphics2D)graphics.create();g.setFont(new Font(Font.MONOSPACED,Font.BOLD,11));
         g.setColor(new Color(23,21,28,235));g.fillRect(800,614,150,20);
         g.setColor(new Color(185,155,123));g.drawString("DEV ON / F1 PANEL",808,628);
@@ -1480,7 +1480,7 @@ public class GamePanel extends JPanel {
             g.setColor(new Color(15,18,25,242));g.fillRoundRect(690,82,260,453,8,8);
             g.setColor(new Color(127,106,113));g.drawRoundRect(690,82,260,453,8,8);
             g.setFont(new Font(Font.MONOSPACED,Font.BOLD,14));g.setColor(new Color(219,205,188));g.drawString("PRESENTATION / DEV",704,108);
-            String[] lines={"Build 3.107","Map "+currentMap()+" / Boss "+selectedBoss,"Boss HP "+boss.getHp()+" / "+boss.getMaxHp(),
+            String[] lines={"Build 3.108","Map "+currentMap()+" / Boss "+selectedBoss,"Boss HP "+boss.getHp()+" / "+boss.getMaxHp(),
                 "F1  Show / hide panel","F3  Map collision","F6  Next map","F7  Replay map story",
                 "1-5 Test boss (battle)","K   Kill boss / all phases","G   God mode: "+(devGod?"ON":"OFF"),
                 "H   Heal player","U   E/Q preview: "+(devSkills?"ON":"OFF"),"C   Clear enemy bullets","P   Final boss phase 2",

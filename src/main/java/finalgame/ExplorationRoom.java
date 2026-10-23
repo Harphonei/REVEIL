@@ -24,7 +24,7 @@ public class ExplorationRoom {
     }
 
     private final double scaleX, scaleY;
-    private static final int VIEW_W = 960, VIEW_H = 520, TOP = 60;
+    private static final int VIEW_W = 960, VIEW_H = 640, TOP = 0;
     private static final double SPEED = 90, SIZE = 16;
     private static final double ZOOM = 1.45;
     private final BufferedImage background;
@@ -282,6 +282,7 @@ public class ExplorationRoom {
     public void draw(Graphics graphics) {
         Graphics2D g=(Graphics2D)graphics.create();
         g.setClip(0,TOP,VIEW_W,VIEW_H);
+        g.setColor(Color.BLACK);g.fillRect(0,0,960,640);
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
         g.translate(0,TOP);
         g.scale(storyZoom,storyZoom);
@@ -310,6 +311,5 @@ public class ExplorationRoom {
             drawPlayer(g,feetX,feetY);
         }
         g.dispose();
-        GameUi.exploration(graphics,"THE FOREST",1);
     }
 }

@@ -40,7 +40,7 @@ public final class ThroneRoom {
     public void focus(double cx,double cy,double z){
         cinematic=true;zoom=z;
         cameraX=Math.max(0,Math.min(cx-480/z,width-960/z));
-        cameraY=Math.max(0,Math.min(cy-260/z,height-520/z));
+        cameraY=Math.max(0,Math.min(cy-320/z,height-640/z));
     }
     public void moveHero(double nx,double ny,double dt){animation.update(nx-x,ny-y,dt,false);x=nx;y=ny;}
     public void faceHero(int direction){animation.reset(direction);}
@@ -122,7 +122,7 @@ public final class ThroneRoom {
     private void updateCamera() {
         if(cinematic)return;
         cameraX=Math.max(0,Math.min(x+8-960/(2*ZOOM),Math.max(0,width-960/ZOOM)));
-        cameraY=Math.max(0,Math.min(y+8-520/(2*ZOOM),Math.max(0,height-520/ZOOM)));
+        cameraY=Math.max(0,Math.min(y+8-640/(2*ZOOM),Math.max(0,height-640/ZOOM)));
     }
     public boolean consumeBackRequest(){boolean b=backRequested;backRequested=false;return b;}
     public boolean consumeBattleRequest(){boolean b=battleRequested;battleRequested=false;return b;}
@@ -134,9 +134,10 @@ public final class ThroneRoom {
         return Math.min(32,16+(int)Math.round(Math.max(0,x-1090)/260*16));
     }
     public void draw(Graphics graphics) {
-        Graphics2D g=(Graphics2D)graphics.create();g.setClip(0,60,960,520);
+        Graphics2D g=(Graphics2D)graphics.create();g.setClip(0,0,960,640);
+        g.setColor(Color.BLACK);g.fillRect(0,0,960,640);
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-        g.translate(0,60);g.scale(zoom,zoom);g.translate(-Math.round(cameraX),-Math.round(cameraY));
+        g.translate(0,0);g.scale(zoom,zoom);g.translate(-Math.round(cameraX),-Math.round(cameraY));
         if(impact>0)g.translate(Math.sin(impact*67)*impact*5,Math.cos(impact*53)*impact*3);
         g.drawImage(background,0,0,null);
         Graphics2D remains=(Graphics2D)g.create();
@@ -161,6 +162,5 @@ public final class ThroneRoom {
         }
         if(showCollision){g.drawImage(collision,0,0,null);g.setColor(Color.CYAN);g.drawRect((int)x+4,(int)y+10,8,6);}
         g.dispose();
-        GameUi.exploration(graphics,"INNER SANCTUARY",5);
     }
 }
