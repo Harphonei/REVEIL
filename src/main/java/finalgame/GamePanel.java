@@ -38,6 +38,7 @@ public class GamePanel extends JPanel {
     private GameState helpReturnState=GameState.MENU;
     private boolean devOverlay;
     private double menuClock;
+    private double creditsTime;
     private String saveNotice=saveStore.warning();
     private final ExplorationRoom exploration = new ExplorationRoom();
     private final MineRoom mine = new MineRoom();
@@ -116,10 +117,11 @@ public class GamePanel extends JPanel {
         bindScreenAction("released UP", "menu-up", () -> moveMenu(-1));
         bindScreenAction("released DOWN", "menu-down", () -> moveMenu(1));
         bindScreenAction("released SPACE", "dialogue-next", () -> {
-            if(state!=GameState.PAUSED && story.active())story.advance();
+            if(state==GameState.CREDITS)leaveCredits();
+            else if(state!=GameState.PAUSED && story.active())story.advance();
         });
         bindScreenAction("released TAB", "skip-seen-scene", () -> {
-            skipStory();
+            if(state==GameState.CREDITS)leaveCredits();else skipStory();
         });
         bindScreenAction("released M", "menu", () -> {
             if (state == GameState.PAUSED||state==GameState.GAME_OVER) returnToMenu();
@@ -213,7 +215,8 @@ public class GamePanel extends JPanel {
     private void hoverMenu(int x,int y){
         layoutMainMenu();
         boolean over=false;
-        if(state==GameState.MENU){
+        if(state==GameState.CREDITS)over=CreditsScreen.SKIP.contains(x,y);
+        else if(state==GameState.MENU){
             int index=menuIndexAt(x,y);if(index>=0){menuChoice=index;over=true;}
         }else if(state==GameState.REMATCH){
             int index=RematchScreen.choiceAt(x,y);
@@ -311,9 +314,17 @@ public class GamePanel extends JPanel {
         menuChoice=0;changeState(GameState.MENU);
     }
     private void finishCampaign(){
+        // Completion is durable before either automatic credits or Skip can leave.
         checkpoint=null;saved=new SaveStore.Profile(true,null);persistCheckpoint();runActive=false;
-        endThroneScene();throneStoryBattle=false;menuFade=1;menuChoice=0;changeState(GameState.MENU);
+        story.cancel();endThroneScene();throneStoryBattle=false;rematchActive=false;
+        creditsTime=0;storyFade=0;menuFade=0;cinematicFlash=0;phaseSlash=0;
+        changeState(GameState.CREDITS);
     }
+    private void leaveCredits(){
+        if(state!=GameState.CREDITS)return;
+        menuFade=1;menuChoice=0;changeState(GameState.MENU);
+    }
+
     private void continueGame(){
         SaveStore.Checkpoint resume=saved.checkpoint();if(resume==null)return;
         resetRun();checkpoint=resume;runActive=true;skillEUnlocked=resume.skillE();skillQUnlocked=resume.skillQ();
@@ -331,7 +342,8 @@ public class GamePanel extends JPanel {
     }
 
     private void togglePause() {
-        if(state==GameState.REMATCH){rematchActive=false;menuFade=0;menuChoice=0;changeState(GameState.MENU);}
+        if(state==GameState.CREDITS){leaveCredits();}
+        else if(state==GameState.REMATCH){rematchActive=false;menuFade=0;menuChoice=0;changeState(GameState.MENU);}
         else if(state==GameState.HELP){returnFromHelp();}
         else if (state == GameState.PAUSED) {
             changeState(stateBeforePause);
@@ -398,7 +410,8 @@ public class GamePanel extends JPanel {
     }
 
     private void confirmScreen() {
-        if(state==GameState.REMATCH){if(rematchChoice==5)togglePause();else startRematch(rematchChoice+1);}
+        if(state==GameState.CREDITS)leaveCredits();
+        else if(state==GameState.REMATCH){if(rematchChoice==5)togglePause();else startRematch(rematchChoice+1);}
         else if (state == GameState.MENU) activateMenu();
         else if(state==GameState.GAME_OVER)activateOverlay(deathChoice,true);
         else if(state==GameState.HELP)returnFromHelp();
@@ -429,6 +442,7 @@ public class GamePanel extends JPanel {
     }
 
     private void handleClick(int x, int y) {
+        if(state==GameState.CREDITS){if(CreditsScreen.SKIP.contains(x,y))leaveCredits();return;}
         layoutMainMenu();
         if(state==GameState.REMATCH){
             int index=RematchScreen.choiceAt(x,y);
@@ -481,7 +495,7 @@ public class GamePanel extends JPanel {
 
     /** Developer replay resets only the current room and its story flags. */
     private void replayCurrentMap(){
-        if(rematchActive||state==GameState.REMATCH||state==GameState.MENU||state==GameState.HELP)return;
+        if(rematchActive||state==GameState.CREDITS||state==GameState.REMATCH||state==GameState.MENU||state==GameState.HELP)return;
         story.cancel();storyFade=0;storySkippable=false;
         cinematicFlash=0;phaseSlash=0;menuFade=0;throneStoryBattle=false;
         exploration.finishStory();mine.finishStory();butterfly.finishStory();temple.finishStory();
@@ -1128,6 +1142,9 @@ public class GamePanel extends JPanel {
         double seconds = Math.min((now - previousTime) / 1_000_000_000.0, 0.05);
         previousTime = now;
 
+        if(state==GameState.CREDITS){
+            creditsTime+=seconds;if(creditsTime>=CreditsScreen.DURATION)leaveCredits();repaint();return;
+        }
         if(state==GameState.GAME_OVER)return;
         if(state==GameState.REMATCH){menuClock+=seconds;repaint();return;}
         if(state==GameState.HELP){menuClock+=seconds;repaint();return;}
@@ -1342,6 +1359,11 @@ public class GamePanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+        if(state==GameState.CREDITS){
+            CreditsScreen.draw(g,creditsTime);
+            if(!saveNotice.isEmpty()){g.setColor(new Color(244,173,156));g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,12));g.drawString(saveNotice,20,620);}
+            return;
+        }
         if(state==GameState.HELP){drawHelp(g);return;}
         if(state==GameState.REMATCH){RematchScreen.draw(g,menuClock,rematchChoice,rematchWins);return;}
         if (state == GameState.MENU) {

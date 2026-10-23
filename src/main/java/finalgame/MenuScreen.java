@@ -39,11 +39,11 @@ public final class MenuScreen {
         text(g,"VHF",854,174,10,DIM);text(g,"UHF",854,276,10,DIM);
         g.setColor(new Color(13,14,18));
         for(int y=320;y<493;y+=9)g.fillRoundRect(821,y,65,4,3,3);
-        PixelLetters.centered(g,"FINAL",854,528,2,new Color(143,134,123));
+        PixelLetters.centered(g,"REVEIL",854,528,2,new Color(143,134,123));
         g.setColor(new Color(83,37,45));g.fillOval(823,593,8,8);
         g.setColor(new Color(175,78,83));g.fillRect(825,595,3,3);
         g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,10));g.setColor(new Color(130,121,111));g.drawString("POWER",841,601);
-        g.setColor(new Color(112,104,97));g.drawString("FINAL / 3.104",72,603);
+        g.setColor(new Color(112,104,97));g.drawString("REVEIL / 3.105",72,603);
     }
     private static void knob(Graphics2D g,int cx,int cy,int radius,double angle){
         g.setColor(new Color(10,11,15));g.fillOval(cx-radius-3,cy-radius-1,radius*2+6,radius*2+6);
@@ -83,8 +83,8 @@ public final class MenuScreen {
     }
     public static void menu(Graphics graphics,double time,SaveStore.Profile profile,int selected,Rectangle continueButton,Rectangle newButton,Rectangle helpButton,Rectangle rematchButton,String notice){
         Graphics2D g=(Graphics2D)graphics.create();shell(g);Graphics2D screen=glass(g,time);
-        PixelLetters.centered(screen,"FINAL",426+2,112,11,new Color(72,39,49));
-        PixelLetters.centered(screen,"FINAL",426,110,11,IVORY);
+        PixelLetters.centered(screen,"REVEIL",426+2,112,11,new Color(72,39,49));
+        PixelLetters.centered(screen,"REVEIL",426,110,11,IVORY);
         text(screen,"- - -",426,216,13,new Color(102,104,100));
         layoutMenu(profile,continueButton,newButton,helpButton,rematchButton);
         boolean resume=profile.checkpoint()!=null;int index=0;
