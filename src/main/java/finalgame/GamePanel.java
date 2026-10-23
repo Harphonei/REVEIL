@@ -39,6 +39,7 @@ public class GamePanel extends JPanel {
     private final boolean devAuthorized=DevAccess.authorized();
     private boolean devEnabled,devGod,devSkills;
     private boolean devOverlay;
+    private boolean devBeforeRematch;
     private double menuClock;
     private double creditsTime;
     private String saveNotice=saveStore.warning();
@@ -113,6 +114,9 @@ public class GamePanel extends JPanel {
         });
         bindScreenAction("released F6", "skip-map", () -> {if(devEnabled)skipMap();});
         bindScreenAction("released F7", "replay-map", () -> {if(devEnabled)replayCurrentMap();});
+        bindScreenAction("released F8", "dev-before-rematch", () -> {
+            if(devEnabled && state==GameState.MENU){devBeforeRematch=!devBeforeRematch;menuChoice=0;layoutMainMenu();repaint();}
+        });
         bindScreenAction("released F1", "dev-overlay", () -> {if(devEnabled){devOverlay=!devOverlay;repaint();}});
         bindScreenAction("ctrl shift released F12","toggle-private-dev",this::toggleDev);
         bindDevAction("K","dev-kill",()->{if(devBattleReady())boss.devDefeat();});
@@ -263,7 +267,7 @@ public class GamePanel extends JPanel {
         if(!devAuthorized)return;
         devEnabled=!devEnabled;devOverlay=false;clearInput();
         if(!devEnabled){
-            devGod=false;devSkills=false;player.setDevInvulnerable(false);
+            devGod=false;devSkills=false;devBeforeRematch=false;menuChoice=0;layoutMainMenu();player.setDevInvulnerable(false);
             exploration.setCollisionView(false);mine.setCollisionView(false);butterfly.setCollisionView(false);
             temple.setCollisionView(false);throne.setCollisionView(false);
         }
@@ -389,13 +393,16 @@ public class GamePanel extends JPanel {
         if(state==GameState.GAME_OVER){deathChoice=Math.floorMod(deathChoice+delta,3);repaint();return;}
         if(state==GameState.PAUSED){pauseChoice=Math.floorMod(pauseChoice+delta,3);repaint();return;}
         if(state!=GameState.MENU)return;
-        menuChoice=Math.floorMod(menuChoice+delta,2+(saved.checkpoint()!=null?1:0)+(saved.completed()?1:0));repaint();
+        menuChoice=Math.floorMod(menuChoice+delta,2+(saved.checkpoint()!=null?1:0)+(menuProfile().completed()?1:0));repaint();
     }
-    private void layoutMainMenu(){MenuScreen.layoutMenu(saved,continueButton,startButton,helpButton,rematchButton);}
+    private SaveStore.Profile menuProfile(){
+        return devEnabled&&devBeforeRematch?new SaveStore.Profile(false,saved.checkpoint()):saved;
+    }
+    private void layoutMainMenu(){MenuScreen.layoutMenu(menuProfile(),continueButton,startButton,helpButton,rematchButton);}
     private int menuIndexAt(int x,int y){
         Rectangle[] buttons=saved.checkpoint()!=null
-            ?(saved.completed()?new Rectangle[]{continueButton,startButton,helpButton,rematchButton}:new Rectangle[]{continueButton,startButton,helpButton})
-            :(saved.completed()?new Rectangle[]{startButton,helpButton,rematchButton}:new Rectangle[]{startButton,helpButton});
+            ?(menuProfile().completed()?new Rectangle[]{continueButton,startButton,helpButton,rematchButton}:new Rectangle[]{continueButton,startButton,helpButton})
+            :(menuProfile().completed()?new Rectangle[]{startButton,helpButton,rematchButton}:new Rectangle[]{startButton,helpButton});
         for(int i=0;i<buttons.length;i++)if(buttons[i].contains(x,y))return i;
         return -1;
     }
@@ -404,17 +411,17 @@ public class GamePanel extends JPanel {
         if(saved.checkpoint()!=null&&menuChoice==index++)continueGame();
         else if(menuChoice==index++)requestNewGame();
         else if(menuChoice==index++)openHelp();
-        else if(saved.completed())openRematches();
+        else if(menuProfile().completed())openRematches();
     }
     private void openRematches(){
-        if(!saved.completed())return;
+        if(!menuProfile().completed())return;
         story.cancel();storyFade=0;menuFade=0;cinematicFlash=0;phaseSlash=0;
         rematchActive=false;runActive=false;
         projectiles.clear();enemyProjectiles.clear();laser.reset();battleEffects.reset();
         changeState(GameState.REMATCH);
     }
     private void startRematch(int number){
-        if(!saved.completed()||number<1||number>5)return;
+        if(!menuProfile().completed()||number<1||number>5)return;
         story.cancel();storyFade=1;cinematicFlash=0;phaseSlash=0;menuFade=0;
         forestStoryBattle=false;mineStoryBattle=false;mothStoryBattle=false;templeStoryBattle=false;throneStoryBattle=false;
         inMine=false;inButterfly=false;inTemple=false;inThrone=false;
@@ -1427,7 +1434,7 @@ public class GamePanel extends JPanel {
     }
 
     private void drawMenu(Graphics g) {
-        MenuScreen.menu(g,menuClock,saved,menuChoice,continueButton,startButton,helpButton,rematchButton,saveNotice);
+        MenuScreen.menu(g,menuClock,menuProfile(),menuChoice,continueButton,startButton,helpButton,rematchButton,saveNotice);
     }
 
 
@@ -1477,14 +1484,15 @@ public class GamePanel extends JPanel {
         g.setColor(new Color(23,21,28,235));g.fillRect(800,614,150,20);
         g.setColor(new Color(185,155,123));g.drawString("DEV ON / F1 PANEL",808,628);
         if(devOverlay){
-            g.setColor(new Color(15,18,25,242));g.fillRoundRect(690,82,260,453,8,8);
-            g.setColor(new Color(127,106,113));g.drawRoundRect(690,82,260,453,8,8);
+            g.setColor(new Color(15,18,25,242));g.fillRoundRect(690,82,260,477,8,8);
+            g.setColor(new Color(127,106,113));g.drawRoundRect(690,82,260,477,8,8);
             g.setFont(new Font(Font.MONOSPACED,Font.BOLD,14));g.setColor(new Color(219,205,188));g.drawString("PRESENTATION / DEV",704,108);
-            String[] lines={"Build 3.108","Map "+currentMap()+" / Boss "+selectedBoss,"Boss HP "+boss.getHp()+" / "+boss.getMaxHp(),
+            String[] lines={"Build 3.109","Map "+currentMap()+" / Boss "+selectedBoss,"Boss HP "+boss.getHp()+" / "+boss.getMaxHp(),
                 "F1  Show / hide panel","F3  Map collision","F6  Next map","F7  Replay map story",
                 "1-5 Test boss (battle)","K   Kill boss / all phases","G   God mode: "+(devGod?"ON":"OFF"),
                 "H   Heal player","U   E/Q preview: "+(devSkills?"ON":"OFF"),"C   Clear enemy bullets","P   Final boss phase 2",
-                "R   Retry fight","M   Menu (pause / death)","Ctrl+Shift+F12  DEV OFF"};
+                "R   Retry fight","M   Menu (pause / death)",
+                "F8  Before Rematch: "+(devBeforeRematch?"ON":"OFF"),"Ctrl+Shift+F12  DEV OFF"};
             g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,12));
             for(int i=0;i<lines.length;i++){g.setColor(i<2?new Color(153,165,163):new Color(199,190,180));g.drawString(lines[i],704,137+i*24);}
         }
