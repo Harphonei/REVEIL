@@ -11,9 +11,7 @@ public final class ButterflyRoom {
     private final BufferedImage background;
     private final BufferedImage rootArtwork;
     // Only the pointed foreground shrub shown on the upper corridor is passable.
-    private static final Polygon PATH_RELIEF=new Polygon(
-        new int[]{571,578,584,592,600,610,614,571},
-        new int[]{306,291,281,280,290,301,307,307},8);
+    private static final Rectangle PATH_RELIEF=new Rectangle(550,274,94,34);
     private final Area floor=loadMask("butterfly-floor.png");
     private final Shape[] obstacles={loadMask("butterfly-objects.png")};
     private final int[] blockedPrefix=createBlockedPrefix();

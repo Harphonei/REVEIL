@@ -43,7 +43,7 @@ public final class MenuScreen {
         g.setColor(new Color(83,37,45));g.fillOval(823,593,8,8);
         g.setColor(new Color(175,78,83));g.fillRect(825,595,3,3);
         g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,10));g.setColor(new Color(130,121,111));g.drawString("POWER",841,601);
-        g.setColor(new Color(112,104,97));g.drawString("FINAL / 3.95",72,603);
+        g.setColor(new Color(112,104,97));g.drawString("FINAL / 3.96",72,603);
     }
     private static void knob(Graphics2D g,int cx,int cy,int radius,double angle){
         g.setColor(new Color(10,11,15));g.fillOval(cx-radius-3,cy-radius-1,radius*2+6,radius*2+6);
@@ -124,10 +124,22 @@ public final class MenuScreen {
         g.setFont(new Font(Font.MONOSPACED,Font.BOLD,13));g.setColor(IVORY);g.drawString(title,x+111,y+30);
         g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,11));g.setColor(DIM);g.drawString(detail,x+111,y+51);
     }
-    public static void skipButton(Graphics g,Rectangle b){
-        g.setColor(new Color(16,20,27,225));g.fillRoundRect(b.x,b.y,b.width,b.height,6,6);
-        g.setColor(new Color(101,105,108));g.drawRoundRect(b.x,b.y,b.width,b.height,6,6);
-        g.setFont(new Font(Font.MONOSPACED,Font.BOLD,13));g.setColor(IVORY);g.drawString("TAB  SKIP SCENE",b.x+24,b.y+24);
+    public static void skipButton(Graphics graphics,Rectangle b){
+        Graphics2D g=(Graphics2D)graphics.create();
+        g.setColor(new Color(0,0,0,75));g.fillRect(b.x+2,b.y+3,b.width,b.height);
+        g.setColor(new Color(20,24,30,235));g.fillRect(b.x,b.y,b.width,b.height);
+        g.setColor(new Color(105,99,101));g.drawRect(b.x,b.y,b.width-1,b.height-1);
+        g.setColor(new Color(52,56,62));g.drawRect(b.x+3,b.y+3,b.width-7,b.height-7);
+        g.setColor(new Color(151,117,116));
+        for(int x:new int[]{b.x,b.x+b.width-1}){
+            int direction=x==b.x?1:-1;
+            g.drawLine(x,b.y,x+direction*9,b.y);
+            g.drawLine(x,b.y+b.height-1,x+direction*9,b.y+b.height-1);
+        }
+        g.setFont(new Font(Font.MONOSPACED,Font.BOLD,17));g.setColor(IVORY);
+        String label="Skip >";
+        g.drawString(label,b.x+(b.width-g.getFontMetrics().stringWidth(label))/2,b.y+25);
+        g.dispose();
     }
     public static void battleTutorial(Graphics graphics){
         Graphics2D g=(Graphics2D)graphics.create();
@@ -145,7 +157,7 @@ public final class MenuScreen {
             {"WASD","MOVE / DODGE","World and red heart"},{"SHIFT","RUN","While exploring"},
             {"MOUSE","HOLD TO FIRE","Right mouse button"},{"TALK","READ / CONFIRM","Advance dialogue"},
             {"E","HEAVY ATTACK","Charge, then fire"},{"Q","ULTIMATE","Boost fire for 5s"},
-            {"TAB","SKIP SCENE","Or click SKIP SCENE"},{"ESC","PAUSE / HELP","Time stops in menus"}
+            {"TAB","SKIP SCENE","Or click Skip >"},{"ESC","PAUSE / HELP","Time stops in menus"}
         };
         for(int i=0;i<items.length;i++)controlCard(screen,112+(i%2)*322,126+(i/2)*84,items[i][0],items[i][1],items[i][2]);
         button(screen,back,"BACK",true);text(screen,"ESC / ENTER TO GO BACK",426,548,12,DIM);

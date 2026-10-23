@@ -51,7 +51,7 @@ public class GamePanel extends JPanel {
     private final Rectangle resumeButton = new Rectangle(340, 270, 280, 60);
     private final Rectangle overlayHelpButton=new Rectangle(340,350,280,60);
     private final Rectangle menuButton = new Rectangle(340, 430, 280, 60);
-    private final Rectangle skipStoryButton=new Rectangle(756,14,184,38);
+    private final Rectangle skipStoryButton=new Rectangle(824,74,116,38);
     private final Rectangle battleArea = new Rectangle(300, 300, 360, 260);
     private final Player player;
     private Boss boss;
