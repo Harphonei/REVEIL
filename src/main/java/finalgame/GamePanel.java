@@ -23,6 +23,13 @@ public class GamePanel extends JPanel {
     private static final int VIEW_HEIGHT = 640;
     private GameState state = GameState.MENU;
     private GameState stateBeforePause = GameState.EXPLORATION;
+    private final SaveStore saveStore=new SaveStore();
+    private SaveStore.Profile saved=saveStore.load();
+    private SaveStore.Checkpoint checkpoint;
+    private boolean runActive;
+    private boolean savePending;
+    private int menuChoice;
+    private String saveNotice=saveStore.warning();
     private final ExplorationRoom exploration = new ExplorationRoom();
     private final MineRoom mine = new MineRoom();
     private boolean inMine;
@@ -32,7 +39,10 @@ public class GamePanel extends JPanel {
     private boolean inTemple;
     private final ThroneRoom throne=new ThroneRoom();
     private boolean inThrone;
-    private final Rectangle startButton = new Rectangle(340, 280, 280, 60);
+    private final Rectangle startButton = new Rectangle(340, 310, 280, 60);
+    private final Rectangle continueButton=new Rectangle(340,230,280,60);
+    private final Rectangle helpButton=new Rectangle(340,390,280,60);
+    private final Rectangle helpBackButton=new Rectangle(340,520,280,60);
     private final Rectangle resumeButton = new Rectangle(340, 270, 280, 60);
     private final Rectangle menuButton = new Rectangle(340, 350, 280, 60);
     private final Rectangle battleArea = new Rectangle(300, 300, 360, 260);
@@ -90,6 +100,8 @@ public class GamePanel extends JPanel {
         bindScreenAction("released F7", "replay-map", () -> replayCurrentMap());
         bindScreenAction("released ESCAPE", "pause", () -> togglePause());
         bindScreenAction("released ENTER", "confirm", () -> confirmScreen());
+        bindScreenAction("released UP", "menu-up", () -> moveMenu(-1));
+        bindScreenAction("released DOWN", "menu-down", () -> moveMenu(1));
         bindScreenAction("released SPACE", "dialogue-next", () -> {
             if(state!=GameState.PAUSED && story.active())story.advance();
         });
@@ -97,7 +109,7 @@ public class GamePanel extends JPanel {
             if(state!=GameState.PAUSED && story.active() && storySkippable)finishForestEntrance();
         });
         bindScreenAction("released M", "menu", () -> {
-            if (state == GameState.PAUSED) changeState(GameState.MENU);
+            if (state == GameState.PAUSED) returnToMenu();
         });
 
         getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
@@ -197,7 +209,7 @@ public class GamePanel extends JPanel {
         repaint();
     }
 
-    private void startNewGame() {
+    private void resetRun() {
         story.cancel();storyFade=0;storySkippable=false;
         forestCorpseSeen=false;forestEncounterSeen=false;forestVictorySeen=false;forestStoryBattle=false;
         mineEntrySeen=false;mineEncounterSeen=false;mineVictorySeen=false;mineStoryBattle=false;skillEUnlocked=false;
@@ -217,12 +229,67 @@ public class GamePanel extends JPanel {
         selectedBoss = 1;
         boss = new ForestBoss(430, 210);
         restartBattle();
+    }
+
+    private void requestNewGame(){
+        if(saved.checkpoint()!=null&&javax.swing.JOptionPane.showConfirmDialog(this,
+                "Start a new game and replace the saved run?","New Game",
+                javax.swing.JOptionPane.YES_NO_OPTION)!=javax.swing.JOptionPane.YES_OPTION)return;
+        startNewGame();
+    }
+
+    private void startNewGame() {
+        resetRun();runActive=true;checkpoint=captureCheckpoint(1);persistCheckpoint();
         playForestOpening();
         changeState(GameState.EXPLORATION);
     }
 
+    private int currentMap(){return inThrone?5:inTemple?4:inButterfly?3:inMine?2:1;}
+    private SaveStore.Checkpoint captureCheckpoint(int map){
+        int mask=(exploration.isCleared()?1:0)|(mine.isCleared()?2:0)|(butterfly.isCleared()?4:0)|(temple.isCleared()?8:0);
+        return new SaveStore.Checkpoint(map,skillEUnlocked,skillQUnlocked,mask&~(1<<(map-1)));
+    }
+    private void checkpointMapIfChanged(){
+        if(runActive&&(checkpoint==null||checkpoint.map()!=currentMap())){
+            checkpoint=captureCheckpoint(currentMap());persistCheckpoint();
+        }
+    }
+    private boolean persistCheckpoint(){
+        SaveStore.Profile next=new SaveStore.Profile(saved.completed(),checkpoint);
+        try{saveStore.save(next);saved=next;savePending=false;saveNotice="";return true;}
+        catch(java.io.IOException ex){savePending=true;saveNotice="Autosave failed. Please check disk space and folder permissions.";repaint();return false;}
+    }
+    public boolean saveBeforeExit(){
+        if(!runActive)return !savePending||persistCheckpoint();
+        checkpointMapIfChanged();return persistCheckpoint();
+    }
+    private void returnToMenu(){
+        if(!saveBeforeExit())return;
+        runActive=false;story.cancel();storyFade=0;cinematicFlash=0;phaseSlash=0;menuFade=0;
+        menuChoice=0;changeState(GameState.MENU);
+    }
+    private void finishCampaign(){
+        checkpoint=null;saved=new SaveStore.Profile(true,null);persistCheckpoint();runActive=false;
+        endThroneScene();throneStoryBattle=false;menuFade=1;menuChoice=0;changeState(GameState.MENU);
+    }
+    private void continueGame(){
+        SaveStore.Checkpoint resume=saved.checkpoint();if(resume==null)return;
+        resetRun();checkpoint=resume;runActive=true;skillEUnlocked=resume.skillE();skillQUnlocked=resume.skillQ();
+        int mask=resume.clearedMask();
+        if((mask&1)!=0){exploration.returnFromBattle();forestCorpseSeen=true;forestEncounterSeen=true;forestVictorySeen=true;}
+        if((mask&2)!=0){mine.returnFromBattle();mineEntrySeen=true;mineEncounterSeen=true;mineVictorySeen=true;}
+        if((mask&4)!=0){butterfly.returnFromBattle();mothEntrySeen=true;mothRootsSeen=true;mothEncounterSeen=true;mothVictorySeen=true;}
+        if((mask&8)!=0){temple.returnFromBattle();templeEntrySeen=true;templeEncounterSeen=true;templeVictorySeen=true;}
+        switch(resume.map()){
+            case 2:enterMine();break;case 3:enterButterfly();break;case 4:enterTemple();break;case 5:enterThrone();break;
+            default:playForestOpening();break;
+        }
+        changeState(GameState.EXPLORATION);
+    }
+
     private void togglePause() {
-        if (state == GameState.PAUSED) {
+        if(state==GameState.HELP){changeState(GameState.MENU);}
+        else if (state == GameState.PAUSED) {
             changeState(stateBeforePause);
         } else if (state == GameState.EXPLORATION || state == GameState.BATTLE) {
             stateBeforePause = state;
@@ -230,8 +297,20 @@ public class GamePanel extends JPanel {
         }
     }
 
+    private void moveMenu(int delta){
+        if(state!=GameState.MENU)return;
+        menuChoice=Math.floorMod(menuChoice+delta,saved.checkpoint()==null?2:3);repaint();
+    }
+    private void activateMenu(){
+        boolean hasContinue=saved.checkpoint()!=null;
+        if(hasContinue&&menuChoice==0)continueGame();
+        else if(menuChoice==(hasContinue?1:0))requestNewGame();
+        else changeState(GameState.HELP);
+    }
+
     private void confirmScreen() {
-        if (state == GameState.MENU) startNewGame();
+        if (state == GameState.MENU) activateMenu();
+        else if(state==GameState.HELP)changeState(GameState.MENU);
         else if (state == GameState.PAUSED) togglePause();
         else if(story.active()){story.advance();repaint();}
         else if (state == GameState.BATTLE && !boss.isAlive() && player.isAlive()) {
@@ -253,12 +332,17 @@ public class GamePanel extends JPanel {
     }
 
     private void handleClick(int x, int y) {
+        if(state==GameState.HELP){if(helpBackButton.contains(x,y))changeState(GameState.MENU);return;}
         if(state!=GameState.PAUSED && story.active()){story.advance();repaint();return;}
         if (state == GameState.MENU && startButton.contains(x, y)) {
-            startNewGame();
+            requestNewGame();
+        } else if(state==GameState.MENU&&continueButton.contains(x,y)&&saved.checkpoint()!=null){
+            continueGame();
+        } else if(state==GameState.MENU&&helpButton.contains(x,y)){
+            changeState(GameState.HELP);
         } else if (state == GameState.PAUSED) {
             if (resumeButton.contains(x, y)) togglePause();
-            else if (menuButton.contains(x, y)) changeState(GameState.MENU);
+            else if (menuButton.contains(x, y)) returnToMenu();
         } else if (state == GameState.EXPLORATION && (inThrone || inTemple ? false : inButterfly ? butterfly.interact(x,y) : inMine ? mine.interact(x,y) : exploration.interact(x, y))) {
             if(inButterfly) startButterflyBattle(); else if(inMine) startMineBattle(); else startForestBattle();
         }
@@ -281,12 +365,12 @@ public class GamePanel extends JPanel {
         } else {
             exploration.returnFromBattle(); enterMine();
         }
-        clearInput();repaint();
+        checkpointMapIfChanged();clearInput();repaint();
     }
 
     /** Developer replay resets only the current room and its story flags. */
     private void replayCurrentMap(){
-        if(state==GameState.MENU)return;
+        if(state==GameState.MENU||state==GameState.HELP)return;
         story.cancel();storyFade=0;storySkippable=false;
         cinematicFlash=0;phaseSlash=0;menuFade=0;throneStoryBattle=false;
         exploration.finishStory();mine.finishStory();butterfly.finishStory();temple.finishStory();
@@ -324,6 +408,7 @@ public class GamePanel extends JPanel {
 
     private void enterThrone(){
         inThrone=true;throne.enter();throne.finishStory();clearInput();
+        checkpointMapIfChanged();
         if(!throneEntrySeen){
             throneEntrySeen=true;storyFade=1;throne.beginStory();
             story.play(this::endThroneScene,
@@ -388,7 +473,7 @@ public class GamePanel extends JPanel {
         if(throneVictorySeen)return;
         throneVictorySeen=true;clearInput();projectiles.clear();enemyProjectiles.clear();laser.reset();
         ((MaskedBoss)boss).clearStoryHazards();
-        story.play(()->{endThroneScene();throneStoryBattle=false;menuFade=1;changeState(GameState.MENU);},
+        story.play(this::finishCampaign,
             StoryDirector.waitFor("final-last-breath",.7),
             StoryDirector.motion("final-victory-dark",1.0,p->storyFade=p),
             StoryDirector.action("final-return-hall",()->{
@@ -470,6 +555,7 @@ public class GamePanel extends JPanel {
 
     private void enterTemple(){
         inTemple=true;temple.enter();clearInput();
+        checkpointMapIfChanged();
         if(!templeEntrySeen){
             templeEntrySeen=true;storyFade=1;
             story.play(this::endTempleScene,
@@ -519,6 +605,7 @@ public class GamePanel extends JPanel {
 
     private void enterButterfly(){
         inButterfly=true;butterfly.enter();clearInput();
+        checkpointMapIfChanged();
         if(!mothEntrySeen){
             mothEntrySeen=true;storyFade=1;
             story.play(this::endMothScene,
@@ -606,6 +693,7 @@ public class GamePanel extends JPanel {
 
     private void enterMine(){
         inMine=true;mine.enter();clearInput();
+        checkpointMapIfChanged();
         if(!mineEntrySeen){
             mineEntrySeen=true;storyFade=1;
             story.play(this::endMineScene,
@@ -832,6 +920,7 @@ public class GamePanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent event) {
                 pressed[index] = false;
+                if(state==GameState.MENU&&(index==0||index==2))moveMenu(index==0?-1:1);
             }
         });
     }
@@ -871,6 +960,7 @@ public class GamePanel extends JPanel {
         double seconds = Math.min((now - previousTime) / 1_000_000_000.0, 0.05);
         previousTime = now;
 
+        if(state==GameState.HELP)return;
         if(state==GameState.MENU){if(menuFade>0){menuFade=Math.max(0,menuFade-seconds/1.2);repaint();}return;}
         if (state == GameState.PAUSED) return;
         if(story.active()){story.update(seconds);repaint();return;}
@@ -916,7 +1006,7 @@ public class GamePanel extends JPanel {
                     enterMine();
                 } else if(exploration.consumeBattleRequest()) startForestBattle();
             }
-            repaint();
+            checkpointMapIfChanged();repaint();
             return;
         }
 
@@ -1080,6 +1170,7 @@ public class GamePanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+        if(state==GameState.HELP){drawHelp(g);return;}
         if (state == GameState.MENU) {
             drawMenu(g);
             if(menuFade>0){g.setColor(new Color(0,0,0,(int)(255*menuFade)));g.fillRect(0,0,960,640);}
@@ -1103,6 +1194,7 @@ public class GamePanel extends JPanel {
             }
         }
         if (state == GameState.PAUSED) drawPause(g);
+        if(!saveNotice.isEmpty()){g.setColor(new Color(244,173,156));g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,12));g.drawString(saveNotice,20,600);}
     }
 
     private void drawButton(Graphics g, Rectangle bounds, String text) {
@@ -1122,12 +1214,32 @@ public class GamePanel extends JPanel {
         g.setColor(Color.WHITE);
         g.setFont(new Font(Font.MONOSPACED, Font.BOLD, 72));
         g.drawString("FINAL", 370, 190);
-        drawButton(g, startButton, "PLAY");
+        boolean hasContinue=saved.checkpoint()!=null;
+        if(hasContinue)drawMenuButton(g,continueButton,"CONTINUE",0);
+        drawMenuButton(g,startButton,"NEW GAME",hasContinue?1:0);
+        drawMenuButton(g,helpButton,"HOW TO PLAY",hasContinue?2:1);
         g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 18));
         g.setColor(Color.LIGHT_GRAY);
-        g.drawString("Click PLAY or press Enter", 340, 395);
-        g.drawString("The complete loop  |  v3.86", 325, 500);
-        g.drawString("No saved progress yet", 365, 535);
+        g.drawString("W/S or arrows: Select | Enter: Confirm", 270, 485);
+        g.drawString("The complete loop  |  v3.87", 325, 525);
+        if(hasContinue)g.drawString("Continue from Map "+saved.checkpoint().map()+" entrance",325,555);
+        else if(saved.completed())g.drawString("THE LOOP IS COMPLETE",365,555);
+        if(!saveNotice.isEmpty()){g.setColor(new Color(244,173,156));g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,12));g.drawString(saveNotice,20,600);}
+    }
+
+    private void drawMenuButton(Graphics g,Rectangle b,String text,int choice){
+        drawButton(g,b,text);
+        if(menuChoice==choice){g.setColor(HeroEffects.LIGHT);g.drawRect(b.x-3,b.y-3,b.width+6,b.height+6);}
+    }
+
+    private void drawHelp(Graphics g){
+        g.setColor(new Color(10,13,18));g.fillRect(0,0,960,640);
+        g.setColor(HeroEffects.LIGHT);g.setFont(new Font(Font.MONOSPACED,Font.BOLD,36));g.drawString("HOW TO PLAY",350,95);
+        g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,18));g.setColor(new Color(225,216,207));
+        String[] lines={"EXPLORE  /  WASD: Move   Shift: Run","DIALOGUE /  Enter, Space or left click: Next", "BATTLE   /  WASD: Move your heart", "            Hold right mouse: Fire", "            E: Heavy Attack   Q: Ultimate", "            Skills awaken as the story progresses.","PAUSE    /  Esc: Pause or resume", "RETRY    /  After defeat, R restarts the same fight.", "CONTINUE /  Restart at the current map's entrance.", "            That map's story and boss begin again."};
+        for(int i=0;i<lines.length;i++)g.drawString(lines[i],160,155+i*32);
+        drawButton(g,helpBackButton,"BACK");
+        g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));g.drawString("Esc / Enter: Back",405,610);
     }
 
     private void drawPause(Graphics g) {
@@ -1141,7 +1253,7 @@ public class GamePanel extends JPanel {
         g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
         g.drawString("Esc / Enter: Resume | M: Main menu", 320, 455);
         g.setColor(Color.LIGHT_GRAY);
-        g.drawString("Returning to menu discards this test run.", 290, 490);
+        g.drawString("Continue returns to this map's entrance.", 290, 490);
     }
 
     private void showShotImpact(Projectile shot){
