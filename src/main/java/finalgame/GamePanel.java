@@ -33,6 +33,7 @@ public class GamePanel extends JPanel {
     private int pauseChoice;
     private GameState helpReturnState=GameState.MENU;
     private boolean devOverlay;
+    private double menuClock;
     private String saveNotice=saveStore.warning();
     private final ExplorationRoom exploration = new ExplorationRoom();
     private final MineRoom mine = new MineRoom();
@@ -43,10 +44,10 @@ public class GamePanel extends JPanel {
     private boolean inTemple;
     private final ThroneRoom throne=new ThroneRoom();
     private boolean inThrone;
-    private final Rectangle startButton = new Rectangle(340, 310, 280, 60);
-    private final Rectangle continueButton=new Rectangle(340,230,280,60);
-    private final Rectangle helpButton=new Rectangle(340,390,280,60);
-    private final Rectangle helpBackButton=new Rectangle(340,520,280,60);
+    private final Rectangle startButton = new Rectangle(285, 310, 280, 60);
+    private final Rectangle continueButton=new Rectangle(285,230,280,60);
+    private final Rectangle helpButton=new Rectangle(285,390,280,60);
+    private final Rectangle helpBackButton=new Rectangle(285,478,280,48);
     private final Rectangle resumeButton = new Rectangle(340, 270, 280, 60);
     private final Rectangle overlayHelpButton=new Rectangle(340,350,280,60);
     private final Rectangle menuButton = new Rectangle(340, 430, 280, 60);
@@ -194,7 +195,29 @@ public class GamePanel extends JPanel {
             }
         });
 
+        addMouseMotionListener(new java.awt.event.MouseMotionAdapter(){
+            @Override public void mouseMoved(MouseEvent event){hoverMenu(event.getX(),event.getY());}
+        });
+        addMouseListener(new MouseAdapter(){
+            @Override public void mouseExited(MouseEvent event){setCursor(java.awt.Cursor.getDefaultCursor());}
+        });
         timer = new Timer(16, event -> updateGame());
+    }
+
+    private void hoverMenu(int x,int y){
+        boolean over=false;
+        if(state==GameState.MENU){
+            boolean resume=saved.checkpoint()!=null;
+            if(resume&&continueButton.contains(x,y)){menuChoice=0;over=true;}
+            else if(startButton.contains(x,y)){menuChoice=resume?1:0;over=true;}
+            else if(helpButton.contains(x,y)){menuChoice=resume?2:1;over=true;}
+        }else if(state==GameState.HELP)over=helpBackButton.contains(x,y);
+        else if(state==GameState.PAUSED||state==GameState.GAME_OVER){
+            int choice=resumeButton.contains(x,y)?0:overlayHelpButton.contains(x,y)?1:menuButton.contains(x,y)?2:-1;
+            if(choice>=0){over=true;if(state==GameState.PAUSED)pauseChoice=choice;else deathChoice=choice;}
+        }
+        setCursor(java.awt.Cursor.getPredefinedCursor(over?java.awt.Cursor.HAND_CURSOR:java.awt.Cursor.DEFAULT_CURSOR));
+        repaint();
     }
 
     private void bindScreenAction(String key, String name, Runnable command) {
@@ -212,6 +235,7 @@ public class GamePanel extends JPanel {
 
     private void changeState(GameState nextState) {
         clearInput();
+        setCursor(java.awt.Cursor.getDefaultCursor());
         state = nextState;
         repaint();
     }
@@ -983,10 +1007,11 @@ public class GamePanel extends JPanel {
         double seconds = Math.min((now - previousTime) / 1_000_000_000.0, 0.05);
         previousTime = now;
 
-        if(state==GameState.HELP||state==GameState.GAME_OVER)return;
-        if(state==GameState.MENU){if(menuFade>0){menuFade=Math.max(0,menuFade-seconds/1.2);repaint();}return;}
+        if(state==GameState.GAME_OVER)return;
+        if(state==GameState.HELP){menuClock+=seconds;repaint();return;}
+        if(state==GameState.MENU){menuClock+=seconds;if(menuFade>0)menuFade=Math.max(0,menuFade-seconds/1.2);repaint();return;}
         if (state == GameState.PAUSED) return;
-        if(story.active()){story.update(seconds);repaint();return;}
+        if(story.active()){if(story.currentId().equals("fade-from-menu"))menuClock+=seconds;story.update(seconds);repaint();return;}
         if(state==GameState.BATTLE)battleEffects.update(seconds);
         if (state == GameState.EXPLORATION) {
             int dx = (pressed[3] ? 1 : 0) - (pressed[1] ? 1 : 0);
@@ -1238,37 +1263,12 @@ public class GamePanel extends JPanel {
     }
 
     private void drawMenu(Graphics g) {
-        g.setColor(Color.BLACK);
-        g.fillRect(0,0,VIEW_WIDTH,VIEW_HEIGHT);
-        g.setColor(Color.WHITE);
-        g.setFont(new Font(Font.MONOSPACED, Font.BOLD, 72));
-        g.drawString("FINAL", 370, 190);
-        boolean hasContinue=saved.checkpoint()!=null;
-        if(hasContinue)drawMenuButton(g,continueButton,"CONTINUE",0);
-        drawMenuButton(g,startButton,"NEW GAME",hasContinue?1:0);
-        drawMenuButton(g,helpButton,"HOW TO PLAY",hasContinue?2:1);
-        g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 18));
-        g.setColor(Color.LIGHT_GRAY);
-        g.drawString("W/S or arrows: Select | Enter: Confirm", 270, 485);
-        g.drawString("The complete loop  |  v3.90", 325, 525);
-        if(hasContinue)g.drawString("Continue from Map "+saved.checkpoint().map()+" entrance",325,555);
-        else if(saved.completed())g.drawString("THE LOOP IS COMPLETE",365,555);
-        if(!saveNotice.isEmpty()){g.setColor(new Color(244,173,156));g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,12));g.drawString(saveNotice,20,600);}
+        MenuScreen.menu(g,menuClock,saved,menuChoice,continueButton,startButton,helpButton,saveNotice);
     }
 
-    private void drawMenuButton(Graphics g,Rectangle b,String text,int choice){
-        drawButton(g,b,text);
-        if(menuChoice==choice){g.setColor(HeroEffects.LIGHT);g.drawRect(b.x-3,b.y-3,b.width+6,b.height+6);}
-    }
 
     private void drawHelp(Graphics g){
-        g.setColor(new Color(10,13,18));g.fillRect(0,0,960,640);
-        g.setColor(HeroEffects.LIGHT);g.setFont(new Font(Font.MONOSPACED,Font.BOLD,36));g.drawString("HOW TO PLAY",350,95);
-        g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,18));g.setColor(new Color(225,216,207));
-        String[] lines={"EXPLORE  /  WASD: Move   Shift: Run","DIALOGUE /  Enter, Space or left click: Next", "BATTLE   /  WASD: Move your heart", "            Hold right mouse: Fire", "            E: Heavy Attack   Q: Ultimate", "            Skills awaken as the story progresses.","PAUSE    /  Esc: Pause or resume", "RETRY    /  After defeat, R restarts the same fight.", "CONTINUE /  Restart at the current map's entrance.", "            That map's story and boss begin again."};
-        for(int i=0;i<lines.length;i++)g.drawString(lines[i],160,155+i*32);
-        drawButton(g,helpBackButton,"BACK");
-        g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,14));g.drawString("Esc / Enter: Back",405,610);
+        MenuScreen.help(g,menuClock,helpBackButton);
     }
 
     private void drawPause(Graphics g) {
