@@ -7,6 +7,22 @@ import javax.imageio.ImageIO;
 
 /** Temple world uses native artwork pixels; collision is always at the feet. */
 public final class TempleRoom {
+    public enum InspectPoint {
+        CORPSE(165,450,165,400,85,false,
+            "เกราะแตกจนแทบไม่เหลือสภาพ…", "เกิดการต่อสู้อะไรขึ้นที่นี่กัน"),
+        STATUE(1004,270,1004,195,94,false,
+            "รูปปั้นอัศวิน…พังไปครึ่งตัวแล้ว", "เมื่อก่อนคงดูน่าเกรงขามกว่านี้"),
+        SWORD(1348,361,1348,308,82,true,
+            "ดาบหนักชะมัด…", "จนถึงที่สุด แกก็ยังไม่ยอมบอกอะไรฉันเลยสินะ");
+        final double x,y,promptX,promptY,radius;
+        final boolean afterBoss;
+        private final String[] lines;
+        InspectPoint(double x,double y,double promptX,double promptY,double radius,boolean afterBoss,String... lines){
+            this.x=x;this.y=y;this.promptX=promptX;this.promptY=promptY;this.radius=radius;this.afterBoss=afterBoss;this.lines=lines;
+        }
+        public String[] lines(){return lines.clone();}
+    }
+
     private static final double ZOOM=1.18;
     // Keep actors and movement the same screen size/speed as the other rooms.
     private static final double ACTOR_SCALE=1.35/1.10, SPEED=90*ACTOR_SCALE;
@@ -81,6 +97,40 @@ public final class TempleRoom {
         x=40;y=508;exitReached=false;backRequested=false;battleRequested=false;
         animation.reset(SpriteAnimator.RIGHT);updateCamera();
     }
+    public InspectPoint nearestInspection(){
+        InspectPoint nearest=null;double best=Double.POSITIVE_INFINITY;
+        for(InspectPoint point:InspectPoint.values()){
+            if(point.afterBoss&&!cleared)continue;
+            double distance=Point2D.distance(x+8,y+16,point.x,point.y);
+            if(distance<=point.radius&&distance<best){best=distance;nearest=point;}
+        }
+        return nearest;
+    }
+    public void faceStoryPoint(double targetX,double targetY){
+        double dx=targetX-(x+8),dy=targetY-(y+16),ax=Math.abs(dx),ay=Math.abs(dy);
+        int direction;
+        if(Math.min(ax,ay)>Math.max(ax,ay)*0.41421356237)
+            direction=dy>0?(dx>0?SpriteAnimator.DOWN_RIGHT:SpriteAnimator.DOWN_LEFT)
+                          :(dx>0?SpriteAnimator.UP_RIGHT:SpriteAnimator.UP_LEFT);
+        else direction=ax>=ay?(dx>=0?SpriteAnimator.RIGHT:SpriteAnimator.LEFT)
+                            :(dy>=0?SpriteAnimator.DOWN:SpriteAnimator.UP);
+        animation.reset(direction);
+    }
+    public void drawInspectionPrompt(Graphics graphics){
+        InspectPoint point=nearestInspection();if(point==null)return;
+        Graphics2D g=(Graphics2D)graphics.create();g.setFont(DialogueBox.font(17));
+        String label="สำรวจ";int width=48+g.getFontMetrics().stringWidth(label),height=32;
+        int sx=(int)Math.round((point.promptX-Math.round(cameraX))*ZOOM)-width/2;
+        int sy=60+(int)Math.round((point.promptY-Math.round(cameraY))*ZOOM)-height/2;
+        sx=Math.max(8,Math.min(960-width-8,sx));sy=Math.max(68,Math.min(580-height-8,sy));
+        g.setColor(new Color(10,16,20,230));g.fillRoundRect(sx,sy,width,height,6,6);
+        g.setColor(new Color(118,126,118));g.drawRoundRect(sx,sy,width,height,6,6);
+        g.setColor(new Color(45,52,53));g.fillRect(sx+7,sy+5,22,22);
+        g.setColor(new Color(158,159,143));g.drawRect(sx+7,sy+5,22,22);
+        g.setFont(new Font(Font.MONOSPACED,Font.BOLD,15));g.setColor(new Color(219,214,192));g.drawString("F",sx+14,sy+22);
+        g.setFont(DialogueBox.font(17));g.drawString(label,sx+37,sy+23);g.dispose();
+    }
+
     public void stopMovement(){animation.stop();}
     public void toggleCollisionView(){showCollision=!showCollision;}
     private boolean canStand(double px,double py) {
@@ -125,6 +175,18 @@ public final class TempleRoom {
     public void returnFromBattle(){cleared=true;battleRequested=false;x=1180;y=286;animation.reset(SpriteAnimator.UP);updateCamera();}
     public boolean consumeBackRequest(){boolean b=backRequested;backRequested=false;return b;}
     public void skipToExit(){cleared=true;battleRequested=false;x=1180;y=155;exitReached=true;animation.reset(SpriteAnimator.UP);updateCamera();}
+    private void drawDroppedSword(Graphics2D graphics){
+        Graphics2D g=(Graphics2D)graphics.create();g.translate(1332,377);
+        // Muted pixel steel, lying below the guardian's pedestal; decoration only.
+        g.setColor(new Color(7,12,20,120));g.fillPolygon(new int[]{-3,2,35,32,5,1},new int[]{4,6,-27,-29,-2,-5},6);
+        g.setColor(new Color(58,72,89));g.fillPolygon(new int[]{4,8,30,34,29,5},new int[]{-9,-5,-28,-35,-33,-11},6);
+        g.setColor(new Color(119,132,145));g.fillPolygon(new int[]{7,9,30,33,28},new int[]{-9,-7,-29,-34,-31},5);
+        g.setColor(new Color(165,171,176));g.drawLine(9,-10,30,-31);
+        g.setColor(new Color(53,49,60));g.fillPolygon(new int[]{-4,-1,8,5},new int[]{1,4,-5,-8},4);
+        g.setColor(new Color(101,112,125));g.fillPolygon(new int[]{1,3,12,10},new int[]{-13,-15,-6,-4},4);
+        g.setColor(new Color(95,103,115));g.fillRect(-5,1,4,4);g.dispose();
+    }
+
     public void draw(Graphics graphics) {
         Graphics2D g=(Graphics2D)graphics.create();
         g.setClip(0,60,960,520);
@@ -132,6 +194,7 @@ public final class TempleRoom {
         g.translate(0,60);g.scale(ZOOM,ZOOM);g.translate(-Math.round(cameraX),-Math.round(cameraY));
         g.drawImage(background,0,0,null);
         if(!cleared)BossArtwork.drawKnightTurn(g,1377,273,ACTOR_SCALE,knightTurn);
+        else drawDroppedSword(g);
         Graphics2D actor=(Graphics2D)g.create();
         if(x+8>=1140 && x+8<1240 && y+16<200)actor.clipRect(1136,154,108,100);
         animation.draw(actor,(int)Math.round(x+8),(int)Math.round(y+16),HERO_WIDTH,HERO_HEIGHT);actor.dispose();

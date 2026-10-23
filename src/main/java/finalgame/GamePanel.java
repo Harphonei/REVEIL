@@ -934,7 +934,16 @@ public class GamePanel extends JPanel {
             }));
     }
 
-    private void inspectNearby(){if(inButterfly)inspectButterfly();else if(inMine)inspectMine();else inspectForest();}
+    private void inspectNearby(){if(inTemple)inspectTemple();else if(inButterfly)inspectButterfly();else if(inMine)inspectMine();else inspectForest();}
+
+    private void inspectTemple(){
+        if(state!=GameState.EXPLORATION||story.active()||!inTemple||inThrone||rematchActive)return;
+        TempleRoom.InspectPoint point=temple.nearestInspection();if(point==null)return;
+        clearInput();temple.faceStoryPoint(point.x,point.y);
+        String[] lines=point.lines();StoryDirector.Beat[] beats=new StoryDirector.Beat[lines.length];
+        for(int i=0;i<lines.length;i++)beats[i]=StoryDirector.say(DialogueBox.Face.CONFUSED,lines[i]);
+        story.play(this::endTempleScene,beats);repaint();
+    }
 
     private void inspectButterfly(){
         if(state!=GameState.EXPLORATION||story.active()||!inButterfly||inTemple||inThrone||rematchActive)return;
@@ -1344,8 +1353,8 @@ public class GamePanel extends JPanel {
         if(story.currentId().equals("fade-from-menu"))drawMenu(g);
         else if (visibleState == GameState.EXPLORATION) { if(inThrone) throne.draw(g); else if(inTemple) temple.draw(g); else if(inButterfly) butterfly.draw(g); else if(inMine) mine.draw(g); else exploration.draw(g); }
         else drawBattle(g);
-        if(state==GameState.EXPLORATION&&!story.active()&&!inTemple&&!inThrone){
-            if(inButterfly)butterfly.drawInspectionPrompt(g);else if(inMine)mine.drawInspectionPrompt(g);else exploration.drawInspectionPrompt(g);
+        if(state==GameState.EXPLORATION&&!story.active()&&!inThrone){
+            if(inTemple)temple.drawInspectionPrompt(g);else if(inButterfly)butterfly.drawInspectionPrompt(g);else if(inMine)mine.drawInspectionPrompt(g);else exploration.drawInspectionPrompt(g);
         }
         if(story.active()) {
             if(cinematicFlash>.004){Graphics2D f=(Graphics2D)g.create();f.setComposite(java.awt.AlphaComposite.SrcOver);f.setColor(new Color(165,106,112,(int)(Math.min(1,cinematicFlash)*255)));f.fillRect(0,0,960,640);f.dispose();}
