@@ -10,7 +10,8 @@ public abstract class Boss {
     private final int y;
     private final int width = 100;
     private final int height = 60;
-    private final int maxHp;
+    private int maxHp;
+    private boolean rematchTuned;
     private final String name;
     private int hp;
     private double shotCooldown = 1.0;
@@ -37,6 +38,12 @@ public abstract class Boss {
         this.maxHp = CombatTuning.TEST_BOSS_HP > 0 ? CombatTuning.TEST_BOSS_HP : maxHp;
         this.name = name;
         hp = this.maxHp;
+    }
+
+    /** Applies once to a fresh boss; Retry retains this maximum without stacking. */
+    final void enableRematch(){
+        if(rematchTuned)return;
+        maxHp=(int)Math.ceil(maxHp*RematchRules.HP_MULTIPLIER);hp=maxHp;rematchTuned=true;
     }
 
     public int getMaxHp() { return maxHp; }

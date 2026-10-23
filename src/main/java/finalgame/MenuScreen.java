@@ -26,7 +26,7 @@ public final class MenuScreen {
     private static void text(Graphics g,String s,int cx,int y,int size,Color c){
         g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,size));g.setColor(c);g.drawString(s,cx-g.getFontMetrics().stringWidth(s)/2,y);
     }
-    private static void shell(Graphics2D g){
+    static void shell(Graphics2D g){
         g.setColor(new Color(7,8,11));g.fillRect(0,0,960,640);
         g.setPaint(new GradientPaint(0,20,new Color(58,53,53),0,620,new Color(23,22,27)));
         g.fillRoundRect(36,20,888,600,36,36);
@@ -43,7 +43,7 @@ public final class MenuScreen {
         g.setColor(new Color(83,37,45));g.fillOval(823,593,8,8);
         g.setColor(new Color(175,78,83));g.fillRect(825,595,3,3);
         g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,10));g.setColor(new Color(130,121,111));g.drawString("POWER",841,601);
-        g.setColor(new Color(112,104,97));g.drawString("FINAL / 3.97",72,603);
+        g.setColor(new Color(112,104,97));g.drawString("FINAL / 3.98",72,603);
     }
     private static void knob(Graphics2D g,int cx,int cy,int radius,double angle){
         g.setColor(new Color(10,11,15));g.fillOval(cx-radius-3,cy-radius-1,radius*2+6,radius*2+6);
@@ -54,7 +54,7 @@ public final class MenuScreen {
         g.setStroke(new BasicStroke(3));g.setColor(IVORY);g.drawLine(cx+dx/2,cy+dy/2,cx+dx,cy+dy);g.setStroke(new BasicStroke(1));
         for(int i=0;i<9;i++){double a=-2.4+i*.6;int x=cx+(int)(Math.sin(a)*(radius+8)),y=cy+(int)(Math.cos(a)*(radius+8));g.setColor(new Color(107,96,87));g.fillRect(x,y,2,2);}
     }
-    private static Graphics2D glass(Graphics2D g,double time){
+    static Graphics2D glass(Graphics2D g,double time){
         Graphics2D screen=(Graphics2D)g.create();screen.clip(GLASS);
         screen.setPaint(new RadialGradientPaint(426,294,420,new float[]{0,1},new Color[]{new Color(23,30,34),new Color(4,7,12)}));
         screen.fillRect(SCREEN.x,SCREEN.y,SCREEN.width,SCREEN.height);
@@ -65,7 +65,7 @@ public final class MenuScreen {
         screen.setColor(new Color(103,112,112,6));screen.fillRect(SCREEN.x,band,SCREEN.width,28);
         return screen;
     }
-    private static void scan(Graphics2D g){
+    static void scan(Graphics2D g){
         Graphics2D screen=(Graphics2D)g.create();screen.clip(GLASS);
         screen.setColor(new Color(0,0,0,23));for(int y=SCREEN.y;y<SCREEN.y+SCREEN.height;y+=3)screen.drawLine(SCREEN.x,y,SCREEN.x+SCREEN.width,y);
         screen.setColor(new Color(140,154,151,10));screen.drawRoundRect(77,57,698,510,38,38);screen.dispose();
@@ -81,20 +81,29 @@ public final class MenuScreen {
             g.fillRect(x,y,4,4);g.fillRect(x+6,y,4,4);g.fillRect(x-2,y+2,14,4);g.fillRect(x,y+6,10,2);g.fillRect(x+2,y+8,6,2);g.fillRect(x+4,y+10,2,2);
         }
     }
-    public static void menu(Graphics graphics,double time,SaveStore.Profile profile,int selected,Rectangle continueButton,Rectangle newButton,Rectangle helpButton,String notice){
+    public static void menu(Graphics graphics,double time,SaveStore.Profile profile,int selected,Rectangle continueButton,Rectangle newButton,Rectangle helpButton,Rectangle rematchButton,String notice){
         Graphics2D g=(Graphics2D)graphics.create();shell(g);Graphics2D screen=glass(g,time);
         PixelLetters.centered(screen,"FINAL",426+2,112,11,new Color(72,39,49));
         PixelLetters.centered(screen,"FINAL",426,110,11,IVORY);
         text(screen,"- - -",426,216,13,new Color(102,104,100));
-        boolean resume=profile.checkpoint()!=null;
-        if(resume)button(screen,continueButton,"CONTINUE",selected==0);
-        button(screen,newButton,"NEW GAME",selected==(resume?1:0));
-        button(screen,helpButton,"HOW TO PLAY",selected==(resume?2:1));
+        layoutMenu(profile,continueButton,newButton,helpButton,rematchButton);
+        boolean resume=profile.checkpoint()!=null;int index=0;
+        if(resume)button(screen,continueButton,"CONTINUE",selected==index++);
+        button(screen,newButton,"NEW GAME",selected==index++);
+        button(screen,helpButton,"HOW TO PLAY",selected==index++);
+        if(profile.completed())button(screen,rematchButton,"BOSS REMATCH",selected==index);
         if(resume)text(screen,"MAP "+profile.checkpoint().map()+" / ENTRANCE",426,485,13,DIM);
         else if(profile.completed())text(screen,"THE LOOP IS COMPLETE",426,485,13,DIM);
         text(screen,"W/S OR ARROWS    ENTER TO SELECT",426,530,12,DIM);
         if(!notice.isEmpty())text(screen,notice,426,551,10,new Color(196,129,120));
         screen.dispose();scan(g);g.dispose();
+    }
+    public static void layoutMenu(SaveStore.Profile profile,Rectangle resume,Rectangle fresh,Rectangle help,Rectangle rematch){
+        int count=2+(profile.checkpoint()!=null?1:0)+(profile.completed()?1:0);
+        int y=count==4?230:count==3?266:310,step=count==4?60:72;
+        if(profile.checkpoint()!=null){resume.setBounds(285,y,280,48);y+=step;}else resume.setBounds(0,0,0,0);
+        fresh.setBounds(285,y,280,48);y+=step;help.setBounds(285,y,280,48);y+=step;
+        if(profile.completed())rematch.setBounds(285,y,280,48);else rematch.setBounds(0,0,0,0);
     }
     private static void keycap(Graphics g,String label,int x,int y,int w){
         g.setColor(new Color(10,14,20));g.fillRoundRect(x,y+4,w,31,6,6);
