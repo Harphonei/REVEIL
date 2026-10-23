@@ -33,6 +33,7 @@ public final class DialogueBox {
     private String text="";
     private Face face=Face.NONE;
     private int[] ends=new int[0];
+    private static final double CHARACTERS_PER_SECOND=24.0;
     private double clock;
     private boolean open;
     private static Font loadFont() {
@@ -55,11 +56,11 @@ public final class DialogueBox {
     }
     public void update(double seconds){if(open)clock+=Math.max(0,seconds);}
     public boolean isOpen(){return open;}
-    public boolean complete(){return (int)(clock*32)>=ends.length;}
+    public boolean complete(){return (int)(clock*CHARACTERS_PER_SECOND)>=ends.length;}
     /** First press reveals the line. A second press advances the script. */
-    public boolean advance(){if(!complete()){clock=ends.length/32.0+1;return false;}return true;}
+    public boolean advance(){if(!complete()){clock=ends.length/CHARACTERS_PER_SECOND+1;return false;}return true;}
     public void close(){open=false;}
-    private String visibleText(){int n=Math.min(ends.length,(int)(clock*32));return n==0?"":text.substring(0,ends[n-1]);}
+    private String visibleText(){int n=Math.min(ends.length,(int)(clock*CHARACTERS_PER_SECOND));return n==0?"":text.substring(0,ends[n-1]);}
     private static List<String> wrap(String text,FontMetrics fm,int maxWidth) {
         List<String> lines=new ArrayList<>();
         for(String paragraph:text.split("\\n",-1)) {
