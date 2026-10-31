@@ -348,7 +348,7 @@ public class GamePanel extends JPanel {
         menuChoice=0;changeState(GameState.MENU);
     }
     private void finishCampaign(){
-        // Completion is durable before either automatic credits or Skip can leave.
+        // Keep failed completion saves pending; credits cannot leave until retry succeeds.
         checkpoint=null;saved=new SaveStore.Profile(true,null);persistCheckpoint();runActive=false;
         story.cancel();endThroneScene();throneStoryBattle=false;rematchActive=false;
         creditsTime=0;storyFade=0;menuFade=0;cinematicFlash=0;phaseSlash=0;
@@ -356,6 +356,10 @@ public class GamePanel extends JPanel {
     }
     private void leaveCredits(){
         if(state!=GameState.CREDITS)return;
+        if(savePending && !persistCheckpoint()){
+            saveNotice="Completion save failed. Check disk space / permissions, then press Enter to retry.";
+            return;
+        }
         menuFade=1;menuChoice=0;changeState(GameState.MENU);
     }
 
@@ -1180,7 +1184,11 @@ public class GamePanel extends JPanel {
         previousTime = now;
 
         if(state==GameState.CREDITS){
-            creditsTime+=seconds;if(creditsTime>=CreditsScreen.DURATION)leaveCredits();repaint();return;
+            if(creditsTime<CreditsScreen.DURATION){
+                creditsTime=Math.min(CreditsScreen.DURATION,creditsTime+seconds);
+                if(creditsTime>=CreditsScreen.DURATION)leaveCredits();
+            }
+            repaint();return;
         }
         if(state==GameState.GAME_OVER)return;
         if(state==GameState.REMATCH){menuClock+=seconds;repaint();return;}
@@ -1487,7 +1495,7 @@ public class GamePanel extends JPanel {
             g.setColor(new Color(15,18,25,242));g.fillRoundRect(690,82,260,477,8,8);
             g.setColor(new Color(127,106,113));g.drawRoundRect(690,82,260,477,8,8);
             g.setFont(new Font(Font.MONOSPACED,Font.BOLD,14));g.setColor(new Color(219,205,188));g.drawString("PRESENTATION / DEV",704,108);
-            String[] lines={"Build 3.110","Map "+currentMap()+" / Boss "+selectedBoss,"Boss HP "+boss.getHp()+" / "+boss.getMaxHp(),
+            String[] lines={"Build 3.111","Map "+currentMap()+" / Boss "+selectedBoss,"Boss HP "+boss.getHp()+" / "+boss.getMaxHp(),
                 "F1  Show / hide panel","F3  Map collision","F6  Next map","F7  Replay map story",
                 "1-5 Test boss (battle)","K   Kill boss / all phases","G   God mode: "+(devGod?"ON":"OFF"),
                 "H   Heal player","U   E/Q preview: "+(devSkills?"ON":"OFF"),"C   Clear enemy bullets","P   Final boss phase 2",
